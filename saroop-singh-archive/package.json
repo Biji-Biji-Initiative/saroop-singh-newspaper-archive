@@ -1,31 +1,16 @@
 {
-  "name": "@saroop-singh-archive/root",
+  "name": "@saroop-singh-archive/tooling",
   "version": "1.0.0",
-  "description": "Saroop Singh Historical Archive - Monorepo",
+  "description": "Convenience commands for the supported Saroop Singh Archive web application",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
-    "start": "npm run dev --workspace=@saroop-singh-archive/web",
-    "dev": "npm run dev --workspace=@saroop-singh-archive/web",
-    "build": "npm run build --workspaces",
-    "cms": "npm run dev --workspace=@saroop-singh-archive/cms",
-    "deploy": "npm run build",
-    "test": "npm run test --workspaces",
-    "lint": "npm run lint --workspaces",
-    "format": "npm run format --workspaces",
-    "clean": "npm run clean --workspaces && rm -rf node_modules",
-    "install:all": "npm install",
-    "clippings:process": "npm run process --workspace=@saroop-singh-archive/clippings",
-    "web:start": "npm run start --workspace=@saroop-singh-archive/web",
-    "web:build": "npm run build --workspace=@saroop-singh-archive/web"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "eslint": "^8.0.0",
-    "prettier": "^3.0.0",
-    "typescript": "^5.0.0"
+    "start": "npm --prefix packages/web run start",
+    "dev": "npm --prefix packages/web run dev",
+    "build": "npm --prefix packages/web run build",
+    "lint": "npm --prefix packages/web run lint",
+    "type-check": "npm --prefix packages/web run type-check",
+    "validate:content": "npm --prefix packages/web run validate:content",
+    "verify:contributions": "npm --prefix packages/web run verify:gallery-submission-access"
   },
   "engines": {
     "node": ">=18.0.0",
@@ -33,14 +18,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/your-username/saroop-singh-archive.git"
+    "url": "git+https://github.com/Biji-Biji-Initiative/saroop-singh-newspaper-archive.git"
   },
   "keywords": [
     "historical-archive",
     "newspaper-digitization",
     "malayan-athletics",
     "monorepo"
-  ],
-  "author": "Your Name",
-  "license": "MIT"
+  ]
 }

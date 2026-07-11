@@ -1,5 +1,13 @@
 # ADK Restoration System
 
+> **Research-only prototype.** This code is not connected to the public
+> archive, is not deployed, and must never receive production credentials or
+> family uploads. The supported production path is
+> `packages/web /restore -> POST /api/restore -> Gemini -> durable /data`.
+> Treat this folder as historical source material pending a separately reviewed
+> design; do not run its server, Airtable workflow, or setup steps for archive
+> operations.
+
 A multi-agent AI restoration system for vintage photographs using Google's Gemini 2.5 Flash with structured outputs and Airtable integration.
 
 ## 🚀 Features
@@ -380,4 +388,5 @@ Based on our testing:
 - Plan creation: ✅ Working
 - Complete restoration: ✅ Working (upload issues are network-related)
 
-The core AI restoration functionality is fully operational and ready for production use.
+This experimental source is retained for historical context only; it is not a
+production service for the archive.
