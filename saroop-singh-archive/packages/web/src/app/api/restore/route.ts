@@ -31,18 +31,6 @@ interface GeminiInteractionResponse {
   }>
 }
 
-function requestIp(request: NextRequest): string {
-  // Coolify's Traefik proxy appends the connected peer address to
-  // X-Forwarded-For. Do not accept X-Real-IP or CF-Connecting-IP directly:
-  // a DNS-only caller can supply either header and bypass a per-IP quota.
-  const forwardedAddresses = request.headers
-    .get('x-forwarded-for')
-    ?.split(',')
-    .map(address => address.trim())
-    .filter(Boolean)
-  return forwardedAddresses?.at(-1) || 'unknown'
-}
-
 function hasTrustedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin')
   return !origin || origin === new URL(request.url).origin
@@ -211,7 +199,10 @@ export async function POST(request: NextRequest) {
     for (let attempt = 0; attempt < 2 && !generatedImage; attempt += 1) {
       // Every provider request (including a bounded retry) spends one durable
       // quota unit, so the configured cost ceiling remains accurate.
-      const quota = await consumeRestorationQuota(requestIp(request))
+      // Coolify's public proxy does not provide a server-sanitized client IP.
+      // Do not derive a rate-limit identity from caller-controlled forwarding
+      // headers; the persisted global caps still bound every paid request.
+      const quota = await consumeRestorationQuota()
       if (!quota.allowed) {
         return NextResponse.json(
           { error: 'Restoration limit reached. Please try again later.' },

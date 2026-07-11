@@ -38,7 +38,7 @@ prefix.
 | `ARCHIVE_DATA_DIR`               | Yes in production            | Persistent writable path, normally `/data`.                           |
 | `ADMIN_API_TOKEN`                | Yes for moderation           | Server-side bearer token for protected gallery administration.        |
 | `REVALIDATE_SECRET`              | Yes for content revalidation | Secret for `POST /api/revalidate`.                                    |
-| `RESTORATION_PER_IP_LIMIT`       | No                           | Persistent per-IP hourly cap; defaults to `3`.                        |
+| `RESTORATION_PER_IP_LIMIT`       | No                           | Reserved for a future proxy that provides a server-sanitized client IP; Coolify currently enforces global caps only. |
 | `RESTORATION_GLOBAL_LIMIT`       | No                           | Persistent service-wide hourly cap; defaults to `20`.                 |
 | `RESTORATION_DAILY_GLOBAL_LIMIT` | No                           | Persistent service-wide daily cost circuit breaker; defaults to `12`. |
 | `RESTORATION_RETENTION_HOURS`    | No                           | Private session retention; defaults to `168` hours (7 days).          |
