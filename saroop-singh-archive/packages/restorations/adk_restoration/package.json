@@ -1,7 +1,8 @@
 {
   "name": "saroop-singh-restoration-adk",
   "version": "1.0.0",
-  "description": "ADK-based image restoration system for Saroop Singh Archive",
+  "description": "Historical restoration research prototype; not deployed or supported by the public archive",
+  "private": true,
   "main": "index.js",
   "type": "module",
   "scripts": {
