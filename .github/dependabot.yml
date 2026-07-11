@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /saroop-singh-archive/packages/web
+    schedule:
+      interval: weekly
+      day: monday
+      time: "03:17"
+      timezone: Asia/Kuala_Lumpur
+    open-pull-requests-limit: 3
