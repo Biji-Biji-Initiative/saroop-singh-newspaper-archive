@@ -8,6 +8,7 @@ import { join } from 'node:path'
 
 const SESSION_ID = '11111111-1111-4111-8111-111111111111'
 const SESSION_ACCESS_TOKEN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+const ADMIN_TOKEN = 'family-review-test-token'
 const RESTORATION_ID = `${SESSION_ID}-archival`
 const RESTORATION_FILE_NAME = 'archival-restoration.png'
 
@@ -117,6 +118,7 @@ async function main() {
         env: {
           ...process.env,
           ARCHIVE_DATA_DIR: dataDirectory,
+          ADMIN_API_TOKEN: ADMIN_TOKEN,
           GEMINI_API_KEY: 'fixture-key-not-used-by-this-test',
           NEXT_TELEMETRY_DISABLED: '1',
         },
@@ -179,7 +181,52 @@ async function main() {
     assert.equal(validToken.body.status, 'pending')
     assert.equal(validToken.body.submittedRestorations, 1)
 
-    console.log('Gallery submission access checks passed.')
+    const unauthorizedQueue = await fetch(
+      `${baseUrl}/api/gallery/moderation?status=pending&limit=10`
+    )
+    assert.equal(unauthorizedQueue.status, 401)
+
+    const moderationQueue = await fetch(
+      `${baseUrl}/api/gallery/moderation?status=pending&limit=10`,
+      { headers: { Authorization: `Bearer ${ADMIN_TOKEN}` } }
+    )
+    const moderationPayload = await moderationQueue.json()
+    assert.equal(moderationQueue.status, 200)
+    assert.equal(moderationPayload.count, 1)
+    assert.equal(moderationPayload.items[0].id, `gallery-${SESSION_ID}`)
+    assert.equal(moderationPayload.items[0].metadata.title, 'Token-gated contribution')
+
+    const publish = await fetch(
+      `${baseUrl}/api/gallery?id=gallery-${SESSION_ID}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'published' }),
+      }
+    )
+    const publishPayload = await publish.json()
+    assert.equal(publish.status, 200)
+    assert.equal(publishPayload.status, 'published')
+    assert.equal(publishPayload.isPublic, true)
+
+    const publicGallery = await fetch(`${baseUrl}/api/gallery?limit=10`)
+    const publicGalleryPayload = await publicGallery.json()
+    assert.equal(publicGallery.status, 200)
+    const publishedFixture = publicGalleryPayload.items.find(
+      item => item.id === `gallery-${SESSION_ID}`
+    )
+    assert.ok(publishedFixture)
+    assert.equal(publishedFixture.title, 'Token-gated contribution')
+
+    const publicAsset = await fetch(
+      `${baseUrl}/api/gallery/assets/gallery-${SESSION_ID}/restoration-1.png`
+    )
+    assert.equal(publicAsset.status, 200)
+
+    console.log('Family contribution pipeline checks passed.')
   } finally {
     if (child) {
       await stopServer(child)
