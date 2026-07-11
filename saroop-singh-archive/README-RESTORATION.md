@@ -67,8 +67,10 @@ credentials belong in Infisical.
   replace it with a fabricated local "restoration".
 - Keep the admin token only in Coolify/Infisical and use HTTPS for every admin
   request.
-- Review pending contributions through the authenticated moderation endpoint;
-  public gallery queries never reveal pending records.
+- Review pending contributions at `/archive-review` with `ADMIN_API_TOKEN`.
+  The page keeps the token in memory only and never exposes pending records to
+  the public gallery. The authenticated moderation endpoint remains available
+  for scripted operations.
 - The hourly and daily restoration caps are deliberate launch safeguards. Raise
   them only after reviewing Gemini spend and abuse signals.
 - Private originals and outputs expire after the configured retention period.
