@@ -13,6 +13,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 
 type ReviewAction = 'published' | 'rejected'
 
@@ -60,6 +69,9 @@ export function ArchiveReviewQueue() {
   const [hasLoadedQueue, setHasLoadedQueue] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [reviewingId, setReviewingId] = useState<string | null>(null)
+  const [publishCandidate, setPublishCandidate] = useState<ReviewItem | null>(
+    null
+  )
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -146,6 +158,9 @@ export function ArchiveReviewQueue() {
           ? `Published “${item.metadata.title || 'Untitled memory'}” to the public gallery.`
           : `Kept “${item.metadata.title || 'Untitled memory'}” private.`
       )
+      if (action === 'published') {
+        setPublishCandidate(null)
+      }
     } catch (reviewError) {
       setError(
         reviewError instanceof Error
@@ -313,7 +328,7 @@ export function ArchiveReviewQueue() {
                             type="button"
                             variant="destructive"
                             className="flex-1"
-                            disabled={isReviewing}
+                            disabled={reviewingId !== null}
                             loading={isReviewing}
                             leftIcon={<X className="h-4 w-4" />}
                             onClick={() => void reviewContribution(item, 'rejected')}
@@ -323,10 +338,12 @@ export function ArchiveReviewQueue() {
                           <Button
                             type="button"
                             className="flex-1"
-                            disabled={isReviewing}
-                            loading={isReviewing}
+                            disabled={reviewingId !== null}
                             leftIcon={<Check className="h-4 w-4" />}
-                            onClick={() => void reviewContribution(item, 'published')}
+                            onClick={() => {
+                              setError(null)
+                              setPublishCandidate(item)
+                            }}
                           >
                             Publish to gallery
                           </Button>
@@ -338,6 +355,67 @@ export function ArchiveReviewQueue() {
               </div>
             </section>
           )}
+
+          <Dialog
+            open={publishCandidate !== null}
+            onOpenChange={open => {
+              if (!open && reviewingId === null) {
+                setPublishCandidate(null)
+              }
+            }}
+          >
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Publish this family contribution?</DialogTitle>
+                <DialogDescription>
+                  {publishCandidate
+                    ? `“${publishCandidate.metadata.title || 'Untitled memory'}” will become visible in the public gallery.`
+                    : 'This contribution will become visible in the public gallery.'}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+                <p className="font-medium">Please check before publishing</p>
+                <p>
+                  You are publishing the selected restoration and its archive
+                  context. The contributor&apos;s original upload remains private.
+                </p>
+              </div>
+              {error && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+                  {error}
+                </p>
+              )}
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={reviewingId !== null}
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="button"
+                  loading={
+                    publishCandidate !== null &&
+                    reviewingId === publishCandidate.id
+                  }
+                  disabled={
+                    publishCandidate === null || reviewingId !== null
+                  }
+                  leftIcon={<Check className="h-4 w-4" />}
+                  onClick={() => {
+                    if (publishCandidate) {
+                      void reviewContribution(publishCandidate, 'published')
+                    }
+                  }}
+                >
+                  Confirm publication
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </ResponsiveContainer>
     </main>
