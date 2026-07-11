@@ -18,22 +18,16 @@ import { contributionsEnabled } from '@/lib/contributions'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-interface GeminiPart {
-  inlineData?: {
-    data?: string
-    mimeType?: string
-  }
-  inline_data?: {
-    data?: string
-    mime_type?: string
-  }
+interface GeminiInteractionPart {
+  type?: string
+  data?: string
+  mime_type?: string
+  mimeType?: string
 }
 
-interface GeminiResponse {
-  candidates?: Array<{
-    content?: {
-      parts?: GeminiPart[]
-    }
+interface GeminiInteractionResponse {
+  steps?: Array<{
+    content?: GeminiInteractionPart[]
   }>
 }
 
@@ -101,21 +95,16 @@ function restorationPrompt(): string {
   ].join(' ')
 }
 
-function imageFromGeminiResponse(response: GeminiResponse): {
+function imageFromGeminiInteraction(response: GeminiInteractionResponse): {
   buffer: Buffer
   mimeType: string
 } | null {
-  const imagePart = response.candidates
-    ?.flatMap(candidate => candidate.content?.parts || [])
-    .find(
-      part =>
-        typeof part.inlineData?.data === 'string' ||
-        typeof part.inline_data?.data === 'string'
-    )
+  const imagePart = response.steps
+    ?.flatMap(step => step.content ?? [])
+    .find(part => typeof part.data === 'string')
 
-  const encodedImage = imagePart?.inlineData?.data || imagePart?.inline_data?.data
-  const mimeType =
-    imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || 'image/png'
+  const encodedImage = imagePart?.data
+  const mimeType = imagePart?.mime_type || imagePart?.mimeType || 'image/png'
   if (!encodedImage || !extensionForImageMimeType(mimeType)) {
     return null
   }
@@ -123,34 +112,26 @@ function imageFromGeminiResponse(response: GeminiResponse): {
   return { buffer: Buffer.from(encodedImage, 'base64'), mimeType }
 }
 
-function responseShape(response: GeminiResponse): {
-  candidateCount: number
+function responseShape(response: GeminiInteractionResponse): {
+  stepCount: number
   parts: Array<{
-    hasInlineData: boolean
+    type: string | null
+    hasImageData: boolean
     dataLength: number
     mimeType: string | null
-    textLength: number
   }>
 } {
-  const candidates = response.candidates ?? []
+  const steps = response.steps ?? []
 
   return {
-    candidateCount: candidates.length,
-    parts: candidates.flatMap(candidate =>
-      (candidate.content?.parts ?? []).map(part => {
-        const camelCaseImage = part.inlineData
-        const snakeCaseImage = part.inline_data
-        return {
-          hasInlineData:
-            typeof camelCaseImage?.data === 'string' ||
-            typeof snakeCaseImage?.data === 'string',
-          dataLength:
-            camelCaseImage?.data?.length ?? snakeCaseImage?.data?.length ?? 0,
-          mimeType:
-            camelCaseImage?.mimeType ?? snakeCaseImage?.mime_type ?? null,
-          textLength: 0,
-        }
-      })
+    stepCount: steps.length,
+    parts: steps.flatMap(step =>
+      (step.content ?? []).map(part => ({
+        type: part.type ?? null,
+        hasImageData: typeof part.data === 'string',
+        dataLength: part.data?.length ?? 0,
+        mimeType: part.mime_type ?? part.mimeType ?? null,
+      }))
     ),
   }
 }
@@ -231,9 +212,9 @@ export async function POST(request: NextRequest) {
     const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-image'
     let generatedImage: { buffer: Buffer; mimeType: string } | null = null
 
-    // Gemini can occasionally finish an image request with a text-only
-    // candidate. A single bounded retry keeps a genuine restoration request
-    // useful without creating an unbounded paid retry loop.
+    // The current Gemini Interactions API has a dedicated image block in its
+    // response steps. Keep one bounded retry for transient model-side output
+    // failures without creating an unbounded paid retry loop.
     for (let attempt = 0; attempt < 2 && !generatedImage; attempt += 1) {
       // Every provider request (including a bounded retry) spends one durable
       // quota unit, so the configured cost ceiling remains accurate.
@@ -253,7 +234,7 @@ export async function POST(request: NextRequest) {
       }
 
       const geminiResponse = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+        'https://generativelanguage.googleapis.com/v1beta/interactions',
         {
           method: 'POST',
           headers: {
@@ -261,30 +242,25 @@ export async function POST(request: NextRequest) {
             'x-goog-api-key': geminiApiKey,
           },
           body: JSON.stringify({
-            contents: [
+            model,
+            input: [
               {
-                role: 'user',
-                parts: [
-                  { text: restorationPrompt() },
-                  {
-                    inlineData: {
-                      mimeType: inputMimeType,
-                      data: inputBuffer.toString('base64'),
-                    },
-                  },
-                ],
+                type: 'text',
+                text: restorationPrompt(),
+              },
+              {
+                type: 'image',
+                mime_type: inputMimeType,
+                data: inputBuffer.toString('base64'),
               },
             ],
-            generationConfig: {
-              responseModalities: ['TEXT', 'IMAGE'],
-            },
           }),
           signal: AbortSignal.timeout(120_000),
         }
       )
 
       if (!geminiResponse.ok) {
-        console.error('Gemini restoration request failed', {
+        console.error('Gemini interaction restoration request failed', {
           status: geminiResponse.status,
         })
         const status = geminiResponse.status === 429 ? 429 : 502
@@ -299,11 +275,12 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const geminiResult = (await geminiResponse.json()) as GeminiResponse
-      generatedImage = imageFromGeminiResponse(geminiResult)
+      const geminiResult =
+        (await geminiResponse.json()) as GeminiInteractionResponse
+      generatedImage = imageFromGeminiInteraction(geminiResult)
 
       if (!generatedImage) {
-        console.warn('Gemini restoration result did not include an image', {
+        console.warn('Gemini interaction result did not include an image', {
           attempt: attempt + 1,
           response: responseShape(geminiResult),
         })
