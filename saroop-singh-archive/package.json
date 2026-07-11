@@ -42,8 +42,5 @@
     "monorepo"
   ],
   "author": "Your Name",
-  "license": "MIT",
-  "dependencies": {
-    "puppeteer": "^24.17.1"
-  }
+  "license": "MIT"
 }
