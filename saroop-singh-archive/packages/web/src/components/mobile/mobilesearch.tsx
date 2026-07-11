@@ -3,7 +3,6 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react'
 import { Search, X, Clock, Filter, SortAsc } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useDebounce } from '@/hooks/useDebounce'
 
 interface MobileSearchProps {
   placeholder?: string
@@ -36,7 +35,6 @@ export function MobileSearch({
   const [recentSearches, setRecentSearches] = useState<SearchSuggestion[]>([])
   
   const inputRef = useRef<HTMLInputElement>(null)
-  const debouncedQuery = useDebounce(query, 300)
 
   // Mock search suggestions - replace with real data
   const suggestions = useMemo<SearchSuggestion[]>(() => [

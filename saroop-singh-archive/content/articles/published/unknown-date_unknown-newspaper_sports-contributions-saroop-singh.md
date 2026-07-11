@@ -14,7 +14,7 @@ tags:
   - sports donations
   - community support
   - Malayan Railway
-image: /images/unknown-date_unknown-newspaper_sports-contributions-saroop-singh.jpg
+image: ""
 ---
 
 # Generous Contributions to Sports Events

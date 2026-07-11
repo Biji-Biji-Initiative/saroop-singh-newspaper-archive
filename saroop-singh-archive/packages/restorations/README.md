@@ -1,51 +1,23 @@
-# Saroop Singh Archive - Image Restoration Systems
+# Restoration research and historical prototypes
 
-This directory contains two independent image restoration implementations:
+The production restoration feature lives in the main Next.js application:
 
-## 📁 Directory Structure
-
-```
-restorations/
-├── python-restoration/       # Python-based restoration system (Primary)
-│   ├── api/                 # Vercel serverless functions
-│   ├── lib/                 # Core Python libraries
-│   ├── scripts/             # Standalone scripts
-│   ├── tests/               # Test suite
-│   ├── airtable/            # Airtable integration
-│   ├── web/                 # Next.js web interface
-│   ├── docs/                # Documentation
-│   └── [config files]       # .env, requirements.txt, etc.
-│
-└── adk_restoration/         # ADK multi-agent system (Alternative)
-    └── [Node.js implementation]
+```text
+packages/web /restore -> POST /api/restore -> Gemini -> durable /data storage
 ```
 
-## 🚀 Quick Start
+It is deployed with the repository-root Docker image on Coolify at the target
+domain `https://saroop.mereka.dev`. See the root
+[restoration guide](../../README-RESTORATION.md) and
+[deployment guide](../../DEPLOYMENT-GUIDE.md).
 
-### Python Restoration System
-```bash
-cd python-restoration
-pip install -r requirements.txt
-python scripts/run_workflow.py
-```
-See [python-restoration/README.md](python-restoration/README.md) for full documentation.
+## What remains here
 
-### ADK Restoration System
-```bash
-cd adk_restoration
-npm install
-npm start
-```
-See [adk_restoration/README.md](adk_restoration/README.md) for full documentation.
+- `python-restoration/` is an archived Python/Vercel prototype. It is not
+  deployed, does not receive production credentials, and must not be used to
+  configure Airtable webhooks. See its [archive notice](python-restoration/ARCHIVED.md).
+- `adk_restoration/` is a separate research prototype. It is not on the public
+  archive request path and needs a dedicated design and review before use.
 
-## 📚 Documentation
-
-- **Python System**: [python-restoration/README.md](python-restoration/README.md)
-- **ADK System**: [adk_restoration/README.md](adk_restoration/README.md)
-
-## 🔧 Technologies
-
-- **Python System**: Python, Gemini 2.5 Flash AI, Vercel, Airtable
-- **ADK System**: Node.js, Composio ADK, Multi-agent architecture
-
-Both systems are production-ready and can be used independently based on your requirements.
+Keeping these folders preserves useful experimentation and provenance without
+creating a second, conflicting production restoration service.

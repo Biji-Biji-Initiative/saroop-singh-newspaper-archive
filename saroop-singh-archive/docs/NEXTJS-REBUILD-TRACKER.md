@@ -1,5 +1,10 @@
 # Next.js Rebuild Implementation Tracker
 
+> **Historical planning snapshot.** Any Vercel deployment references below
+> were superseded by the Coolify cutover. Use
+> [DEPLOYMENT-GUIDE.md](../DEPLOYMENT-GUIDE.md) for the supported production
+> path.
+
 ## Monorepo Structure ✅
 - ✅ Created proper monorepo with npm workspaces
 - ✅ Four packages: web, cms, clippings, restorations

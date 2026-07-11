@@ -46,8 +46,6 @@ export function SwipeableViews({
 
     const deltaX = dragCurrentX - dragStartX
     const threshold = 50 // Minimum swipe distance
-    const containerWidth = containerRef.current?.offsetWidth || 0
-
     // Determine if swipe was significant enough
     if (Math.abs(deltaX) > threshold) {
       const direction = deltaX > 0 ? -1 : 1
@@ -118,21 +116,6 @@ export function SwipeableViews({
       }
     }
   }, [currentIndex, animateHeight, children])
-
-  // Navigation functions
-  const goToSlide = (index: number) => {
-    const clampedIndex = Math.max(0, Math.min(children.length - 1, index))
-    setCurrentIndex(clampedIndex)
-    onIndexChange?.(clampedIndex)
-  }
-
-  const goToPrevious = () => {
-    goToSlide(currentIndex - 1)
-  }
-
-  const goToNext = () => {
-    goToSlide(currentIndex + 1)
-  }
 
   return (
     <div 

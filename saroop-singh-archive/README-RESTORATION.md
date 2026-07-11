@@ -1,224 +1,73 @@
-# Saroop Singh Archive - Photo Restoration System
+# Saroop Singh Archive — photo restoration
 
-## Overview
+The production restoration workflow is part of the archive’s Next.js
+application. It runs as one service on Coolify; there is no second Python API,
+Vercel project, public upload bucket, or client-side API key.
 
-The Saroop Singh Archive includes a sophisticated AI-powered photo restoration system that uses Google's Gemini AI to restore and enhance historical photographs. The system provides both batch processing capabilities and a web interface for real-time restoration.
+## Supported workflow
 
-## Architecture
+1. A visitor selects a JPG, PNG, or WEBP image (up to 10 MB) on `/restore`.
+2. The browser sends a same-origin multipart request to `POST /api/restore`
+   with the file in the `image` field.
+3. The server sends the image and a conservative preservation prompt to Gemini.
+4. The original, generated restoration, and session manifest are written to
+   the durable archive data directory.
+5. The visitor compares the result with the original, downloads it, or submits
+   it for archive review. Gallery submissions are pending by default and are
+   never made public by a browser request.
 
-### Components
+Private session images use a per-session capability link. When an administrator
+approves a contribution, the service copies only the selected output to a
+separate public-gallery path; publishing never exposes the contributor's
+original image.
 
-1. **Gemini Restoration Package** (`packages/restorations/`)
-   - Python-based restoration engine using Google Gemini AI
-   - Batch processing scripts for multiple photos
-   - REST API server for web integration
-   - 6 different restoration styles with custom prompts
+The application intentionally produces one archival restoration, rather than
+multiple speculative variants. AI-generated output must be reviewed against
+the source image before it is published or described as historical evidence.
 
-2. **Web Interface** (`packages/web/`)
-   - Next.js-based web application
-   - Photo upload and restoration interface
-   - Gallery for viewing restored photos
-   - Submission system for community contributions
+## Production configuration
 
-3. **Shared Data** (`shared/data/`)
-   - Centralized storage for articles and metadata
-   - CMS integration for content management
+Secrets are stored in Infisical and injected as Coolify **runtime** variables.
+Do not create production `.env` files or expose any key with a `NEXT_PUBLIC_`
+prefix.
 
-## Setup Instructions
+| Variable            | Required                     | Purpose                                                        |
+| ------------------- | ---------------------------- | -------------------------------------------------------------- |
+| `GEMINI_API_KEY`    | Yes                          | Server-only key used by `/api/restore`.                        |
+| `GEMINI_MODEL`      | No                           | Image-capable Gemini model; the route has a safe default.      |
+| `ARCHIVE_DATA_DIR`  | Yes in production            | Persistent writable path, normally `/data`.                    |
+| `ADMIN_API_TOKEN`   | Yes for moderation           | Server-side bearer token for protected gallery administration. |
+| `REVALIDATE_SECRET` | Yes for content revalidation | Secret for `POST /api/revalidate`.                             |
+| `RESTORATION_PER_IP_LIMIT` | No | Persistent per-IP hourly cap; defaults to `3`.                         |
+| `RESTORATION_GLOBAL_LIMIT` | No | Persistent service-wide hourly cap; defaults to `20`.                  |
 
-### Prerequisites
+OpenAI is not on the active restoration request path. Do not add an OpenAI key
+until there is a reviewed server-side feature that needs it.
 
-- Node.js 18+ and npm
-- Python 3.9+
-- Google Gemini API key
+## Local development
 
-### 1. Configure Gemini API
-
-Create `.env` file in `packages/restorations/`:
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-1.5-flash-002
-GEMINI_GENERATION_CONFIG='{"temperature": 0.4, "top_p": 1, "top_k": 32, "max_output_tokens": 4096}'
-```
-
-### 2. Install Dependencies
-
-#### Python Dependencies (Restoration Engine)
-```bash
-cd packages/restorations
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-```
-
-#### Node.js Dependencies (Web App)
 ```bash
 cd packages/web
-npm install
-```
-
-### 3. Start the Services
-
-#### Start Gemini API Server (Port 5001)
-```bash
-cd packages/restorations
-./start-api.sh
-# Or manually:
-# source venv/bin/activate
-# python api/server.py
-```
-
-#### Start Web Application (Port 3000)
-```bash
-cd packages/web
+npm ci
 npm run dev
 ```
 
-## Usage
+For local-only testing, the application uses a local `archive-data` directory
+unless `ARCHIVE_DATA_DIR` is set. Use a development Gemini key only; production
+credentials belong in Infisical.
 
-### Web Interface
+## Operations
 
-1. Navigate to http://localhost:3000
-2. Click "Restore Photos" in the navigation
-3. Upload a historical photograph
-4. Click "Process Image" to generate 6 restoration variants
-5. Compare results and download preferred versions
-6. Optionally submit to public gallery
+- Persist `/data` through Coolify. It contains restoration sessions and
+  gallery submissions, so deleting or replacing that volume loses review data.
+- Treat a failed Gemini request as a user-visible failure; do not silently
+  replace it with a fabricated local "restoration".
+- Keep the admin token only in Coolify/Infisical and use HTTPS for every admin
+  request.
+- Before a storage migration, create and test a backup of the Coolify `/data`
+  volume using the recovery procedure in `DEPLOYMENT-GUIDE.md`.
+- Verify a deployment with an actual small image upload after checking the
+  public archive and gallery endpoints.
 
-### Batch Processing
-
-For processing multiple photos offline:
-
-```bash
-cd packages/restorations
-python scripts/gemini_batch_restore.py
-```
-
-This will:
-- Process all images in `raw-files/` directory
-- Generate 6 restoration variants per image
-- Save results to `generated/restorations/`
-- Create metadata JSON files
-
-### Populating the Gallery
-
-To add Gemini-restored photos to the web gallery:
-
-```bash
-cd packages/web
-node scripts/populate-gallery.js
-```
-
-This imports all restorations from `packages/restorations/generated/` into the web gallery.
-
-## Restoration Styles
-
-The system provides 6 different restoration approaches:
-
-1. **Enhanced** - Basic restoration with dust/scratch removal
-2. **Colorized** - Adds historically accurate colors 
-3. **Repaired** - Fixes tears, fading, and missing sections
-4. **Denoised** - Removes grain while preserving details
-5. **Sharpened** - Enhances clarity and detail
-6. **Artistic** - Creative restoration with enhanced contrast
-
-## API Endpoints
-
-### Gemini Restoration API (Python)
-
-- `GET /health` - Health check
-- `POST /restore` - Restore single image (multipart/form-data)
-- `POST /restore/batch` - Batch restoration (JSON with base64 images)
-
-### Web Application API
-
-- `POST /api/restore` - Process image (uses Gemini if available, falls back to Sharp)
-- `GET /api/gallery` - Fetch gallery items
-- `POST /api/gallery/submit` - Submit restoration to gallery
-
-## File Structure
-
-```
-saroop-singh-archive/
-├── packages/
-│   ├── restorations/          # Gemini restoration engine
-│   │   ├── api/               # REST API server
-│   │   ├── scripts/           # Batch processing scripts
-│   │   ├── tools/             # Gemini client and utilities
-│   │   ├── prompts/           # Restoration prompt templates
-│   │   └── generated/         # Output directory
-│   │
-│   └── web/                   # Next.js web application
-│       ├── src/
-│       │   ├── app/
-│       │   │   ├── restore/   # Restoration interface
-│       │   │   ├── gallery/   # Gallery viewer
-│       │   │   └── api/       # API routes
-│       │   └── components/    # React components
-│       └── public/
-│           └── gallery-data/  # Gallery metadata
-│
-└── shared/
-    └── data/                  # Shared content
-        └── articles/          # Article markdown files
-```
-
-## Environment Variables
-
-### Restoration Package
-- `GEMINI_API_KEY` - Google Gemini API key (required)
-- `GEMINI_MODEL` - Model name (default: gemini-1.5-flash-002)
-- `PORT` - API server port (default: 5001)
-
-### Web Application
-- `GEMINI_API_URL` - Gemini API server URL (default: http://localhost:5001)
-- `NEXT_PUBLIC_API_URL` - Public API URL for client-side requests
-
-## Troubleshooting
-
-### Gemini API Not Working
-1. Check API key is valid
-2. Ensure Python dependencies are installed
-3. Verify API server is running on port 5001
-4. Check console for error messages
-
-### Gallery Not Showing Items
-1. Run `node scripts/populate-gallery.js` to import restorations
-2. Check `public/gallery-data/index.json` exists
-3. Verify image files are in `public/gallery/` directory
-
-### Restoration Fails
-1. Check image format (JPEG, PNG supported)
-2. Verify file size < 10MB
-3. Ensure adequate memory available
-4. Check Gemini API quota
-
-## Development
-
-### Adding New Restoration Styles
-
-1. Add prompt file to `packages/restorations/prompts/`
-2. Update `restoration_prompts` in `api/server.py`
-3. Test with batch processing script
-
-### Modifying Web Interface
-
-1. Edit components in `packages/web/src/components/`
-2. Update API routes in `packages/web/src/app/api/`
-3. Test with `npm run dev`
-
-## Production Deployment
-
-### Gemini API Server
-- Deploy as Python application (Heroku, Railway, etc.)
-- Set environment variables
-- Configure CORS for production domain
-
-### Web Application
-- Deploy to Vercel (recommended)
-- Set `GEMINI_API_URL` to production API endpoint
-- Configure environment variables in Vercel dashboard
-
-## License
-
-This restoration system is part of the Saroop Singh Archive project, preserving Malaysian athletics history through AI-enhanced photograph restoration.
+The retired Python/Vercel prototype is preserved solely for historical source
+reference in [packages/restorations/python-restoration](packages/restorations/python-restoration/ARCHIVED.md).

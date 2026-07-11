@@ -14,7 +14,7 @@ tags:
   - athletic entries
   - Selangor AAA
   - championships
-image: /images/unknown-date_unknown-newspaper_athletic-championships-entries.jpg
+image: ""
 ---
 
 # Athletic Championship Entries - Selangor Amateur Athletic Association

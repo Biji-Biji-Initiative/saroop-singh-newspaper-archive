@@ -16,7 +16,7 @@ tags:
   - school sports
   - mile race
   - results
-image: /images/1936-07-18_straits-times_athletic-results-saroop-singh.jpg
+image: /images/1936-07-18_straits-times_athletic-results-saroop-singh-mile-race.jpg
 ---
 
 # Athletic Results - Victoria Institution Sports

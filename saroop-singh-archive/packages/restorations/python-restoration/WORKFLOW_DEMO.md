@@ -1,5 +1,9 @@
 # Workflow Demonstration - Image Restoration System
 
+> **Archived reference.** This workflow targets the retired Python/Vercel
+> prototype and must not be used for production processing. See
+> [ARCHIVED.md](ARCHIVED.md) for the supported replacement.
+
 ## ✅ Successfully Demonstrated
 
 ### 1. System Components Working

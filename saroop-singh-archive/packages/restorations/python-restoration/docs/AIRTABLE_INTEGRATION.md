@@ -1,5 +1,9 @@
 # Airtable Integration - Legacy Documentation
 
+> **Archived reference.** This integration belongs to the retired
+> Python/Vercel prototype and must not be configured for the live archive. See
+> [the archive notice](../ARCHIVED.md).
+
 > **⚠️ DEPRECATED**: This document contains outdated information. Please refer to [AIRTABLE_SETUP.md](AIRTABLE_SETUP.md) for current setup instructions.
 
 ## Overview

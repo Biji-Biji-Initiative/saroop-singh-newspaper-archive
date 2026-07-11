@@ -17,7 +17,7 @@ tags:
   - half-mile championship
   - mile race
   - quarter mile
-image: /images/unknown-date_unknown-newspaper_fmsr-sports-saroop-singh.jpg
+image: ""
 ---
 
 # FMSR Sports - Saroop Singh Performance

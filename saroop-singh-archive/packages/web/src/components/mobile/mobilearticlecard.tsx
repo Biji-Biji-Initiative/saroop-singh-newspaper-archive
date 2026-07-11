@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Calendar, Building2, Eye, Heart, Share2, BookOpen } from 'lucide-react'
+import { Calendar, Building2, Heart, Share2, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Article {

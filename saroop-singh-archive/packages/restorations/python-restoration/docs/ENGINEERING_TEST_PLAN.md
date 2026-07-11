@@ -1,5 +1,9 @@
 # Engineering Test Plan for AI Image Restoration Pipeline
 
+> **Archived reference.** This plan covers the retired Python/Vercel
+> prototype. It is not a production test plan for the Coolify-hosted archive;
+> see [the archive notice](../ARCHIVED.md).
+
 > ⚠️ **DEPRECATED DOCUMENT**
 > 
 > This document references an outdated testing approach and incorrect prompt counts.

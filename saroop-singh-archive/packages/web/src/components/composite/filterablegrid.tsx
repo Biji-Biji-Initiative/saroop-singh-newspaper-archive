@@ -4,7 +4,7 @@ import { ArticleFilters, type ArticleFiltersProps } from '@/components/ui/articl
 import { Button } from '@/components/ui/button'
 import { Filter, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { Article, ArticleMetadata, SearchOptions, SortOptions, FilterCounts } from '@/types'
+import type { Article, ArticleMetadata, SearchOptions, SortOptions } from '@/types'
 
 export interface FilterableGridProps
   extends Omit<ArticleGridProps, 'articles'>,

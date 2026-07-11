@@ -1,101 +1,155 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { readFile, readdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
-import archiver from 'archiver';
-import { PassThrough } from 'stream';
+import { ZipArchive } from 'archiver'
+import { PassThrough } from 'node:stream'
+
+import { NextRequest, NextResponse } from 'next/server'
+
+import {
+  ArchiveStorageValidationError,
+  assertSafeArchiveId,
+  assertUuid,
+} from '@/lib/archive-storage'
+import {
+  hasRestorationSessionAccess,
+  readRestorationAsset,
+  readRestorationSession,
+} from '@/lib/restoration-storage'
+
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+function requestedRestorationIds(
+  value: unknown,
+  sessionId: string
+): string[] | null {
+  if (value === undefined) {
+    return null
+  }
+
+  if (!Array.isArray(value) || value.length === 0 || value.length > 12) {
+    throw new ArchiveStorageValidationError(
+      'restorationIds must contain between 1 and 12 entries'
+    )
+  }
+
+  const ids = value.map((id, index) =>
+    assertSafeArchiveId(id, `restorationIds[${index}]`)
+  )
+  if (ids.some(id => !id.startsWith(`${sessionId}-`))) {
+    throw new ArchiveStorageValidationError(
+      'Every restoration must belong to the requested session'
+    )
+  }
+
+  return [...new Set(ids)]
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { restorationIds } = await request.json();
-
-    if (!restorationIds || !Array.isArray(restorationIds) || restorationIds.length === 0) {
-      return NextResponse.json(
-        { error: 'No restoration IDs provided' },
-        { status: 400 }
-      );
+    const body: unknown = await request.json()
+    if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+      throw new ArchiveStorageValidationError('Request body must be an object')
     }
 
-    // Extract session ID from first restoration ID
-    const sessionId = restorationIds[0].split('-')[0];
-    const sessionDir = join(process.cwd(), 'public', 'restorations', sessionId);
+    const requestBody = body as Record<string, unknown>
+    const sessionId = assertUuid(
+      requestBody.sessionId,
+      'Restoration session ID'
+    )
+    const selectedIds = requestedRestorationIds(
+      requestBody.restorationIds,
+      sessionId
+    )
+    const session = await readRestorationSession(sessionId)
 
-    if (!existsSync(sessionDir)) {
+    if (!session) {
       return NextResponse.json(
         { error: 'Restoration session not found' },
         { status: 404 }
-      );
+      )
     }
 
-    // Create a zip archive
-    const archive = archiver('zip', {
-      zlib: { level: 9 }
-    });
+    if (!hasRestorationSessionAccess(session, requestBody.sessionAccessToken)) {
+      return NextResponse.json(
+        { error: 'Restoration session not found' },
+        { status: 404 }
+      )
+    }
 
-    // Collect all data in memory
-    const buffers: Buffer[] = [];
-    const passThrough = new PassThrough();
-    
-    passThrough.on('data', (chunk) => buffers.push(chunk));
-    
-    return new Promise<NextResponse>((resolve, reject) => {
+    const selectedRestorations = session.restorations.filter(
+      restoration => !selectedIds || selectedIds.includes(restoration.id)
+    )
+    if (selectedRestorations.length === 0) {
+      return NextResponse.json(
+        { error: 'No matching restorations were found' },
+        { status: 404 }
+      )
+    }
+
+    const archive = new ZipArchive({ zlib: { level: 9 } })
+    const passThrough = new PassThrough()
+    const archiveBuffers: Buffer[] = []
+    passThrough.on('data', chunk => archiveBuffers.push(Buffer.from(chunk)))
+
+    return await new Promise<NextResponse>((resolve, reject) => {
       passThrough.on('end', () => {
-        const zipBuffer = Buffer.concat(buffers);
-        const response = new NextResponse(zipBuffer, {
-          headers: {
-            'Content-Type': 'application/zip',
-            'Content-Disposition': `attachment; filename="restored-photos-${sessionId}.zip"`,
-            'Content-Length': zipBuffer.length.toString(),
-          },
-        });
-        resolve(response);
-      });
-
-      archive.on('error', (err) => reject(err));
-      archive.pipe(passThrough);
-
-      // Add files to archive
-      Promise.all([
-        readdir(sessionDir).then(files => 
-          Promise.all(
-            files.filter(file => file.endsWith('.png')).map(async (file) => {
-              const filePath = join(sessionDir, file);
-              const fileBuffer = await readFile(filePath);
-              
-              // Use descriptive filename
-              let archiveFilename = file;
-              if (file === 'original.png') {
-                archiveFilename = 'original.png';
-              } else {
-                // Convert kebab-case back to proper name
-                const styleName = file.replace('.png', '').split('-').map(word => 
-                  word.charAt(0).toUpperCase() + word.slice(1)
-                ).join(' ');
-                archiveFilename = `${styleName}.png`;
-              }
-              
-              archive.append(fileBuffer, { name: archiveFilename });
-            })
-          )
+        const zipBuffer = Buffer.concat(archiveBuffers)
+        resolve(
+          new NextResponse(zipBuffer, {
+            headers: {
+              'Content-Type': 'application/zip',
+              'Content-Disposition': `attachment; filename="saroop-restoration-${sessionId}.zip"`,
+              'Content-Length': zipBuffer.length.toString(),
+              'Cache-Control': 'private, no-store',
+            },
+          })
         )
-      ]).then(() => {
-        archive.finalize();
-      }).catch(reject);
-    });
+      })
 
+      archive.on('error', reject)
+      archive.pipe(passThrough)
+
+      Promise.all(
+        selectedRestorations.map(async restoration => {
+          const file = await readRestorationAsset(
+            sessionId,
+            restoration.fileName
+          )
+          if (!file) {
+            throw new Error(`Missing restoration asset ${restoration.fileName}`)
+          }
+          archive.append(file, { name: restoration.fileName })
+        })
+      )
+        .then(() => archive.finalize())
+        .catch(reject)
+    })
   } catch (error) {
-    console.error('Download all error:', error);
+    if (
+      error instanceof ArchiveStorageValidationError ||
+      error instanceof SyntaxError
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            error instanceof SyntaxError
+              ? 'Invalid JSON request body'
+              : error.message,
+        },
+        { status: 400 }
+      )
+    }
+
+    console.error('Restoration ZIP download error', error)
     return NextResponse.json(
-      { error: 'Failed to create download archive' },
+      { error: 'Unable to create the restoration download.' },
       { status: 500 }
-    );
+    )
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'Download All Restorations API',
-    methods: ['POST'],
-    description: 'Download all restoration results as a ZIP file',
-  });
+    service: 'archive-restoration-download',
+    method: 'POST',
+  })
 }

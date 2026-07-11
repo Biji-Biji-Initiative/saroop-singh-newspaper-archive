@@ -1,4 +1,9 @@
 # Saroop Singh Archive - Strategic Improvement Plan
+
+> **Historical planning snapshot.** Any Vercel deployment references below
+> were superseded by the Coolify cutover. Use
+> [DEPLOYMENT-GUIDE.md](../DEPLOYMENT-GUIDE.md) for the supported production
+> path.
 *Generated: December 2024*
 
 ## Executive Summary

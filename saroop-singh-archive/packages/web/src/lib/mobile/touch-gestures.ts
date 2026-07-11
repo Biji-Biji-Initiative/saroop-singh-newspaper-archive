@@ -165,7 +165,7 @@ export class TouchGestureHandler {
     }
   }
 
-  private handleTouchEnd(event: TouchEvent) {
+  private handleTouchEnd() {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer)
       this.longPressTimer = null
@@ -214,7 +214,7 @@ export class TouchGestureHandler {
     this.currentTouches = []
   }
 
-  private handleTouchCancel(_event: TouchEvent) {
+  private handleTouchCancel() {
     if (this.longPressTimer) {
       clearTimeout(this.longPressTimer)
       this.longPressTimer = null

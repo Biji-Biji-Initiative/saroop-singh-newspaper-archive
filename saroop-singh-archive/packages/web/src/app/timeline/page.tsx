@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Calendar, Clock, MapPin, Users, Tag, FileText } from 'lucide-react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import type { Article } from '@/types'
 import Image from 'next/image'
 
@@ -26,12 +25,6 @@ export default function TimelinePage() {
     fetchArticles()
   }, [])
 
-  useEffect(() => {
-    if (articles.length > 0) {
-      createTimeline(articles)
-    }
-  }, [articles, selectedYear, sortOrder])
-
   const fetchArticles = async () => {
     try {
       const response = await fetch('/api/articles')
@@ -46,7 +39,7 @@ export default function TimelinePage() {
     }
   }
 
-  const createTimeline = (articlesData: Article[]) => {
+  const createTimeline = useCallback((articlesData: Article[]) => {
     const filteredArticles = selectedYear === 'all' 
       ? articlesData 
       : articlesData.filter(article => {
@@ -81,7 +74,13 @@ export default function TimelinePage() {
       .sort((a, b) => sortOrder === 'desc' ? b.year - a.year : a.year - b.year)
 
     setTimeline(timelineData)
-  }
+  }, [selectedYear, sortOrder])
+
+  useEffect(() => {
+    if (articles.length > 0) {
+      createTimeline(articles)
+    }
+  }, [articles, createTimeline])
 
   const getAvailableYears = () => {
     const years = new Set<number>()
@@ -186,7 +185,7 @@ export default function TimelinePage() {
 
                 {/* Articles */}
                 <div className="space-y-6">
-                  {yearData.articles.map((article, articleIndex) => (
+                  {yearData.articles.map((article) => (
                     <div key={article.slug} className="relative flex items-start gap-6">
                       {/* Timeline Dot */}
                       <div className="flex-shrink-0 w-4 h-4 bg-vintage-500 border-4 border-vintage-100 rounded-full shadow-sm mt-6"></div>

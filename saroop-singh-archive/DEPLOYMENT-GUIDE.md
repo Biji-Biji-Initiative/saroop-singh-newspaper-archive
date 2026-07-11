@@ -1,237 +1,124 @@
-# Saroop Singh Archive - Deployment Guide
+# Saroop Singh Archive — Coolify deployment guide
 
-## Overview
+## Production target
 
-The Saroop Singh Archive is a modern Next.js 15 application with a markdown-based CMS that can be deployed on multiple platforms. This guide covers deployment to Vercel (recommended) and other platforms.
+The archive is deployed as a single Dockerized Next.js service on Coolify.
+Its intended public domain is `https://saroop.mereka.dev`.
 
-## Prerequisites
+Vercel is not part of the supported deployment path. The repository-root
+`Dockerfile` builds the active `packages/web` application together with the
+published archive content; Coolify should use that Dockerfile with port `3000`.
 
-- Node.js 18 or later
-- npm or yarn package manager
-- Git repository access
+## Before the first deploy
 
-## Architecture Overview
+1. Run the web build from the checked-out commit:
 
-The application uses:
-- **Next.js 15** with App Router
-- **Static Site Generation (SSG)** with Incremental Static Regeneration (ISR)
-- **Markdown-based CMS** for content management
-- **TypeScript** for type safety
-- **Tailwind CSS** for styling
-- **Server Components** for optimal performance
+   ```bash
+   cd packages/web
+   npm ci
+   npm run build
+   ```
 
-## Deployment on Vercel (Recommended)
+2. Create a Coolify application from the public Git repository. Use the
+   repository root as build context and `Dockerfile` as the build pack input.
+3. Set the internal port to `3000`. Do not add a second proxy, custom Nginx
+   configuration, or a separate restoration service.
+4. Attach one persistent volume at `/data`. This volume owns restoration
+   sessions and gallery submissions; it must survive redeploys and rollbacks.
+5. Add `saroop.mereka.dev` in Coolify, then create a DNS-only `A` record for
+   that hostname pointing at the active Coolify ingress. Wait for Coolify’s
+   TLS certificate to become active before treating the domain as live.
 
-### 1. Initial Setup
+## Runtime variables
 
-1. Fork or clone the repository
-2. Push to your GitHub account
-3. Connect to Vercel:
-   - Visit [vercel.com](https://vercel.com)
-   - Click "New Project"
-   - Import your GitHub repository
-   - Select the `packages/web` directory as the project root
+Set these values through Infisical and Coolify’s runtime-environment UI. Never
+commit them to the repository or configure them as build-time variables.
 
-### 2. Environment Variables
+| Variable            | Setting                                      |
+| ------------------- | -------------------------------------------- |
+| `NODE_ENV`          | `production`                                 |
+| `ARCHIVE_DATA_DIR`  | `/data`                                      |
+| `GEMINI_API_KEY`    | Dedicated server-side Gemini credential      |
+| `GEMINI_MODEL`      | Optional image-capable model override        |
+| `ADMIN_API_TOKEN`   | High-entropy server-side moderation token    |
+| `REVALIDATE_SECRET` | High-entropy server-side revalidation secret |
+| `RESTORATION_PER_IP_LIMIT` | Optional; defaults to `3` per hour      |
+| `RESTORATION_GLOBAL_LIMIT` | Optional; defaults to `20` per hour     |
 
-Set the following environment variables in Vercel:
+`ARCHIVE_CONTENT_DIR` normally does not need an override: the Docker image
+ships the source-controlled article directory. If it is set explicitly, it
+must point to the copied published-content directory inside the container.
 
-```bash
-# Required for content revalidation
-REVALIDATE_SECRET=your-secure-random-string-here
+## Deployment verification
 
-# Optional: Custom domain configuration
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
-```
+After Coolify reports a successful rollout:
 
-### 3. Build Configuration
+1. Open `https://saroop.mereka.dev` and confirm that the archive shell loads.
+2. Request `GET /api/articles` and confirm that it returns real articles, not
+   an empty array.
+3. Request `GET /api/gallery` and confirm it exposes only published entries.
+4. Upload one small, non-sensitive test image through `/restore`. Confirm a
+   Gemini result is returned and that the original plus output remain available
+   after a container restart.
+5. Confirm a gallery submission stays pending until explicit archive review.
+6. Check the Coolify deployment logs for startup, storage-permission, and
+   Gemini errors before directing traffic to the new domain.
 
-Vercel automatically detects Next.js projects. The build configuration in `next.config.js` is already optimized for deployment.
+## Moderating a contribution
 
-### 4. Domain Setup
-
-1. In Vercel dashboard, go to your project settings
-2. Navigate to "Domains"
-3. Add your custom domain
-4. Update DNS records as instructed by Vercel
-
-### 5. Deployment
-
-- **Automatic**: Push to main branch triggers deployment
-- **Manual**: Use Vercel CLI or dashboard to deploy
-
-## Content Management Workflow
-
-### Adding New Articles
-
-1. Create a new markdown file in `shared/data/articles/`
-2. Follow the naming convention: `YYYY-MM-DD_publication_title-slug.md`
-3. Include proper frontmatter (see CMS.md for schema)
-4. Commit and push changes
-5. Trigger revalidation (optional, or wait for next deployment)
-
-### Content Revalidation
-
-The application supports on-demand revalidation via API endpoint:
+Contributions are private pending records. An administrator can approve or
+reject one with the runtime-only `ADMIN_API_TOKEN`; publishing copies only the
+selected restoration into a separate public-gallery location and does not
+expose the original upload or its private session URL.
 
 ```bash
-POST /api/revalidate?secret=YOUR_REVALIDATE_SECRET
+curl -X PATCH 'https://saroop.mereka.dev/api/gallery?id=GALLERY_ID' \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN" \
+  -H 'Content-Type: application/json' \
+  --data '{"status":"published"}'
 ```
 
-Optional parameters:
-- `path=/articles` - Revalidate specific path
-- `tag=articles` - Revalidate by cache tag
+Use `{"status":"rejected"}` to keep the record private. Delete a record with
+the same bearer token and `DELETE /api/gallery?id=GALLERY_ID`.
 
-### Environment-specific Configuration
+## Content updates
 
-#### Production
-- ISR enabled with 1-hour revalidation
-- Image optimization enabled
-- Metadata properly configured
+Article Markdown and source scans are source-controlled. A normal content
+change is deployed with its Git commit. If immediate cache refresh is required,
+use the protected endpoint:
 
-#### Development
-- Hot reload for content changes
-- Debug information available
-- Local image serving
-
-## Alternative Deployment Options
-
-### Static Export (GitHub Pages, Netlify)
-
-1. Enable static export in `next.config.js`:
-```javascript
-output: 'export',
-trailingSlash: true,
+```text
+POST /api/revalidate?secret=REVALIDATE_SECRET
 ```
 
-2. Build static files:
+Use `path` or `tag` parameters only when the target is understood; the default
+refreshes archive article routes.
+
+## Rollback and recovery
+
+To roll back application code, redeploy a previously verified Git commit from
+Coolify. Do not delete, recreate, or mount over `/data` during that rollback.
+Back up the persistent volume before any storage migration and prove a restore
+with a test session after recovery.
+
+For a Docker-managed Coolify volume, run the backup from the Coolify worker
+after substituting the actual volume name shown by `docker volume ls`:
+
 ```bash
-npm run build
+docker run --rm -v VOLUME_NAME:/data:ro -v /var/backups/saroop:/backup \
+  alpine tar -C /data -czf /backup/saroop-data-YYYYMMDD.tgz .
+sha256sum /var/backups/saroop/saroop-data-YYYYMMDD.tgz
 ```
 
-3. Deploy the `out` directory to your static hosting service
+Prove recovery into a disposable volume before relying on a backup:
 
-### Docker Deployment
-
-1. Use the provided Dockerfile (if available) or create:
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-### Self-hosted
-
-1. Build the application:
 ```bash
-npm run build
+docker volume create saroop-restore-proof
+docker run --rm -v saroop-restore-proof:/data -v /var/backups/saroop:/backup:ro \
+  alpine sh -c 'tar -C /data -xzf /backup/saroop-data-YYYYMMDD.tgz && find /data -type f | sort'
+docker volume rm saroop-restore-proof
 ```
 
-2. Start the production server:
-```bash
-npm start
-```
-
-## Performance Optimization
-
-The application is optimized for performance:
-
-- **Static Generation**: All articles pre-rendered at build time
-- **ISR**: Content updates without full rebuilds
-- **Image Optimization**: Next.js Image component (recommended upgrade)
-- **Bundle Optimization**: Code splitting and tree shaking
-- **Caching**: Proper cache headers and revalidation strategy
-
-## Monitoring and Maintenance
-
-### Build Verification
-
-Always verify successful builds:
-```bash
-npm run build
-npm run start
-```
-
-### Content Validation
-
-The application includes content validation:
-- Markdown parsing verification
-- Frontmatter schema validation
-- Image path verification
-
-### Performance Monitoring
-
-Use Vercel Analytics or similar tools to monitor:
-- Page load times
-- Core Web Vitals
-- User engagement metrics
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Build Failures**
-   - Check TypeScript errors
-   - Verify markdown frontmatter syntax
-   - Ensure all images exist
-
-2. **Content Not Updating**
-   - Verify revalidation endpoint
-   - Check ISR configuration
-   - Clear cache if necessary
-
-3. **Image Loading Issues**
-   - Verify image paths in markdown
-   - Check Next.js image configuration
-   - Ensure images are accessible
-
-### Debug Mode
-
-Enable debug logging:
-```bash
-DEBUG=* npm run dev
-```
-
-## Security Considerations
-
-- REVALIDATE_SECRET should be strong and unique
-- Enable CORS protection in production
-- Use HTTPS for all production deployments
-- Regularly update dependencies
-
-## Backup and Recovery
-
-### Content Backup
-- Git repository contains all content
-- Regular automated backups recommended
-- Export content periodically
-
-### Database-free Architecture
-The markdown-based approach provides:
-- Version control for all content
-- Easy migration between platforms
-- No database maintenance requirements
-
-## Future Enhancements
-
-Consider these improvements:
-- Image optimization with Next.js Image component
-- Search functionality
-- Comment system integration
-- Analytics implementation
-- CDN optimization for images
-
-## Support
-
-For deployment issues:
-1. Check Vercel deployment logs
-2. Verify build process locally
-3. Review configuration files
-4. Check environment variables
-
-The application is designed to be deployment-friendly with minimal configuration required for most hosting platforms.
+The retired Vercel/Python prototype is documented in
+[packages/restorations/python-restoration/ARCHIVED.md](packages/restorations/python-restoration/ARCHIVED.md)
+for historical reference only.
