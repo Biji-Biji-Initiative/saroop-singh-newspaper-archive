@@ -1,273 +1,100 @@
-# Saroop Singh Archive - Next.js Web Application
+# Saroop Singh Archive
 
-A modern, performant web application for browsing and exploring the historical newspaper archive of Saroop Singh, a pioneering athlete from Malaya (1936-1957).
+A family-led digital archive of Saroop Singh, a Sikh middle-distance runner
+documented in athletics in pre-war Malaya. The project combines a reviewed
+newspaper catalogue, best-available photographic sources, private family
+contributions, and a source-first restoration review studio.
 
-## 🚀 Features
+## Archive principles
 
-- **📰 Article Browser**: Browse 38 historical newspaper clippings with advanced search and filtering
-- **🔍 Smart Search**: Full-text search with debouncing and auto-suggestions
-- **🎯 Advanced Filtering**: Filter by people, sources, locations, tags, and date ranges
-- **📅 Timeline View**: Chronological visualization of articles grouped by year
-- **📱 Responsive Design**: Mobile-first design that works on all devices
-- **🎨 Vintage Theme**: Authentic newspaper archive aesthetic with sepia tones
-- **⚡ Performance**: Server-side rendering, static generation, and optimized images
-- **♿ Accessibility**: Keyboard navigation, ARIA labels, and semantic HTML
+- Source files remain independently downloadable and never get overwritten by
+  an AI derivative.
+- Catalogue errors are withdrawn or redirected, not quietly rewritten.
+- Family memories are private claims until a human review decision.
+- Public contributions require no account and never publish automatically.
+- AI processing is optional, default-off, recorded separately from preservation
+  consent, and blocked server-side when permission is absent.
+- Recovered legacy AI outputs are speculative experiments with unknown prompts
+  and unreliable likeness—not conservation restorations.
 
-## 🛠️ Tech Stack
+The recovered image set contains JPG/PNG source files only. Some are scans,
+some are newspaper crops or screenshots, and one is a known crop of another
+group portrait. No physical-print register, reverse scans, TIFF/DNG/RAW masters,
+or complete digitisation histories were recovered.
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS 4
-- **UI Components**: shadcn/ui
-- **Data**: Markdown files with YAML frontmatter
-- **Deployment**: Dockerized for Coolify
+## Main surfaces
 
-## 📦 Getting Started
+- `/story` — guided family exhibition
+- `/articles` — reviewed catalogue entries and source scans
+- `/timeline` and `/people` — evidence-led discovery
+- `/gallery` — source-first photographic records and optional comparisons
+- `/remember` — private names, stories, corrections, voice, fronts and backs
+- `/contribute` — multi-photo family intake with per-photo metadata
+- `/studio` — owner-only preservation, restoration review and publication
+- `/methodology` — evidence, provenance, originals and restoration policy
 
-### Prerequisites
+## Runtime and storage
 
-- Node.js 18+
-- npm or pnpm
+The current ChatGPT Sites deployment uses vinext on Cloudflare Workers, D1 for
+metadata and R2 for private source files and derivatives. Bindings are declared
+in `.openai/hosting.json`; schema migrations live in `drizzle/`.
 
-### Installation
+Important runtime values:
 
-```bash
-# Install dependencies
-npm install
+- `ARCHIVE_ADMIN_EMAILS` — comma-separated owner allowlist
+- `OPENAI_API_KEY` — optional GPT Image restoration provider
+- `GEMINI_API_KEY` — optional Gemini image provider
+- `NEXT_PUBLIC_SITE_ORIGIN` — canonical public origin for metadata, sitemap,
+  sharing and QR codes
+- `ARCHIVE_REVALIDATE_SECRET` — optional private revalidation credential
 
-# Run development server
-npm run dev
-
-# Open http://localhost:3000
-```
-
-## 🗂️ Project Structure
-
-```
-packages/web/
-├── app/                    # Next.js App Router pages
-│   ├── articles/          # Article listing and detail pages
-│   ├── timeline/          # Timeline view page
-│   ├── about/             # About page
-│   └── api/               # API routes
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components
-│   ├── article-*.tsx     # Article-specific components
-│   ├── filter-*.tsx      # Filter components
-│   └── timeline-*.tsx    # Timeline components
-├── lib/                   # Utilities and data fetching
-│   ├── articles.ts       # Article data functions
-│   ├── markdown.ts       # Markdown parsing
-│   └── types.ts          # TypeScript types
-├── data/                  # Content
-│   └── articles/         # Markdown article files
-└── public/               # Static assets
-```
-
-## 📝 Available Scripts
+Run:
 
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm start           # Start production server
-npm run lint        # Run ESLint
-npm run type-check  # Run TypeScript type checking
-npm run format      # Format code with Prettier
-npm run format:check # Check code formatting
+npm ci
+npm run lint
+npm test
+npm run db:generate   # only after editing db/schema.ts
 ```
 
-## 🎯 Key Features
+`npm test` builds the production Worker, validates the Sites artifact, verifies
+source/media integrity, and runs the regression suite.
 
-### Article Management
+## Restoration contract
 
-- Server-side rendering for SEO
-- Static generation for article pages
-- Dynamic metadata for each article
-- Related article suggestions
+The family chooses one of three optional intentions: Clean & preserve, Repair
+damage, or Explore colour. The owner chooses the engine in the advanced panel.
+Each run records the exact provider model, versioned prompt, preset and output
+checksum. Gemini calls use stateless storage settings. Outputs with material
+aspect-ratio drift are rejected before storage, and publication requires an
+explicit human comparison checklist.
 
-### Search & Filter System
+The slider is a review instrument, not proof of geometric registration. Legacy
+pairs have different canvases and are disclosed as illustrative comparisons.
+Fresh output still requires human landmark/alignment inspection.
 
-- Real-time search with 300ms debounce
-- Multi-criteria filtering
-- Filter suggestions based on data
-- Active filter badges with removal
+## Deployment warning
 
-### Timeline Visualization
+ChatGPT Sites strips spoofed `oai-authenticated-*` identity headers before the
+application sees them. A generic Coolify/Vercel proxy does not automatically
+provide that trust boundary. Do not expose the current owner routes on another
+host by merely forwarding those headers.
 
-- Articles grouped by year
-- Decade quick filters
-- Expandable article groups
-- Chronological sorting
+Before a non-Sites deployment:
 
-### Performance Optimizations
+1. add a real signed OIDC/session adapter;
+2. strip all inbound `oai-authenticated-*` headers at the public proxy;
+3. inject identity only from a trusted internal hop;
+4. require `ARCHIVE_ADMIN_EMAILS` and fail closed;
+5. provision persistent SQL/object storage and run every migration;
+6. set `NEXT_PUBLIC_SITE_ORIGIN` to the final domain;
+7. configure request-body, rate, concurrency and storage quotas;
+8. verify backup, restore and withdrawal procedures.
 
-- Image optimization with Next.js Image
-- Code splitting and lazy loading
-- Static generation where possible
-- Efficient data caching
+## Preservation exports
 
-## 🔧 Data Integration
-
-The application works with the monorepo's content structure:
-
-- Article data: `../../content/articles/published/`
-- Images: `../../content/media/`
-- Metadata: `../../content/metadata/`
-
-Articles are stored as Markdown files with YAML frontmatter:
-
-```yaml
----
-title: "Article Title"
-date: "1937-07-18"
-date_text: "18 July 1937"
-source: "The Straits Times, Page 15"
-location: "Kuala Lumpur"
-people:
-  - "Saroop Singh"
-  - "Other Person"
-tags: ["athletics", "records"]
-image: "../../assets/images/article.jpg"
----
-Article content in Markdown...
-```
-
-## 🎨 Customization
-
-### Theming
-
-The application uses a custom vintage newspaper theme:
-
-- `vintage.*` - Warm brown tones
-- `sepia.*` - Aged yellow/brown tones
-
-Colors are defined in `tailwind.config.ts`.
-
-### Typography
-
-- **Inter** - Modern sans-serif for body text and UI
-- **Playfair Display** - Elegant serif for headlines
-
-### Components
-
-UI components are built with shadcn/ui and can be customized in `components/ui/`.
-
-## 🚀 Deployment
-
-### Coolify (Production)
-
-The repository-root Dockerfile builds this package and the published archive
-content together. Deploy that image through Coolify, expose port `3000`, and
-attach durable storage at `/data`. The target public domain is
-`https://saroop.mereka.dev`.
-
-### Environment Variables
-
-For local development, create `.env.local` only if needed. Production values
-are managed in Infisical and injected by Coolify:
-
-```env
-GEMINI_API_KEY=development-only-key
-ARCHIVE_DATA_DIR=archive-data
-```
-
-See the root [deployment guide](../../DEPLOYMENT-GUIDE.md) for production
-variables, volume requirements, and verification steps.
-
-## 📊 Performance Metrics
-
-- **Lighthouse Score**: 95+ (Performance, Accessibility, SEO)
-- **Core Web Vitals**: All green
-- **Bundle Size**: Optimized with code splitting
-- **Load Time**: < 2s on 3G networks
-
-## 📚 API
-
-### Search API
-
-```typescript
-GET /api/search
-Query parameters:
-{
-  query?: string
-  people?: string[]
-  sources?: string[]
-  locations?: string[]
-  tags?: string[]
-  dateFrom?: string
-  dateTo?: string
-  sortBy?: 'date' | 'title' | 'source'
-  sortOrder?: 'asc' | 'desc'
-}
-```
-
-### Articles API
-
-```typescript
-GET / api / articles;
-GET / api / articles / [slug];
-GET / api / unique - values;
-```
-
-## 🏗️ Architecture Decisions
-
-- **App Router**: Next.js 15's stable App Router for better performance
-- **TypeScript**: Type safety and better developer experience
-- **Tailwind CSS 4**: Rapid, consistent styling with custom design system
-- **shadcn/ui**: Accessible, customizable UI components
-- **Server Components**: Better performance with React Server Components
-- **Static Generation**: Using SSG where possible for optimal performance
-
-## 🧪 Development
-
-### Component Development
-
-```tsx
-import { Button } from "@/components/ui/button"
-import { ArticleCard } from "@/components/article-card"
-
-// Use pre-built components
-<Button variant="vintage">Browse Archive</Button>
-<ArticleCard article={article} variant="featured" />
-```
-
-### Data Fetching
-
-```typescript
-import { getAllArticles, searchArticles } from "@/lib/articles";
-
-// Server component
-const articles = await getAllArticles();
-
-// With filters
-const filtered = await searchArticles({
-  query: "athletics",
-  people: ["Saroop Singh"],
-  dateFrom: "1936-01-01",
-});
-```
-
-## 🤝 Contributing
-
-1. Follow existing code style
-2. Run `npm run lint` and `npm run type-check`
-3. Use conventional commit messages
-4. Ensure responsive design works
-5. Test on multiple browsers
-
-## 📄 License
-
-MIT License - See LICENSE file for details
-
-## 🙏 Acknowledgments
-
-- Historical content from Malaysian newspapers (1936-1957)
-- Built with Next.js, React, and Tailwind CSS
-- UI components from shadcn/ui
-- Archive of Saroop Singh's athletic achievements
-
----
-
-**Documentation**: [View Full Docs](./docs)
-**Issues**: [Report Issues](https://github.com/your-repo/issues)
-**Live Demo**: Coming Soon
+`/api/archive/manifest` publishes checksums for recovered gallery sources,
+legacy experiments and active article scans. The owner Studio metadata export
+includes image records, restoration runs, audit events and private memory
+metadata. Media bytes still require a separate versioned object-storage backup
+and tested restore process.

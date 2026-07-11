@@ -1,0 +1,62 @@
+{
+  "id": "gemini-extended-indian-family-group-portrait-1970s-formal",
+  "title": "Formal family group portrait",
+  "date": "Date unknown",
+  "submittedAt": "2025-08-31T11:03:23.258Z",
+  "isPublic": true,
+  "metadata": {
+    "title": "Formal family group portrait",
+    "date": "Date unknown",
+    "dateConfidence": "unknown",
+    "sourceType": "recovered family-photo JPEG; physical print and digitisation history unknown",
+    "familyMember": "People not yet identified",
+    "tags": [
+      "Portrait",
+      "Family",
+      "Group Photo",
+      "Identity research"
+    ],
+    "isPublic": true,
+    "description": "A recovered formal group portrait. Identities, date, location, physical custodian and digitisation history remain unknown."
+  },
+  "thumbnailUrl": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-original.jpg",
+  "restorations": [
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-1",
+      "type": "enhanced",
+      "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-1.png",
+      "createdAt": "2025-08-31T11:03:23.239Z"
+    },
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-2",
+      "type": "colorized",
+      "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-2.png",
+      "createdAt": "2025-08-31T11:03:23.242Z"
+    },
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-3",
+      "type": "repaired",
+      "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-3.png",
+      "createdAt": "2025-08-31T11:03:23.245Z"
+    },
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-4",
+      "type": "denoised",
+      "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-4.png",
+      "createdAt": "2025-08-31T11:03:23.250Z"
+    },
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-5",
+      "type": "sharpened",
+      "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-5.png",
+      "createdAt": "2025-08-31T11:03:23.254Z"
+    },
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-6",
+      "type": "artistic",
+      "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-6.png",
+      "createdAt": "2025-08-31T11:03:23.258Z"
+    }
+  ],
+  "originalImageUrl": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-original.jpg"
+}

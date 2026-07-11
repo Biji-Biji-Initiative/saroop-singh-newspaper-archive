@@ -1,0 +1,1077 @@
+{
+  "schemaVersion": 3,
+  "collection": "Saroop Singh Archive — recovered source corpus",
+  "fixityAlgorithm": "SHA-256",
+  "counts": {
+    "collections": 7,
+    "bestAvailableSources": 7,
+    "legacyAiExperiments": 36,
+    "articleScans": 36
+  },
+  "totalBytes": 63894632,
+  "collections": [
+    {
+      "id": "gemini-extended-family-portrait-1970s-group",
+      "title": "Extended family group portrait",
+      "assertedDate": "Date unknown",
+      "dateConfidence": "unknown",
+      "sourceType": "recovered family-photo JPEG; physical print and digitisation history unknown",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-original.jpg",
+        "filename": "gemini-extended-family-portrait-1970s-group-original.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 362164,
+        "sha256": "bb21470c4b9375e8f6d1e47088e4447753842d7f27e236691044c00d2457198d",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": [
+        {
+          "id": "gemini-extended-family-portrait-1970s-group-restoration-1",
+          "type": "enhanced",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-1.png",
+          "filename": "gemini-extended-family-portrait-1970s-group-restoration-1.png",
+          "mimeType": "image/png",
+          "bytes": 1683782,
+          "sha256": "5c220c923d3dee7630b119358ce9ad0bc44e288000d63bb3fc265c4ab1b88a95",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-family-portrait-1970s-group-restoration-2",
+          "type": "colorized",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-2.png",
+          "filename": "gemini-extended-family-portrait-1970s-group-restoration-2.png",
+          "mimeType": "image/png",
+          "bytes": 1744662,
+          "sha256": "f0eb99faec5a8fc1613359b7d78ef8767ffb6b7e3abd388da23e203dd69b08a5",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-family-portrait-1970s-group-restoration-3",
+          "type": "repaired",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-3.png",
+          "filename": "gemini-extended-family-portrait-1970s-group-restoration-3.png",
+          "mimeType": "image/png",
+          "bytes": 1679860,
+          "sha256": "30e22526f7c394ad2ccd679adc85dbe7049317822dda37d83a03d9e5d0b9dc7c",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-family-portrait-1970s-group-restoration-4",
+          "type": "denoised",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-4.png",
+          "filename": "gemini-extended-family-portrait-1970s-group-restoration-4.png",
+          "mimeType": "image/png",
+          "bytes": 1754635,
+          "sha256": "203a5fa7d0f462d2c21d2dfbd3e1cba41618b5947a6b12226ebc8fbc2d6f7efe",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-family-portrait-1970s-group-restoration-5",
+          "type": "sharpened",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-5.png",
+          "filename": "gemini-extended-family-portrait-1970s-group-restoration-5.png",
+          "mimeType": "image/png",
+          "bytes": 1742002,
+          "sha256": "fe50ba9b571daeaa84fd37aa7e342b59544ff336faf7ff3f1b64448354f4cfe9",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-family-portrait-1970s-group-restoration-6",
+          "type": "artistic",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-6.png",
+          "filename": "gemini-extended-family-portrait-1970s-group-restoration-6.png",
+          "mimeType": "image/png",
+          "bytes": 1649406,
+          "sha256": "f6c3e3368303c271cc3eb9bc243be8ffab838f1530b5c36ac7212ce19fa823ba",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        }
+      ]
+    },
+    {
+      "id": "gemini-extended-indian-family-group-portrait-1970s-formal",
+      "title": "Formal family group portrait",
+      "assertedDate": "Date unknown",
+      "dateConfidence": "unknown",
+      "sourceType": "recovered family-photo JPEG; physical print and digitisation history unknown",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-original.jpg",
+        "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-original.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 83385,
+        "sha256": "8a88efa082c87d8f399ca83ae6c15cd2a61440e0da14a2374eaf97138fbfda47",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": [
+        {
+          "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-1",
+          "type": "enhanced",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-1.png",
+          "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-1.png",
+          "mimeType": "image/png",
+          "bytes": 1536418,
+          "sha256": "2c5768d9caefa0fe924af5071dde6f4eca5c536a9a83d610d3a9bdfe5c692385",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-2",
+          "type": "colorized",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-2.png",
+          "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-2.png",
+          "mimeType": "image/png",
+          "bytes": 1658255,
+          "sha256": "4d7d64521c6ecdcdd80a11176c478faa5bf0d56d609ec1185c9cb37b312813b3",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-3",
+          "type": "repaired",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-3.png",
+          "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-3.png",
+          "mimeType": "image/png",
+          "bytes": 1667067,
+          "sha256": "229470e7ba0dcee7b88025cf11491f342ede67b2d3481af65a4462c056125e59",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-4",
+          "type": "denoised",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-4.png",
+          "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-4.png",
+          "mimeType": "image/png",
+          "bytes": 1656154,
+          "sha256": "c678157f18fcac026e6ea95f97f08648a7a89c9f8650d00f29e00529a235a6c5",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-5",
+          "type": "sharpened",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-5.png",
+          "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-5.png",
+          "mimeType": "image/png",
+          "bytes": 1650754,
+          "sha256": "be05e5c217551dd49c3e520b84f31bd5d8d93c7ca92ea013fd86f0b75d0c454e",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-6",
+          "type": "artistic",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-extended-indian-family-group-portrait-1970s-formal-restoration-6.png",
+          "filename": "gemini-extended-indian-family-group-portrait-1970s-formal-restoration-6.png",
+          "mimeType": "image/png",
+          "bytes": 1748323,
+          "sha256": "01dcfe1e2c4a328a1e3aed7f964545418f2b4d770dbeacb74dfe22523da48a3d",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        }
+      ]
+    },
+    {
+      "id": "gemini-portrait-of-a-young-man-in-a-turban-vintage-monochrome",
+      "title": "Portrait of an unidentified young Sikh man",
+      "assertedDate": "Date unknown",
+      "dateConfidence": "unknown",
+      "sourceType": "recovered family-photo JPEG; physical print and digitisation history unknown",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/gemini-portrait-of-a-young-man-in-a-turban-vintage-monochrome-original.jpg",
+        "filename": "gemini-portrait-of-a-young-man-in-a-turban-vintage-monochrome-original.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 431690,
+        "sha256": "0dcfa89fa93e8e484edba2c57b71bab644c744fc4982c68e5a67dd138f97f154",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": []
+    },
+    {
+      "id": "gemini-sardar-and-sardarni-india-1950s-portrait",
+      "title": "Portrait of an unidentified Sikh couple",
+      "assertedDate": "Date unknown",
+      "dateConfidence": "unknown",
+      "sourceType": "recovered family-photo JPEG; physical print and digitisation history unknown",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-original.jpg",
+        "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-original.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 102128,
+        "sha256": "fe14eb4943e2f36ce411746e7b6cb9afd4ca6057ddcfce8cd903618f3b9c1181",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": [
+        {
+          "id": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-1",
+          "type": "enhanced",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-restoration-1.png",
+          "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-1.png",
+          "mimeType": "image/png",
+          "bytes": 1617018,
+          "sha256": "d5593feb41e1335cfc08c26eb31855a595a9079bfb8a80316b566f91768cc0a2",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-2",
+          "type": "colorized",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-restoration-2.png",
+          "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-2.png",
+          "mimeType": "image/png",
+          "bytes": 1742277,
+          "sha256": "9ffc8d94b171cf5a0a591b3531d12ad64c038584ad800c31cddc6a98b7d5f850",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-3",
+          "type": "repaired",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-restoration-3.png",
+          "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-3.png",
+          "mimeType": "image/png",
+          "bytes": 1683002,
+          "sha256": "91448a2ad8f0c2adb5a3817a55d2bb29f764041587b1c19263ce803f6d39a178",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-4",
+          "type": "denoised",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-restoration-4.png",
+          "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-4.png",
+          "mimeType": "image/png",
+          "bytes": 1600431,
+          "sha256": "4b10a5643f8d4743e9583f7bf96282060828c07103dfadf9994268d7821e840d",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-5",
+          "type": "sharpened",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-restoration-5.png",
+          "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-5.png",
+          "mimeType": "image/png",
+          "bytes": 1599593,
+          "sha256": "798b1f1d2c022e0a929616c7e54dd1ed61d6b6e067791f3643686c309aca1777",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-6",
+          "type": "artistic",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sardar-and-sardarni-india-1950s-portrait-restoration-6.png",
+          "filename": "gemini-sardar-and-sardarni-india-1950s-portrait-restoration-6.png",
+          "mimeType": "image/png",
+          "bytes": 1664897,
+          "sha256": "e06f747995eb905ad78a0695547272eebcbda3bfe377611dedef6f2c44023c2e",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        }
+      ]
+    },
+    {
+      "id": "gemini-saroop-singh-running1",
+      "title": "M. Thomas and Saroop Singh after a mile race",
+      "assertedDate": "Publication date not visible",
+      "dateConfidence": "unknown",
+      "sourceType": "newspaper photograph crop from a Tribune page; not a family-print scan",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/gemini-saroop-singh-running1-original.jpg",
+        "filename": "gemini-saroop-singh-running1-original.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 116939,
+        "sha256": "d21b39f23c5a3b33449154f8ab79cf590447cc79bc5553dcce603b122f43871e",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": [
+        {
+          "id": "gemini-saroop-singh-running1-restoration-1",
+          "type": "enhanced",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running1-restoration-1.png",
+          "filename": "gemini-saroop-singh-running1-restoration-1.png",
+          "mimeType": "image/png",
+          "bytes": 1501864,
+          "sha256": "d6e54c475650119de5acd5c8226a7c596a1639f44853d1cb199db525d4bb5142",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running1-restoration-2",
+          "type": "colorized",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running1-restoration-2.png",
+          "filename": "gemini-saroop-singh-running1-restoration-2.png",
+          "mimeType": "image/png",
+          "bytes": 1557110,
+          "sha256": "47e738cdf13723136741a4aa4c16f048a994e1bf5423d10bb0243fa375fa81c8",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running1-restoration-3",
+          "type": "repaired",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running1-restoration-3.png",
+          "filename": "gemini-saroop-singh-running1-restoration-3.png",
+          "mimeType": "image/png",
+          "bytes": 1686829,
+          "sha256": "7589d160ebdd570c6ef0b042c7ae58d257d61a099f5e9f4dab0e22a9cdae68b2",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running1-restoration-4",
+          "type": "denoised",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running1-restoration-4.png",
+          "filename": "gemini-saroop-singh-running1-restoration-4.png",
+          "mimeType": "image/png",
+          "bytes": 1815047,
+          "sha256": "d1650eeaf5f8fe5123d5a2cdb57538b443a9854801d858597f540517f4c83e87",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running1-restoration-5",
+          "type": "sharpened",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running1-restoration-5.png",
+          "filename": "gemini-saroop-singh-running1-restoration-5.png",
+          "mimeType": "image/png",
+          "bytes": 1640901,
+          "sha256": "e5e413efb7aaad9f055b99bbc60e94d99bc9f340461ae4ce5695e94a3acc37a9",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running1-restoration-6",
+          "type": "artistic",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running1-restoration-6.png",
+          "filename": "gemini-saroop-singh-running1-restoration-6.png",
+          "mimeType": "image/png",
+          "bytes": 1676758,
+          "sha256": "5cf423d2ef174e13245b0756d01bde5d66c615b19e5389d2510bac1113dc11c7",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        }
+      ]
+    },
+    {
+      "id": "gemini-saroop-singh-running2",
+      "title": "Saroop Singh — half-mile winner portrait",
+      "assertedDate": "19 July 1937",
+      "dateConfidence": "confirmed publication date",
+      "sourceType": "screenshot crop from The Straits Times, page 15; not a family-print scan",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/saroop-singh-running2.png",
+        "filename": "saroop-singh-running2.png",
+        "mimeType": "image/png",
+        "bytes": 658451,
+        "sha256": "1bcaf30c73efe883095356e97b1c35eb6eb6862f799f8b02ae65e32bac3f4670",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": [
+        {
+          "id": "gemini-saroop-singh-running2-restoration-1",
+          "type": "enhanced",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running2-restoration-1.png",
+          "filename": "gemini-saroop-singh-running2-restoration-1.png",
+          "mimeType": "image/png",
+          "bytes": 1653615,
+          "sha256": "2f9cec57968873a389ad78279d6e0e15cfafb80edb1974222821b319f97264b6",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running2-restoration-2",
+          "type": "colorized",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running2-restoration-2.png",
+          "filename": "gemini-saroop-singh-running2-restoration-2.png",
+          "mimeType": "image/png",
+          "bytes": 1507385,
+          "sha256": "c5c564fab0a38661bed86847128df8201315a1883bdfa6142ab361ac364db292",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running2-restoration-3",
+          "type": "repaired",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running2-restoration-3.png",
+          "filename": "gemini-saroop-singh-running2-restoration-3.png",
+          "mimeType": "image/png",
+          "bytes": 1694937,
+          "sha256": "f0c634b50f8bb1699d1bf2402e33c814c3809477dc1512c3f22079db5d947e71",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running2-restoration-4",
+          "type": "denoised",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running2-restoration-4.png",
+          "filename": "gemini-saroop-singh-running2-restoration-4.png",
+          "mimeType": "image/png",
+          "bytes": 1459399,
+          "sha256": "14f52f68d381de64de3d34987b60ceaaddab870849a0a8afe05e5df36c24c04a",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running2-restoration-5",
+          "type": "sharpened",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running2-restoration-5.png",
+          "filename": "gemini-saroop-singh-running2-restoration-5.png",
+          "mimeType": "image/png",
+          "bytes": 1483083,
+          "sha256": "b64db3018d4c4c3550e787ffd7381d8ac536f157ab0d692c24741e4ef6727f2c",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-saroop-singh-running2-restoration-6",
+          "type": "artistic",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-saroop-singh-running2-restoration-6.png",
+          "filename": "gemini-saroop-singh-running2-restoration-6.png",
+          "mimeType": "image/png",
+          "bytes": 1430168,
+          "sha256": "e811f40f559e4fb332a05fe0f5e0ccfd6d42e01077f7b88460aab374dd657663",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        }
+      ]
+    },
+    {
+      "id": "gemini-sikh-couple-portrait-1980s-family-photo",
+      "title": "Cropped portrait of an unidentified Sikh couple",
+      "assertedDate": "Date unknown",
+      "dateConfidence": "unknown",
+      "sourceType": "derived crop of the formal family group portrait; not an independent source photograph",
+      "original": {
+        "role": "best-available-source",
+        "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-original.jpg",
+        "filename": "gemini-sikh-couple-portrait-1980s-family-photo-original.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 78400,
+        "sha256": "ef2137829f18a931ce2f036e1b29b151430429879e1e4f5510e8395e75a2f985",
+        "provenanceStatus": "recovered-legacy-source-scan-screenshot-or-crop"
+      },
+      "studies": [
+        {
+          "id": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-1",
+          "type": "enhanced",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-restoration-1.png",
+          "filename": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-1.png",
+          "mimeType": "image/png",
+          "bytes": 1627082,
+          "sha256": "063ad476898427c4c6090d77303a5bb850b13adc41f8da98fbeb3b86286eeaad",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-2",
+          "type": "colorized",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-restoration-2.png",
+          "filename": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-2.png",
+          "mimeType": "image/png",
+          "bytes": 1659719,
+          "sha256": "ff7c62a0d7e6894a0d735cf20edcc1bd9cc552eabf3c891daa8796df966ff676",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-3",
+          "type": "repaired",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-restoration-3.png",
+          "filename": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-3.png",
+          "mimeType": "image/png",
+          "bytes": 1647591,
+          "sha256": "6bc4c5f5e6b3422427bb57ad85f5ea0e7cde766e6c6269640f9fe7c83d2172ae",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-4",
+          "type": "denoised",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-restoration-4.png",
+          "filename": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-4.png",
+          "mimeType": "image/png",
+          "bytes": 1681827,
+          "sha256": "a4e583a15fdae9ef2ca4ee8547d90f06395c70d4bb728890e33815b3224d1e80",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-5",
+          "type": "sharpened",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-restoration-5.png",
+          "filename": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-5.png",
+          "mimeType": "image/png",
+          "bytes": 1814814,
+          "sha256": "6323020259f2843335353b1ad1cd452a59941cc2b2489a8ac36ac56026a13bd0",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        },
+        {
+          "id": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-6",
+          "type": "artistic",
+          "role": "legacy-ai-experiment",
+          "url": "/gallery-images/gemini-sikh-couple-portrait-1980s-family-photo-restoration-6.png",
+          "filename": "gemini-sikh-couple-portrait-1980s-family-photo-restoration-6.png",
+          "mimeType": "image/png",
+          "bytes": 1714838,
+          "sha256": "f75ccb078c15180296dd4ea87d66d6cb72c8b59fc2b944cfb62856fc1940e6e4",
+          "provenanceStatus": "speculative-derivative-exact-model-and-prompt-unknown"
+        }
+      ]
+    }
+  ],
+  "articleScans": [
+    {
+      "slug": "1936-07-18_straits-times_athletic-results-saroop-singh",
+      "title": "Athletic Results - Victoria Institution Sports",
+      "publication": "The Straits Times",
+      "dateText": "1936-07-18",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1936-07-18_straits-times_athletic-results-saroop-singh-mile-race.jpg",
+        "filename": "1936-07-18_straits-times_athletic-results-saroop-singh-mile-race.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 56070,
+        "sha256": "d10b078f5c66fd7f7d7df7edb6e63619bb00d6289a487e16b565a106138478f8",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-16_unknown-newspaper_some-good-times-recorded",
+      "title": "Some Good Times Recorded",
+      "publication": "(newspaper not visible), Page (not visible)",
+      "dateText": "16 July 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-16_unknown-newspaper_some-good-times-recorded.jpg",
+        "filename": "1937-07-16_unknown-newspaper_some-good-times-recorded.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 81179,
+        "sha256": "236db7db4ebe6a6dd37ade3d72474c7b2bbbe00fa6856a9ec3956c55422ddeee",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-17_singapore-free-press_selangor-aa-meeting-opens",
+      "title": "Selangor A.A. Meeting Opens",
+      "publication": "The Singapore Free Press and Mercantile Advertiser, Page 15",
+      "dateText": "17 July 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-17_singapore-free-press_selangor-aa-meeting-opens.jpg",
+        "filename": "1937-07-17_singapore-free-press_selangor-aa-meeting-opens.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 72402,
+        "sha256": "5d029d99025fa5ad7c567d96dd10e930685103b11505c7c09a9a85e901f64772",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-17_unknown-newspaper_selangor-athletic-championships-sikh-runner-record",
+      "title": "Selangor Athletic Championships - Sikh Runner's State Record For Half-Mile",
+      "publication": "(newspaper not visible), Page (not visible)",
+      "dateText": "17 July 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-17_unknown-newspaper_selangor-athletic-championships-sikh-runner-record.jpg",
+        "filename": "1937-07-17_unknown-newspaper_selangor-athletic-championships-sikh-runner-record.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 58931,
+        "sha256": "66a3dab2178c0cfeac9ba119c4e870d732bc5049d64992ed12e7797dec28b4ea",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-18_straits-times_selangor-athletic-meeting-saroop-singh-record",
+      "title": "Selangor Athletic Meeting - Saroop Singh Sets New Record",
+      "publication": "The Straits Times, Page 10",
+      "dateText": "18 July 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-18_straits-times_selangor-athletic-meeting-saroop-singh-record.jpg",
+        "filename": "1937-07-18_straits-times_selangor-athletic-meeting-saroop-singh-record.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 67124,
+        "sha256": "4bc9dbf789243899e0874f08dc455f3a3dc5e07bb1a56104b1c5be73137adb3a",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-19_straits-times_saroop-singh-half-mile-winner-state-record-photo",
+      "title": "Saroop Singh - Half-Mile Winner in State Record Time (Photo)",
+      "publication": "The Straits Times, Page 15",
+      "dateText": "19 July 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-19_straits-times_saroop-singh-half-mile-winner-state-record-photo.jpg",
+        "filename": "1937-07-19_straits-times_saroop-singh-half-mile-winner-state-record-photo.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 74367,
+        "sha256": "24e8cc811083e8ed5879feabac30f97734840343efb4d1776e2df9a10888c5c3",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-19_straits-times_selangor-athletic-championships-full-page",
+      "title": "Selangor Athletic Championships - Sikh Runner's State Record For The Half-Mile",
+      "publication": "The Straits Times, Page 15",
+      "dateText": "Monday, July 19, 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-19_straits-times_selangor-athletic-championships-full-page.jpg",
+        "filename": "1937-07-19_straits-times_selangor-athletic-championships-full-page.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 133181,
+        "sha256": "609d6445cceb03c0acdd33da0a6662b8fa878abe49adcbd2b01cf1d0f2269dc4",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-07-24_morning-tribune_half-mile-record-broken-at-selangor-aaa-meet",
+      "title": "Half‑mile Record Broken at Selangor AAA Meet",
+      "publication": "Morning Tribune, Page 6",
+      "dateText": "24 July 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-07-24_morning-tribune_half-mile-record.jpg",
+        "filename": "1937-07-24_morning-tribune_half-mile-record.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 103285,
+        "sha256": "beace816a08f0701efd7d84a2b3bf9e00c6de8457e1d17843694d1ff72c957e1",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-08-03_singapore-free-press_fmsr-annual-sports",
+      "title": "F.M.S.R. Annual Sports",
+      "publication": "The Singapore Free Press and Mercantile Advertiser, Page 13",
+      "dateText": "3 Aug 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-08-03_singapore-free-press_fmsr-annual-sports.jpg",
+        "filename": "1937-08-03_singapore-free-press_fmsr-annual-sports.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 97664,
+        "sha256": "347d9c9aeb2996097ca80dc945995b458e8f31d78227293871c050c46e55252a",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion",
+      "title": "F.M.S.R. Sports - Wong Swee Chew The Individual Champion",
+      "publication": "The Straits Times, Page 14",
+      "dateText": "3 August 1937",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion.jpg",
+        "filename": "1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 38192,
+        "sha256": "2305e1c1b63dea172a3c18592435813158b2ea1078c35afeeb5ff4615b992c68",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1938-06-17_singapore-free-press_athletic-sports-at-seremban",
+      "title": "Athletic Sports At Seremban",
+      "publication": "The Singapore Free Press and Mercantile Advertiser, Page 15",
+      "dateText": "17 June 1938",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1938-06-17_singapore-free-press_athletic-sports-seremban.jpg",
+        "filename": "1938-06-17_singapore-free-press_athletic-sports-seremban.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 84913,
+        "sha256": "f419635da4b088250f101159d4540a19c099e3b89ebf3b80707aec2dbba906b1",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1938-06-30_malaya-tribune_saaa-meeting",
+      "title": "S.A.A.A. Meeting",
+      "publication": "Malaya Tribune, Page 14",
+      "dateText": "30 June 1938",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1938-06-30_malaya-tribune_saaa-meeting.jpg",
+        "filename": "1938-06-30_malaya-tribune_saaa-meeting.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 77283,
+        "sha256": "172cedb6ad1b2b85795e3bc48b8aa3e79da7b51a7d194229b3261d462b403824",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1938-07-24_unknown-newspaper_malayan-aaa-council-olympic-games",
+      "title": "Malayan A.A.A. Council Meeting and Olympic Games Discussion",
+      "publication": "Source not visible",
+      "dateText": "Before 24 July 1937 (inferred; issue date not visible)",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1938-07-24_unknown-newspaper_malayan-aaa-council-olympic-games.jpg",
+        "filename": "1938-07-24_unknown-newspaper_malayan-aaa-council-olympic-games.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 210691,
+        "sha256": "6624ab89693cc2519de904527befb0411c317b7d4edd117e51849ea61882e15b",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1939-02-03_straits-times_inter-club-cross-country-race",
+      "title": "Inter‑Club Cross Country Race",
+      "publication": "The Straits Times, Page 18",
+      "dateText": "3 Feb 1939",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1939-02-03_straits-times_inter-club-cross-country-race.jpg",
+        "filename": "1939-02-03_straits-times_inter-club-cross-country-race.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 53428,
+        "sha256": "0a232da7892855bc921ad00ef4d3206921e3232416b5f35c05e3f66c02e9ebfe",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-01-27_pinang-gazette-straits-chronicle_six-miles-trial-in-selangor",
+      "title": "Six Miles' Trial In Selangor",
+      "publication": "Pinang Gazette and Straits Chronicle, Page 4",
+      "dateText": "27 January 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-01-27_pinang-gazette-straits-chronicle_six-miles-trial-in-selangor.jpg",
+        "filename": "1940-01-27_pinang-gazette-straits-chronicle_six-miles-trial-in-selangor.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 69590,
+        "sha256": "f0594c849a5168c636ef163b5d4950c5c3629fbd7b10a035b7334472ed9fa3bf",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-02-01_unknown-newspaper_selangor-harriers-expected-strongest-team",
+      "title": "Selangor Harriers Expected Strongest Team",
+      "publication": "(newspaper not visible), Page (not visible)",
+      "dateText": "1 Feb 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-02-01_unknown-newspaper_selangor-harriers-expected-strongest-team.jpg",
+        "filename": "1940-02-01_unknown-newspaper_selangor-harriers-expected-strongest-team.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 81827,
+        "sha256": "518f84f9cad20d9bec68f3a635c5e7c1a936c4fbeb6bdcc6a6cda8bd11c5c68d",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-02-02_straits-times_selangor-harriers-to-compete-at-ipoh",
+      "title": "Selangor Harriers To Compete At Ipoh",
+      "publication": "The Straits Times, Page 15",
+      "dateText": "2 Feb 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-02-02_straits-times_selangor-harriers-to-compete-at-ipoh.jpg",
+        "filename": "1940-02-02_straits-times_selangor-harriers-to-compete-at-ipoh.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 62583,
+        "sha256": "9986e5ba0eb5fb2d9628270ec9938c669851cfe0a42275af6d45eb834228c5dd",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-02-03_pinang-gazette-straits-chronicle_selangor-harriers-for-ipoh",
+      "title": "Selangor Harriers For Ipoh",
+      "publication": "Pinang Gazette and Straits Chronicle, Page 4",
+      "dateText": "3 Feb 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-02-03_pinang-gazette-straits-chronicle_selangor-harriers-for-ipoh.jpg",
+        "filename": "1940-02-03_pinang-gazette-straits-chronicle_selangor-harriers-for-ipoh.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 49437,
+        "sha256": "a61c3eb1c6f98697beb030d8355a1f8250c91f6354efa43a45ad29c63215941b",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-02-05_pinang-gazette-straits-chronicle_only-three-teams-entered-for-race",
+      "title": "Only Three Teams Entered For Race",
+      "publication": "Pinang Gazette and Straits Chronicle, Page 11",
+      "dateText": "5 Feb 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-02-05_pinang-gazette_only-three-teams-entered.jpg",
+        "filename": "1940-02-05_pinang-gazette_only-three-teams-entered.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 81000,
+        "sha256": "fad1cd4d9214d7109e7ce66beb865473f6c11320a796949f273fd80f85f533e6",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-02-05_unknown-newspaper_cross-country-entries-saroop-singh",
+      "title": "Nine Individual And Three Team Entries for All-Malayan Cross-Country Race",
+      "publication": "Unknown Newspaper",
+      "dateText": "1940-02-05",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-02-05_pinang-gazette_only-three-teams-entered.jpg",
+        "filename": "1940-02-05_pinang-gazette_only-three-teams-entered.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 81000,
+        "sha256": "fad1cd4d9214d7109e7ce66beb865473f6c11320a796949f273fd80f85f533e6",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-02-07_straits-times_cross-country-race-on-saturday",
+      "title": "Cross-Country Race On Saturday",
+      "publication": "The Straits Times, Page 15",
+      "dateText": "7 February 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-02-07_straits-times_cross-country-race-on-saturday.jpg",
+        "filename": "1940-02-07_straits-times_cross-country-race-on-saturday.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 73842,
+        "sha256": "c9e4336c5963549e70a308b0b70cd2e729a05294a9b5aa83e08c8ead5134f0c5",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1940-08-07_straits-times_st-john-ambulance-brigade-sports-saroop-singh",
+      "title": "St. John Ambulance Brigade Sports - Saroop Singh Wins Individual Championship",
+      "publication": "The Straits Times, Page 15",
+      "dateText": "7 August 1940",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1940-08-07_straits-times_st-john-ambulance-brigade-sports-saroop-singh.jpg",
+        "filename": "1940-08-07_straits-times_st-john-ambulance-brigade-sports-saroop-singh.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 87706,
+        "sha256": "8f36934a8e0ed8db3498da8f14e4d74b5e478542a161a212e1d29cc8ca5d9053",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1949-04-17_indian-daily-mail_first-malayan-sikh-ladies-athletic-meet",
+      "title": "First Malayan Sikh Ladies Athletic Meet",
+      "publication": "Indian Daily Mail, Page 4",
+      "dateText": "17 Apr 1949",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1949-04-17_indian-daily-mail_first-malayan-sikh-ladies-athletic-meet.jpg",
+        "filename": "1949-04-17_indian-daily-mail_first-malayan-sikh-ladies-athletic-meet.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 123744,
+        "sha256": "c4985f50a31f51dd3354cd6ad80f8a55e019529c8fe06e54fa6c2a90ed05c978",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1949-12-18_indian-daily-mail_selangor-sikh-sportsmen-singapore-visit",
+      "title": "Selangor Sikh Sportsmen To Visit Singapore During Christmas Holidays",
+      "publication": "Indian Daily Mail, Page 4",
+      "dateText": "18 December 1949",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1949-12-18_indian-daily-mail_selangor-sikh-sportsmen-singapore-visit.jpg",
+        "filename": "1949-12-18_indian-daily-mail_selangor-sikh-sportsmen-singapore-visit.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 100468,
+        "sha256": "44d64d68d40a09efd95448e21c94f38e74a2c539a5e7fd9e4106a2e88106072d",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1953-06-04_singapore-standard_selangor-hockey",
+      "title": "Selangor Hockey",
+      "publication": "Singapore Standard, Page 12",
+      "dateText": "4 June 1953",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1953-06-04_singapore-standard_selangor-hockey.jpg",
+        "filename": "1953-06-04_singapore-standard_selangor-hockey.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 46535,
+        "sha256": "ffdc1d793a4e9cba0ab5e48ed22306b2d425affdd831c1deb9531cc97d53d6a7",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "1954-11-07_straits-times_johore-police-routed-at-kl",
+      "title": "Johore Police Routed At K.L.",
+      "publication": "The Straits Times, Page 19",
+      "dateText": "7 Nov 1954",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1954-11-07_straits-times_johore-police-routed-at-kl.jpg",
+        "filename": "1954-11-07_straits-times_johore-police-routed-at-kl.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 46243,
+        "sha256": "95e5a5c25c26ceebefd1c2d492919ee5d8242c2c66bbfb149fc16d143783bbea",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_tribune_mile-race-winners-photo",
+      "title": "Mile Race Winners Photo",
+      "publication": "(Tribune), Page (not visible)",
+      "dateText": "(date not visible)",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_tribune_mile-race-winners-photo.jpg",
+        "filename": "unknown-date_tribune_mile-race-winners-photo.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 101708,
+        "sha256": "538a326b8d6141d5656aba589ed16b067faa2cc1cb30a6a134e3571972c35e6c",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_athletic-championships-entries",
+      "title": "Athletic Championship Entries - Selangor Amateur Athletic Association",
+      "publication": "Unknown Newspaper",
+      "dateText": "unknown",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/placeholder-image.svg",
+        "filename": "placeholder-image.svg",
+        "mimeType": "application/octet-stream",
+        "bytes": 606,
+        "sha256": "a2064698c6cee6210adf8febc4a9db8ceed0c2bb5263f1673cc54e3825d4ad1f",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_athletic-results-saroop-singh-mile",
+      "title": "Athletic Results Including One Mile Race",
+      "publication": "Source not visible",
+      "dateText": "Date not visible",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_unknown-newspaper_athletic-results-saroop-singh-mile.jpg",
+        "filename": "unknown-date_unknown-newspaper_athletic-results-saroop-singh-mile.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 48164,
+        "sha256": "ae2ba97675d6fd9a05d15045cf8e9d8f494bd75795e39a28ab630387d82dc946",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_fmsr-sports-saroop-singh",
+      "title": "FMSR Sports - Saroop Singh Performance",
+      "publication": "Unknown Newspaper",
+      "dateText": "unknown",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion.jpg",
+        "filename": "1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 38192,
+        "sha256": "2305e1c1b63dea172a3c18592435813158b2ea1078c35afeeb5ff4615b992c68",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_inter-state-athletic-match-seremban",
+      "title": "Inter-State Athletic Match at Seremban",
+      "publication": "Source not visible",
+      "dateText": "June 16",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_unknown-newspaper_inter-state-athletic-match-seremban.jpg",
+        "filename": "unknown-date_unknown-newspaper_inter-state-athletic-match-seremban.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 105659,
+        "sha256": "637001010ad220555d18b4b2b39b9c344cb9ced62611cd1dec4945a8ec0e7a63",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_malaya-tokyo-olympics-saroop-singh-mention",
+      "title": "Will Malaya Send Team To Tokyo Olympics? - Saroop Singh Mentioned",
+      "publication": "Source not visible",
+      "dateText": "Date not visible",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_unknown-newspaper_malaya-tokyo-olympics-saroop-singh-mention.jpg",
+        "filename": "unknown-date_unknown-newspaper_malaya-tokyo-olympics-saroop-singh-mention.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 86642,
+        "sha256": "8128351639f254dc6cb8a09fc2e43b439a753ab4e1dc73742a237dd5d6236573",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_saroop-singh-half-mile-record-improvement",
+      "title": "Saroop Singh Knocks Second Off Half Mile Record at Selangor Amateur Athletic Association",
+      "publication": "Source not visible",
+      "dateText": "Date not visible",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_unknown-newspaper_saroop-singh-half-mile-record-improvement.jpg",
+        "filename": "unknown-date_unknown-newspaper_saroop-singh-half-mile-record-improvement.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 117735,
+        "sha256": "331bbe480cb27c7fbc18d0a6b41c6e75ed65ecf48034ee1d2112e9e338d94f1d",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_saroop-singh-half-mile-winner-photo",
+      "title": "Saroop Singh Half-Mile Winner Photo",
+      "publication": "(newspaper not visible), Page (not visible)",
+      "dateText": "(date not visible)",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_unknown-newspaper_saroop-singh-half-mile-winner-photo.jpg",
+        "filename": "unknown-date_unknown-newspaper_saroop-singh-half-mile-winner-photo.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 47632,
+        "sha256": "71ea1f43713c0cadd97f88ee6b3cd538c09b263ea3b95c9c61312d38c59ee5cc",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_selangor-harriers-for-ipoh-cross-country",
+      "title": "Selangor Harriers For Ipoh Cross-Country Race",
+      "publication": "(newspaper not visible), Page (not visible)",
+      "dateText": "(date not visible)",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/images/unknown-date_unknown-newspaper_selangor-harriers-for-ipoh-cross-country.jpg",
+        "filename": "unknown-date_unknown-newspaper_selangor-harriers-for-ipoh-cross-country.jpg",
+        "mimeType": "image/jpeg",
+        "bytes": 70343,
+        "sha256": "e9e1c811ff175c3d2f878506cc0096909ae761908cc4f07194a9abb892f8c8dd",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    },
+    {
+      "slug": "unknown-date_unknown-newspaper_sports-contributions-saroop-singh",
+      "title": "Generous Contributions to Sports Events",
+      "publication": "Unknown Newspaper",
+      "dateText": "unknown",
+      "scan": {
+        "role": "newspaper-access-capture",
+        "url": "/placeholder-image.svg",
+        "filename": "placeholder-image.svg",
+        "mimeType": "application/octet-stream",
+        "bytes": 606,
+        "sha256": "a2064698c6cee6210adf8febc4a9db8ceed0c2bb5263f1673cc54e3825d4ad1f",
+        "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
+      }
+    }
+  ]
+}
