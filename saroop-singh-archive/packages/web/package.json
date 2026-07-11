@@ -8,6 +8,7 @@
     "build": "next build",
     "sync:article-images": "node scripts/sync-article-images.js",
     "validate:content": "node scripts/validate-archive-content.js",
+    "verify:gallery-submission-access": "node scripts/verify-gallery-submission-access.mjs",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",

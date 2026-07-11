@@ -225,7 +225,9 @@ export default function RestorePage() {
     details: GalleryContributionDetails
   ) => {
     try {
-      if (!sessionId) throw new Error('Restoration session is unavailable')
+      if (!sessionId || !sessionAccessToken) {
+        throw new Error('Restoration session is unavailable')
+      }
 
       const response = await fetch('/api/gallery/submit', {
         method: 'POST',
@@ -234,6 +236,7 @@ export default function RestorePage() {
         },
         body: JSON.stringify({
           sessionId,
+          sessionAccessToken,
           selectedRestorations: selectedRestorations.map(r => ({
             id: r.id,
             name: r.name,
