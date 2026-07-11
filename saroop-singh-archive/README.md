@@ -42,8 +42,11 @@ Content management system for processing newspaper clippings into structured Mar
 ### @saroop-singh-archive/clippings
 Utilities for processing newspaper clippings, including image processing and metadata extraction.
 
-### @saroop-singh-archive/restorations
-AI-powered image restoration and enhancement tools for improving historical photograph quality.
+### Restoration research
+The public restoration feature is implemented in the web package and deployed
+with the archive. Historical Python and ADK experiments are retained under
+`packages/restorations/` as non-production research; see
+[README-RESTORATION.md](README-RESTORATION.md).
 
 ## Available Scripts
 
@@ -53,7 +56,6 @@ AI-powered image restoration and enhancement tools for improving historical phot
 - `npm run lint` - Lint all packages
 - `npm run cms:dev` - Start CMS development tools
 - `npm run clippings:process` - Process newspaper clippings
-- `npm run restorations:generate` - Generate image restorations
 
 ## Migration Notes
 

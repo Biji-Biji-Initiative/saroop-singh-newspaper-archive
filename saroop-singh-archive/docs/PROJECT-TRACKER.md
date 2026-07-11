@@ -1,5 +1,10 @@
 # Saroop Singh Archive - Project Tracker
 
+> **Historical planning snapshot.** Any Vercel deployment references below
+> were superseded by the Coolify cutover. Use
+> [DEPLOYMENT-GUIDE.md](../DEPLOYMENT-GUIDE.md) for the supported production
+> path.
+
 ## Migration Progress
 
 ### Phase 1: Foundation & Setup ✅

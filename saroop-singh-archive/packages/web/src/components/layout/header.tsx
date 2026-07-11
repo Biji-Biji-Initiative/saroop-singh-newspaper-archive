@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { MobileNav } from '@/components/mobile/mobilenav';
 import { ResponsiveContainer } from '@/components/layout/responsivecontainer';
-import { HStack, Spacer } from '@/components/layout/flexlayout';
+import { HStack } from '@/components/layout/flexlayout';
 import { cn } from '@/lib/utils';
 
 const navigationItems = [

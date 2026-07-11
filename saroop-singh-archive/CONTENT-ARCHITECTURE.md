@@ -1,5 +1,9 @@
 # Saroop Singh Archive - Content Architecture Strategy
 
+> **Historical planning snapshot.** Any Vercel cost or deployment references
+> below were superseded by the Coolify cutover. Use
+> [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md) for the supported production path.
+
 ## Recommended Directory Structure
 
 ```

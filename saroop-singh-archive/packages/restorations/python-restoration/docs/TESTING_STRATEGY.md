@@ -1,5 +1,9 @@
 # Testing & Improvement Strategy for AI Restoration Pipeline
 
+> **Archived reference.** This strategy targets the retired Python/Vercel
+> prototype and must not guide production changes without a fresh design.
+> See [the archive notice](../ARCHIVED.md).
+
 > ⚠️ **DEPRECATED DOCUMENT**
 > 
 > This document contains outdated testing strategies from an earlier implementation.

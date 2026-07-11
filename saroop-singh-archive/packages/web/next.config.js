@@ -3,21 +3,16 @@ const nextConfig = {
   experimental: {
     // typedRoutes: true, // Disabled for now
   },
-  outputFileTracingRoot: __dirname,
+  outputFileTracingRoot: require('path').join(__dirname, '../..'),
   // Do not fail the build on ESLint errors in production builds
   eslint: {
     ignoreDuringBuilds: false,
   },
-  
-  // Enable ISR for better performance
-  async generateBuildId() {
-    return 'saroop-singh-archive-build'
-  },
+
   images: {
     domains: ['localhost'],
     formats: ['image/avif', 'image/webp'],
     unoptimized: false,
-    dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   // Enable static exports for GitHub Pages if needed
@@ -44,7 +39,13 @@ const nextConfig = {
 
   // Redirects for SEO
   async redirects() {
-    return []
+    return [
+      {
+        source: '/gallery-images/:path*',
+        destination: '/gallery/:path*',
+        permanent: true,
+      },
+    ]
   },
 
   // Headers for better performance

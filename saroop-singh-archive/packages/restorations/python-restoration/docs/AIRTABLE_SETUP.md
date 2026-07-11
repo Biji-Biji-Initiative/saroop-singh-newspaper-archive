@@ -1,5 +1,9 @@
 # Airtable Setup & Integration Guide
 
+> **Archived reference.** These setup steps target the retired Python/Vercel
+> prototype and must not be used against the live archive. See
+> [the archive notice](../ARCHIVED.md).
+
 ## Overview
 
 The photo restoration system uses Airtable as a content management system (CMS) for organizing restoration workflows, managing prompts, tracking photos, and monitoring system performance.

@@ -1,5 +1,9 @@
 # API Reference - Photo Restoration System
 
+> **Archived reference.** The API below is the retired Python/Vercel contract,
+> not the live archive API. Do not integrate against it; see
+> [the archive notice](../ARCHIVED.md).
+
 ## Overview
 
 The Saroop Singh Archive Photo Restoration API provides endpoints for automated vintage photograph restoration using Gemini 2.5 Flash. The API is deployed on Vercel and integrates with Airtable for workflow management.

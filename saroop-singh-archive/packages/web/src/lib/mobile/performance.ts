@@ -190,7 +190,7 @@ export class MobilePerformanceOptimizer {
     )
   }
 
-  public getOptimalImageFormat(metrics?: PerformanceMetrics): 'webp' | 'jpeg' | 'avif' {
+  public getOptimalImageFormat(): 'webp' | 'jpeg' | 'avif' {
     // Check for AVIF support
     if (this.supportsImageFormat('avif')) {
       return 'avif'
@@ -267,7 +267,7 @@ export function usePerformanceOptimization() {
     shouldReduceAnimations: metrics ? optimizer.shouldReduceAnimations(metrics) : false,
     shouldReduceImageQuality: metrics ? optimizer.shouldReduceImageQuality(metrics) : false,
     shouldLazyLoadImages: metrics ? optimizer.shouldLazyLoadImages(metrics) : true,
-    optimalImageFormat: metrics ? optimizer.getOptimalImageFormat(metrics) : 'jpeg',
+    optimalImageFormat: metrics ? optimizer.getOptimalImageFormat() : 'jpeg',
     recommendedConcurrency: metrics ? optimizer.getRecommendedConcurrency(metrics) : 2
   }
 }

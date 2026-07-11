@@ -1,5 +1,9 @@
 # Photo Restoration System Architecture
 
+> **Archived reference.** The architecture below is the retired Python/Vercel
+> prototype, not the production service. See [ARCHIVED.md](ARCHIVED.md) and
+> the root deployment guide before making operational decisions.
+
 ## Complete End-to-End Implementation
 
 > **Production Model**: Gemini 2.5 Flash (understanding + image generation)
@@ -133,48 +137,17 @@ packages/restorations/airtable/
 | **Creative Remake** | 0.7 | 0.95 | generation | Artistic reinterpretation |
 | **Document Processing** | 0.2 | 0.8 | understanding | Text extraction, OCR |
 
-## Deployment Instructions
+## Retired deployment instructions
 
-### 1. Deploy Python API to Vercel
-```bash
-cd packages/restorations
-./deploy.sh
-# Configure environment variables in Vercel dashboard
-```
+There is no supported deployment path for this prototype. The old Vercel
+manifest, CLI dependency, shell entrypoint, and deployment script were removed
+because they did not match the active archive application. Do not configure its
+Airtable automation or copy its environment variables into production.
 
-### 2. Configure Airtable
-1. Add button fields to PhotoGallery table
-2. Copy scripts from `airtable/scripts/`
-3. Set API URL in scripts to your Vercel deployment
-4. Test with single photo first
-
-### 3. Deploy Web Interface
-```bash
-cd packages/restorations/web
-npm install
-npm run build
-vercel --prod
-```
-
-### 4. Set Environment Variables
-```env
-# Gemini AI
-GEMINI_API_KEY=your-gemini-api-key
-GOOGLE_API_KEY=your-gemini-api-key  # Alternative key name
-
-# Airtable CMS
-AIRTABLE_API_KEY=your-airtable-key
-AIRTABLE_BASE_ID=appQpjCUauAy7Ut1Y
-
-# Storage & Queue
-REDIS_URL=your-redis-url
-CLOUDINARY_CLOUD_NAME=your-cloudinary-name
-CLOUDINARY_API_KEY=your-cloudinary-key
-CLOUDINARY_API_SECRET=your-cloudinary-secret
-
-# ADK System (if using alternative)
-COMPOSIO_API_KEY=your-composio-key
-```
+For the current service, deploy the repository-root Docker image with Coolify,
+use the Next.js `POST /api/restore` endpoint, and manage only its runtime
+variables through Infisical. See [ARCHIVED.md](ARCHIVED.md) for the boundary
+and [the root deployment guide](../../../DEPLOYMENT-GUIDE.md) for operations.
 
 ## Production Usage
 

@@ -1,5 +1,9 @@
 # Quick Start - Image Restoration System
 
+> **Archived reference.** This prototype is not deployed or supported. Do not
+> run its public-service or credential setup steps; see [ARCHIVED.md](ARCHIVED.md)
+> for the current Coolify/Next.js replacement.
+
 ## Running Restorations Locally (Without Airtable Automation)
 
 ### 1. Test with Local Images

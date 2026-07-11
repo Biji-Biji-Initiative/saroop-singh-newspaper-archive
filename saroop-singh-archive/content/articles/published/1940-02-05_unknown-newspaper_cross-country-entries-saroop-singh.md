@@ -19,7 +19,7 @@ tags:
   - Selangor Harriers
   - Perak Wingfoot Harriers
   - F.M.S. Police
-image: /images/1940-02-05_unknown-newspaper_cross-country-entries-saroop-singh.jpg
+image: ""
 ---
 
 # Nine Individual And Three Team Entries for All-Malayan Cross-Country Race

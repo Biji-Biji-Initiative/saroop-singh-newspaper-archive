@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ResponsiveContainer } from '@/components/layout/responsivecontainer';
-import { VStack, HStack } from '@/components/layout/flexlayout';
+import { VStack } from '@/components/layout/flexlayout';
 import { Heart } from 'lucide-react';
 
 export function Footer() {

@@ -31,7 +31,6 @@ export function PullToRefresh({
   const [pullDistance, setPullDistance] = useState(0)
   const [isPulling, setIsPulling] = useState(false)
   const [startY, setStartY] = useState(0)
-  const [currentY, setCurrentY] = useState(0)
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -44,7 +43,6 @@ export function PullToRefresh({
     if (disabled || isRefreshing || !isAtTop()) return
     
     setStartY(e.touches[0].clientY)
-    setCurrentY(e.touches[0].clientY)
   }, [disabled, isRefreshing, isAtTop])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
@@ -57,7 +55,6 @@ export function PullToRefresh({
     if (deltaY > 0 && isAtTop()) {
       e.preventDefault() // Prevent default scroll behavior
       
-      setCurrentY(currentY)
       setIsPulling(true)
       
       // Calculate pull distance with diminishing returns
@@ -85,7 +82,6 @@ export function PullToRefresh({
           setPullDistance(0)
           setIsPulling(false)
           setStartY(0)
-          setCurrentY(0)
         }, 300)
       }
     } else {
@@ -93,7 +89,6 @@ export function PullToRefresh({
       setPullDistance(0)
       setIsPulling(false)
       setStartY(0)
-      setCurrentY(0)
     }
   }, [disabled, isRefreshing, pullDistance, threshold, onRefresh])
 
@@ -103,7 +98,6 @@ export function PullToRefresh({
       setPullDistance(0)
       setIsPulling(false)
       setStartY(0)
-      setCurrentY(0)
     }
   }, [isPulling, isAtTop])
 

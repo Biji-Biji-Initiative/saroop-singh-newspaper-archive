@@ -1,5 +1,9 @@
 # Airtable Database Setup for Photo Restoration
 
+> **Archived reference.** Do not configure this database or its automations
+> against the live archive. It belongs to the retired Python/Vercel prototype;
+> see [the archive notice](../ARCHIVED.md).
+
 This document provides detailed instructions for configuring your Airtable PhotoGallery table with all the required fields for photo restoration automation.
 
 ## PhotoGallery Table Schema

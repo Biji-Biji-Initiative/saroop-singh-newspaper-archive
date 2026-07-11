@@ -1,5 +1,10 @@
 # Saroop Singh Archive - Next.js Migration Plan
 
+> **Historical planning snapshot.** Any Vercel deployment references below
+> were superseded by the Coolify cutover. Use
+> [DEPLOYMENT-GUIDE.md](../DEPLOYMENT-GUIDE.md) for the supported production
+> path.
+
 ## Project Overview
 Migrate the historical newspaper archive from Jekyll/GitHub Pages to Next.js/Vercel for better maintainability and performance.
 

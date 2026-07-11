@@ -1,5 +1,9 @@
 # Airtable Automation Setup Guide
 
+> **Archived reference.** These automation instructions target retired
+> endpoints and must not be connected to the live archive. See
+> [the archive notice](../../ARCHIVED.md).
+
 This guide walks you through setting up Airtable automations and button fields to integrate with the Saroop Singh Archive Photo Restoration API.
 
 ## Prerequisites

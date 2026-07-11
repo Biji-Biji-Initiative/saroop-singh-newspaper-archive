@@ -1,5 +1,10 @@
 # Saroop Singh Archive - AI Image Restoration System
 
+> **Archived reference.** This document describes the retired Python/Vercel
+> prototype. Do not follow its deployment or credential instructions; the
+> supported production path is the Next.js application on Coolify. See
+> [ARCHIVED.md](ARCHIVED.md).
+
 ## Clean Project Structure
 
 ```

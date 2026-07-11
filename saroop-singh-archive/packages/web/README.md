@@ -5,7 +5,7 @@ A modern, performant web application for browsing and exploring the historical n
 ## 🚀 Features
 
 - **📰 Article Browser**: Browse 38 historical newspaper clippings with advanced search and filtering
-- **🔍 Smart Search**: Full-text search with debouncing and auto-suggestions  
+- **🔍 Smart Search**: Full-text search with debouncing and auto-suggestions
 - **🎯 Advanced Filtering**: Filter by people, sources, locations, tags, and date ranges
 - **📅 Timeline View**: Chronological visualization of articles grouped by year
 - **📱 Responsive Design**: Mobile-first design that works on all devices
@@ -20,11 +20,12 @@ A modern, performant web application for browsing and exploring the historical n
 - **Styling**: Tailwind CSS 4
 - **UI Components**: shadcn/ui
 - **Data**: Markdown files with YAML frontmatter
-- **Deployment**: Optimized for Vercel
+- **Deployment**: Dockerized for Coolify
 
 ## 📦 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or pnpm
 
@@ -78,24 +79,28 @@ npm run format:check # Check code formatting
 ## 🎯 Key Features
 
 ### Article Management
+
 - Server-side rendering for SEO
 - Static generation for article pages
 - Dynamic metadata for each article
 - Related article suggestions
 
 ### Search & Filter System
+
 - Real-time search with 300ms debounce
 - Multi-criteria filtering
 - Filter suggestions based on data
 - Active filter badges with removal
 
 ### Timeline Visualization
+
 - Articles grouped by year
 - Decade quick filters
 - Expandable article groups
 - Chronological sorting
 
 ### Performance Optimizations
+
 - Image optimization with Next.js Image
 - Code splitting and lazy loading
 - Static generation where possible
@@ -104,6 +109,7 @@ npm run format:check # Check code formatting
 ## 🔧 Data Integration
 
 The application works with the monorepo's content structure:
+
 - Article data: `../../content/articles/published/`
 - Images: `../../content/media/`
 - Metadata: `../../content/metadata/`
@@ -123,48 +129,50 @@ people:
 tags: ["athletics", "records"]
 image: "../../assets/images/article.jpg"
 ---
-
 Article content in Markdown...
 ```
 
 ## 🎨 Customization
 
 ### Theming
+
 The application uses a custom vintage newspaper theme:
+
 - `vintage.*` - Warm brown tones
 - `sepia.*` - Aged yellow/brown tones
 
 Colors are defined in `tailwind.config.ts`.
 
 ### Typography
+
 - **Inter** - Modern sans-serif for body text and UI
 - **Playfair Display** - Elegant serif for headlines
 
 ### Components
+
 UI components are built with shadcn/ui and can be customized in `components/ui/`.
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
+### Coolify (Production)
 
-```bash
-# Build command
-npm run build
-
-# Output directory
-.next
-
-# Node.js Version
-18.x
-```
+The repository-root Dockerfile builds this package and the published archive
+content together. Deploy that image through Coolify, expose port `3000`, and
+attach durable storage at `/data`. The target public domain is
+`https://saroop.mereka.dev`.
 
 ### Environment Variables
 
-Create `.env.local`:
+For local development, create `.env.local` only if needed. Production values
+are managed in Infisical and injected by Coolify:
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://your-domain.com
+GEMINI_API_KEY=development-only-key
+ARCHIVE_DATA_DIR=archive-data
 ```
+
+See the root [deployment guide](../../DEPLOYMENT-GUIDE.md) for production
+variables, volume requirements, and verification steps.
 
 ## 📊 Performance Metrics
 
@@ -196,9 +204,9 @@ Query parameters:
 ### Articles API
 
 ```typescript
-GET /api/articles
-GET /api/articles/[slug]
-GET /api/unique-values
+GET / api / articles;
+GET / api / articles / [slug];
+GET / api / unique - values;
 ```
 
 ## 🏗️ Architecture Decisions
@@ -226,17 +234,17 @@ import { ArticleCard } from "@/components/article-card"
 ### Data Fetching
 
 ```typescript
-import { getAllArticles, searchArticles } from "@/lib/articles"
+import { getAllArticles, searchArticles } from "@/lib/articles";
 
 // Server component
-const articles = await getAllArticles()
+const articles = await getAllArticles();
 
 // With filters
 const filtered = await searchArticles({
   query: "athletics",
   people: ["Saroop Singh"],
-  dateFrom: "1936-01-01"
-})
+  dateFrom: "1936-01-01",
+});
 ```
 
 ## 🤝 Contributing
