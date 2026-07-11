@@ -29,7 +29,7 @@ ENV NODE_ENV=production \
     ARCHIVE_DATA_DIR=/data \
     ARCHIVE_CONTENT_DIR=/app/saroop-singh-archive/content/articles/published
 
-RUN apk add --no-cache su-exec \
+RUN apk add --no-cache curl su-exec \
   && addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 --ingroup nodejs nextjs
 
