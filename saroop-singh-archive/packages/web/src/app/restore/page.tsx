@@ -15,7 +15,10 @@ import {
 } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 // cn utility not used in this component
-import { RestorationGrid } from '@/components/restoration/restorationgrid'
+import {
+  RestorationGrid,
+  type GalleryContributionDetails,
+} from '@/components/restoration/restorationgrid'
 // Metadata is handled by layout.tsx
 
 interface RestorationResult {
@@ -67,6 +70,9 @@ export default function RestorePage() {
   )
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [submissionMessage, setSubmissionMessage] = useState<string | null>(
+    null
+  )
 
   const handleFileSelect = (file: File) => {
     setSelectedFile(file)
@@ -76,6 +82,7 @@ export default function RestorePage() {
     setSessionAccessToken(null)
     setOriginalImageUrl(null)
     setProgress(0)
+    setSubmissionMessage(null)
   }
 
   const handleFileRemove = () => {
@@ -87,6 +94,7 @@ export default function RestorePage() {
     setProgress(0)
     setProcessingStatus('idle')
     setError(null)
+    setSubmissionMessage(null)
   }
 
   const handleGenerateRestorations = async () => {
@@ -213,7 +221,8 @@ export default function RestorePage() {
   }
 
   const handleSubmitToGallery = async (
-    selectedRestorations: RestorationResult[]
+    selectedRestorations: RestorationResult[],
+    details: GalleryContributionDetails
   ) => {
     try {
       if (!sessionId) throw new Error('Restoration session is unavailable')
@@ -232,22 +241,42 @@ export default function RestorePage() {
             selected: true,
           })),
           metadata: {
-            title: `Restored Photo - ${new Date().toLocaleDateString()}`,
-            description: `AI-assisted historical photograph with ${selectedRestorations.length} selected restoration result(s)`,
-            date: new Date().toISOString().split('T')[0],
-            tags: selectedRestorations.map(r => r.style),
+            title: details.title,
+            description: details.description,
+            ...(details.date ? { date: details.date } : {}),
+            ...(details.familyMember
+              ? { familyMember: details.familyMember }
+              : {}),
+            tags: Array.from(
+              new Set([
+                ...details.tags,
+                ...selectedRestorations.map(restoration => restoration.style),
+              ])
+            ).slice(0, 12),
+            contributorConsent: details.contributorConsent,
           },
         }),
       })
 
-      if (!response.ok) throw new Error('Failed to submit to gallery')
+      const submission =
+        (await response.json()) as GallerySubmissionResponse & {
+          error?: string
+        }
+      if (!response.ok) {
+        throw new Error(submission.error || 'Failed to submit to gallery')
+      }
 
-      const submission = (await response.json()) as GallerySubmissionResponse
-      alert(
-        `Submitted ${selectedRestorations.length} restoration(s) for archive review${submission.galleryId ? ` (reference ${submission.galleryId})` : ''}.`
+      setError(null)
+      setSubmissionMessage(
+        `Thank you. ${selectedRestorations.length} restoration${selectedRestorations.length === 1 ? '' : 's'} ${selectedRestorations.length === 1 ? 'is' : 'are'} now private and waiting for archive review${submission.galleryId ? ` (reference ${submission.galleryId})` : ''}.`
       )
-    } catch {
-      setError('Failed to submit to gallery')
+    } catch (submissionError) {
+      const message =
+        submissionError instanceof Error
+          ? submissionError.message
+          : 'Failed to submit to gallery'
+      setError(message)
+      throw new Error(message)
     }
   }
 
@@ -269,6 +298,15 @@ export default function RestorePage() {
               conservative, AI-assisted restoration for review.
             </p>
           </div>
+
+          {submissionMessage && (
+            <div
+              className="w-full max-w-4xl rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-center text-emerald-900"
+              role="status"
+            >
+              {submissionMessage}
+            </div>
+          )}
 
           {/* Main Content */}
           <div className="w-full max-w-6xl space-y-8">
@@ -306,9 +344,9 @@ export default function RestorePage() {
                     </Button>
                     <p className="text-sm text-gray-500">
                       This creates one conservative restoration for careful
-                      comparison with the original. Private uploads are
-                      retained for up to seven days unless approved for the
-                      public gallery.
+                      comparison with the original. Private uploads are retained
+                      for up to seven days unless approved for the public
+                      gallery.
                     </p>
                   </div>
                 )}

@@ -28,7 +28,8 @@ import Image from 'next/image'
 interface GalleryItem {
   id: string
   title: string
-  date: string
+  description?: string
+  date?: string
   familyMember?: string
   tags: string[]
   isPublic: boolean
@@ -51,7 +52,11 @@ interface GalleryResponse {
 type SortOption = 'newest' | 'oldest' | 'title'
 type ViewMode = 'grid' | 'list'
 
-function displayArchiveDate(date: string): string {
+function displayArchiveDate(date?: string): string {
+  if (!date) {
+    return 'Date unknown'
+  }
+
   const parsed = new Date(date)
   return Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString()
 }
@@ -558,6 +563,11 @@ export default function GalleryPage() {
                     ? ` · ${selectedItem.familyMember}`
                     : ''}
                 </DialogDescription>
+                {selectedItem.description && (
+                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-200 sm:text-base">
+                    {selectedItem.description}
+                  </p>
+                )}
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button
                     onClick={() => handleDownloadItem(selectedItem)}

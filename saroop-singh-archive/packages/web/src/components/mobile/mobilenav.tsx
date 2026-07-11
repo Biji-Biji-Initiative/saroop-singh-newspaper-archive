@@ -25,7 +25,7 @@ const navigationItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/articles', label: 'Articles', icon: FileText },
   { href: '/timeline', label: 'Timeline', icon: Clock },
-  { href: '/restore', label: 'Restore Photos', icon: Sparkles },
+  { href: '/restore', label: 'Contribute', icon: Sparkles },
   { href: '/gallery', label: 'Gallery', icon: Image },
   { href: '/about', label: 'About', icon: User },
 ]

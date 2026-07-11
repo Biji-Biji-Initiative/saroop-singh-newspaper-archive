@@ -11,7 +11,7 @@ const navigationItems = [
   { href: '/', label: 'Home' },
   { href: '/articles', label: 'Articles' },
   { href: '/timeline', label: 'Timeline' },
-  { href: '/restore', label: 'Restore Photos' },
+  { href: '/restore', label: 'Contribute' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/about', label: 'About' },
 ];
@@ -44,7 +44,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden sm:block">
+          <nav aria-label="Primary navigation" className="hidden sm:block">
             <ul className="flex items-center gap-1">
               {navigationItems.map((item) => (
                 <li key={item.href} className="relative">
