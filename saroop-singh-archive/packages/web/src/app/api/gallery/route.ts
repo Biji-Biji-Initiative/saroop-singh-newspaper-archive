@@ -32,6 +32,7 @@ const DEFAULT_PAGE_SIZE = 12
 
 interface GalleryMetadata {
   title?: string
+  description?: string
   date?: string
   familyMember?: string
   tags?: string[]
@@ -99,6 +100,13 @@ function titleFor(item: GalleryItem): string {
     : typeof item.title === 'string' && item.title.length > 0
       ? item.title
       : 'Untitled'
+}
+
+function descriptionFor(item: GalleryItem): string | undefined {
+  const description = metadataFor(item).description
+  return typeof description === 'string' && description.length > 0
+    ? description
+    : undefined
 }
 
 function dateFor(item: GalleryItem): string | undefined {
@@ -412,6 +420,7 @@ export async function GET(request: NextRequest) {
       items: paginatedItems.map(item => ({
         id: item.id,
         title: titleFor(item),
+        description: descriptionFor(item),
         date: dateFor(item),
         familyMember: familyMemberFor(item),
         tags: tagsFor(item),

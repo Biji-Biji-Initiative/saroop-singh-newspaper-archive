@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: 'Saroop Singh Archive',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/opengraph-image',
         width: 1200,
         height: 630,
         alt: 'Saroop Singh Archive',
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Saroop Singh Archive',
     description: 'Preserving the legacy of a Malaysian athletics pioneer',
-    images: ['/og-image.jpg'],
+    images: ['/opengraph-image'],
   },
   robots: {
     index: true,
@@ -68,8 +68,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: [
     { media: '(prefers-color-scheme: light)', color: '#ffffff' },
     { media: '(prefers-color-scheme: dark)', color: '#1a202c' },

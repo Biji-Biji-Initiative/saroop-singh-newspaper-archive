@@ -72,7 +72,7 @@ export default async function HomePage() {
               <Button asChild variant="premium" size="lg">
                 <Link href="/restore">
                   <Sparkles className="mr-2 h-5 w-5" />
-                  AI Photo Restoration
+                  Contribute a Photo
                 </Link>
               </Button>
             </div>
@@ -157,18 +157,18 @@ export default async function HomePage() {
                     <Sparkles className="h-7 w-7 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-neutral-900">
-                    Photo Restoration
+                    Restore & Contribute
                   </h3>
                   <p className="leading-relaxed text-neutral-600">
-                    Bring old photographs back to life using AI-powered
-                    restoration technology. Upload a historical photo and create
-                    one conservative restoration for careful review.
+                    Share a family photo with its story, then create one
+                    conservative AI-assisted restoration for careful archive
+                    review.
                   </p>
                   <Link
                     href="/restore"
                     className="text-accent-600 hover:text-accent-700 group/link inline-flex items-center font-semibold transition-colors"
                   >
-                    Restore Photos
+                    Contribute a Photo
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/link:translate-x-1" />
                   </Link>
                 </div>

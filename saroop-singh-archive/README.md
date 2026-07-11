@@ -31,6 +31,13 @@ saroop-singh-archive/
    npm run dev
    ```
 
+## Family contributions
+
+For the current, family-friendly photo, article, correction, and review
+workflow, see the repository-wide [contribution guide](../CONTRIBUTING.md).
+It documents the private moderation path and the exact content checks used by
+continuous integration.
+
 ## Package Overview
 
 ### @saroop-singh-archive/web

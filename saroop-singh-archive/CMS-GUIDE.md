@@ -1,4 +1,10 @@
-# Saroop Singh Archive - Content Management System Guide
+# Saroop Singh Archive - Historical CMS Reference
+
+> **Use [CONTRIBUTING.md](../CONTRIBUTING.md) for current work.** The active
+> published-content directory is `content/articles/published/`, and the CI
+> command is `npm run validate:content` from `packages/web`. The `shared/data`
+> layout described below is retained only as historical migration reference and
+> must not be used for new contributions.
 
 ## Overview
 

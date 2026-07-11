@@ -36,9 +36,10 @@ interface GallerySubmission {
   metadata: {
     title: string
     description: string
-    date: string
+    date?: string
     familyMember?: string
     tags: string[]
+    contributorConsent: true
     isPublic: false
   }
   submittedAt: string
@@ -83,12 +84,25 @@ function optionalText(
   return normalized
 }
 
-function today(): string {
-  return new Date().toISOString().slice(0, 10)
+function requiredText(
+  value: unknown,
+  fieldName: string,
+  maximumLength: number
+): string {
+  const text = optionalText(value, fieldName, maximumLength)
+  if (!text) {
+    throw new ArchiveStorageValidationError(`${fieldName} is required`)
+  }
+
+  return text
 }
 
-function parseArchiveDate(value: unknown): string {
-  const date = optionalText(value, 'Metadata date', 10) ?? today()
+function parseArchiveDate(value: unknown): string | undefined {
+  const date = optionalText(value, 'Metadata date', 10)
+  if (!date) {
+    return undefined
+  }
+
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
     throw new ArchiveStorageValidationError('Metadata date must use YYYY-MM-DD')
   }
@@ -102,6 +116,16 @@ function parseArchiveDate(value: unknown): string {
   }
 
   return date
+}
+
+function requireContributorConsent(value: unknown): true {
+  if (value !== true) {
+    throw new ArchiveStorageValidationError(
+      'Please confirm that you have permission to submit this material'
+    )
+  }
+
+  return true
 }
 
 function parseTags(value: unknown): string[] {
@@ -220,16 +244,16 @@ function parseRestorations(
 function parseMetadata(value: unknown): GallerySubmission['metadata'] {
   const metadata = requireRecord(value, 'Metadata')
   const familyMember = optionalText(metadata.familyMember, 'Family member', 100)
+  const date = parseArchiveDate(metadata.date)
 
   return {
-    title:
-      optionalText(metadata.title, 'Metadata title', 160) ||
-      'Untitled Restoration',
+    title: requiredText(metadata.title, 'Metadata title', 160),
     description:
       optionalText(metadata.description, 'Metadata description', 2_000) || '',
-    date: parseArchiveDate(metadata.date),
+    ...(date ? { date } : {}),
     ...(familyMember ? { familyMember } : {}),
     tags: parseTags(metadata.tags),
+    contributorConsent: requireContributorConsent(metadata.contributorConsent),
     // Public visibility is an explicit moderation decision, never a client input.
     isPublic: false,
   }
@@ -287,12 +311,14 @@ export async function POST(request: NextRequest) {
       submissionRequest.sessionId,
       'Restoration session ID'
     )
+    // Reject missing contribution context before doing any storage reads. This
+    // keeps the public boundary clear and avoids work for incomplete requests.
+    const metadata = parseMetadata(submissionRequest.metadata)
     const restorations = parseRestorations(
       submissionRequest.selectedRestorations,
       sessionId
     )
     await assertRestorationsExistInSession(sessionId, restorations)
-    const metadata = parseMetadata(submissionRequest.metadata)
     // One moderation record per restoration session prevents duplicate queue
     // spam while allowing a contributor to select all desired restorations in
     // one deliberate submission.

@@ -31,12 +31,24 @@ interface RestorationResult {
   downloadUrl: string
 }
 
+export interface GalleryContributionDetails {
+  title: string
+  description: string
+  date?: string
+  familyMember?: string
+  tags: string[]
+  contributorConsent: true
+}
+
 interface RestorationGridProps {
   restorations: RestorationResult[]
   originalImage: string
   onDownloadSingle: (restoration: RestorationResult) => void
   onDownloadAll: () => void
-  onSubmitToGallery?: (selectedRestorations: RestorationResult[]) => void
+  onSubmitToGallery?: (
+    selectedRestorations: RestorationResult[],
+    details: GalleryContributionDetails
+  ) => Promise<void>
   className?: string
 }
 
@@ -56,6 +68,16 @@ export function RestorationGrid({
   )
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [showGalleryDialog, setShowGalleryDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submissionError, setSubmissionError] = useState<string | null>(null)
+  const [contribution, setContribution] = useState({
+    title: '',
+    description: '',
+    date: '',
+    familyMember: '',
+    tags: '',
+    contributorConsent: false,
+  })
 
   const filteredRestorations = restorations
 
@@ -82,12 +104,62 @@ export function RestorationGrid({
     setFavorites(newFavorites)
   }
 
-  const handleSubmitToGallery = () => {
-    if (onSubmitToGallery) {
-      const selected = restorations.filter(r => selectedRestorations.has(r.id))
-      onSubmitToGallery(selected)
+  const handleSubmitToGallery = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault()
+
+    if (!onSubmitToGallery) {
+      return
     }
-    setShowGalleryDialog(false)
+
+    const title = contribution.title.trim()
+    if (!title) {
+      setSubmissionError('Please add a short title for this memory.')
+      return
+    }
+
+    if (!contribution.contributorConsent) {
+      setSubmissionError(
+        'Please confirm that you have permission to submit this material.'
+      )
+      return
+    }
+
+    const selected = restorations.filter(r => selectedRestorations.has(r.id))
+    const tags = Array.from(
+      new Set(
+        contribution.tags
+          .split(',')
+          .map(tag => tag.trim())
+          .filter(Boolean)
+      )
+    )
+
+    setIsSubmitting(true)
+    setSubmissionError(null)
+
+    try {
+      await onSubmitToGallery(selected, {
+        title,
+        description: contribution.description.trim(),
+        ...(contribution.date ? { date: contribution.date } : {}),
+        ...(contribution.familyMember.trim()
+          ? { familyMember: contribution.familyMember.trim() }
+          : {}),
+        tags,
+        contributorConsent: true,
+      })
+      setShowGalleryDialog(false)
+    } catch (error) {
+      setSubmissionError(
+        error instanceof Error
+          ? error.message
+          : 'We could not submit this contribution. Please try again.'
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleSelectAll = () => {
@@ -142,25 +214,186 @@ export function RestorationGrid({
                     <DialogHeader>
                       <DialogTitle>Submit to Archive Review</DialogTitle>
                       <DialogDescription>
+                        Add the context that will travel with this memory.
                         Submitted restorations stay private until an archive
                         administrator approves them. You have{' '}
                         {selectedRestorations.size} restoration(s) selected.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="flex items-center justify-end space-x-2 pt-4">
-                      <Button
-                        onClick={() => setShowGalleryDialog(false)}
-                        variant="outline"
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        onClick={handleSubmitToGallery}
-                        className="bg-purple-600 text-white hover:bg-purple-700"
-                      >
-                        Submit for Review
-                      </Button>
-                    </div>
+                    <form
+                      className="space-y-4"
+                      onSubmit={handleSubmitToGallery}
+                    >
+                      <div className="space-y-2">
+                        <label
+                          className="text-sm font-medium text-gray-900"
+                          htmlFor="contribution-title"
+                        >
+                          Title for this memory
+                        </label>
+                        <input
+                          id="contribution-title"
+                          value={contribution.title}
+                          onChange={event =>
+                            setContribution(current => ({
+                              ...current,
+                              title: event.target.value,
+                            }))
+                          }
+                          maxLength={160}
+                          required
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none"
+                          placeholder="For example: Saroop at the Selangor games"
+                        />
+                      </div>
+
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <label
+                            className="text-sm font-medium text-gray-900"
+                            htmlFor="contribution-date"
+                          >
+                            Approximate photo date
+                          </label>
+                          <input
+                            id="contribution-date"
+                            type="date"
+                            value={contribution.date}
+                            onChange={event =>
+                              setContribution(current => ({
+                                ...current,
+                                date: event.target.value,
+                              }))
+                            }
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none"
+                          />
+                          <p className="text-xs text-gray-500">
+                            Leave blank if the date is unknown; we will not
+                            guess it.
+                          </p>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label
+                            className="text-sm font-medium text-gray-900"
+                            htmlFor="contribution-family-member"
+                          >
+                            Family member or contributor
+                          </label>
+                          <input
+                            id="contribution-family-member"
+                            value={contribution.familyMember}
+                            onChange={event =>
+                              setContribution(current => ({
+                                ...current,
+                                familyMember: event.target.value,
+                              }))
+                            }
+                            maxLength={100}
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none"
+                            placeholder="Optional"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label
+                          className="text-sm font-medium text-gray-900"
+                          htmlFor="contribution-description"
+                        >
+                          Story or context
+                        </label>
+                        <textarea
+                          id="contribution-description"
+                          value={contribution.description}
+                          onChange={event =>
+                            setContribution(current => ({
+                              ...current,
+                              description: event.target.value,
+                            }))
+                          }
+                          maxLength={2000}
+                          rows={4}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none"
+                          placeholder="Who is pictured, where it came from, or why it matters."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label
+                          className="text-sm font-medium text-gray-900"
+                          htmlFor="contribution-tags"
+                        >
+                          Tags
+                        </label>
+                        <input
+                          id="contribution-tags"
+                          value={contribution.tags}
+                          onChange={event =>
+                            setContribution(current => ({
+                              ...current,
+                              tags: event.target.value,
+                            }))
+                          }
+                          maxLength={720}
+                          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 focus:outline-none"
+                          placeholder="athletics, Kuala Lumpur, family album"
+                        />
+                        <p className="text-xs text-gray-500">
+                          Separate up to 12 short tags with commas.
+                        </p>
+                      </div>
+
+                      <label className="flex items-start gap-3 rounded-md bg-purple-50 p-3 text-sm text-gray-800">
+                        <input
+                          type="checkbox"
+                          checked={contribution.contributorConsent}
+                          onChange={event =>
+                            setContribution(current => ({
+                              ...current,
+                              contributorConsent: event.target.checked,
+                            }))
+                          }
+                          className="mt-0.5 h-4 w-4 rounded border-gray-300 text-purple-600 focus:ring-purple-600"
+                        />
+                        <span>
+                          I have permission to submit this material and
+                          understand it will remain private until an archive
+                          administrator reviews it.
+                        </span>
+                      </label>
+
+                      {submissionError && (
+                        <p
+                          className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                          role="alert"
+                        >
+                          {submissionError}
+                        </p>
+                      )}
+
+                      <div className="flex items-center justify-end space-x-2 pt-2">
+                        <Button
+                          type="button"
+                          onClick={() => setShowGalleryDialog(false)}
+                          variant="outline"
+                          disabled={isSubmitting}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={
+                            isSubmitting ||
+                            !contribution.title.trim() ||
+                            !contribution.contributorConsent
+                          }
+                          className="bg-purple-600 text-white hover:bg-purple-700"
+                        >
+                          {isSubmitting ? 'Submitting…' : 'Submit for Review'}
+                        </Button>
+                      </div>
+                    </form>
                   </DialogContent>
                 </Dialog>
               )}
