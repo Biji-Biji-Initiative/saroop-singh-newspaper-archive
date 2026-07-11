@@ -31,15 +31,18 @@ Secrets are stored in Infisical and injected as Coolify **runtime** variables.
 Do not create production `.env` files or expose any key with a `NEXT_PUBLIC_`
 prefix.
 
-| Variable            | Required                     | Purpose                                                        |
-| ------------------- | ---------------------------- | -------------------------------------------------------------- |
-| `GEMINI_API_KEY`    | Yes                          | Server-only key used by `/api/restore`.                        |
-| `GEMINI_MODEL`      | No                           | Image-capable Gemini model; the route has a safe default.      |
-| `ARCHIVE_DATA_DIR`  | Yes in production            | Persistent writable path, normally `/data`.                    |
-| `ADMIN_API_TOKEN`   | Yes for moderation           | Server-side bearer token for protected gallery administration. |
-| `REVALIDATE_SECRET` | Yes for content revalidation | Secret for `POST /api/revalidate`.                             |
-| `RESTORATION_PER_IP_LIMIT` | No | Persistent per-IP hourly cap; defaults to `3`.                         |
-| `RESTORATION_GLOBAL_LIMIT` | No | Persistent service-wide hourly cap; defaults to `20`.                  |
+| Variable                         | Required                     | Purpose                                                               |
+| -------------------------------- | ---------------------------- | --------------------------------------------------------------------- |
+| `GEMINI_API_KEY`                 | Yes                          | Server-only key used by `/api/restore`.                               |
+| `GEMINI_MODEL`                   | No                           | Image-capable Gemini model; the route has a safe default.             |
+| `ARCHIVE_DATA_DIR`               | Yes in production            | Persistent writable path, normally `/data`.                           |
+| `ADMIN_API_TOKEN`                | Yes for moderation           | Server-side bearer token for protected gallery administration.        |
+| `REVALIDATE_SECRET`              | Yes for content revalidation | Secret for `POST /api/revalidate`.                                    |
+| `RESTORATION_PER_IP_LIMIT`       | No                           | Persistent per-IP hourly cap; defaults to `3`.                        |
+| `RESTORATION_GLOBAL_LIMIT`       | No                           | Persistent service-wide hourly cap; defaults to `20`.                 |
+| `RESTORATION_DAILY_GLOBAL_LIMIT` | No                           | Persistent service-wide daily cost circuit breaker; defaults to `12`. |
+| `RESTORATION_RETENTION_HOURS`    | No                           | Private session retention; defaults to `168` hours (7 days).          |
+| `CONTRIBUTIONS_ENABLED`          | No                           | Set to `false` to halt public restores and gallery submissions.       |
 
 OpenAI is not on the active restoration request path. Do not add an OpenAI key
 until there is a reviewed server-side feature that needs it.
@@ -64,6 +67,13 @@ credentials belong in Infisical.
   replace it with a fabricated local "restoration".
 - Keep the admin token only in Coolify/Infisical and use HTTPS for every admin
   request.
+- Review pending contributions through the authenticated moderation endpoint;
+  public gallery queries never reveal pending records.
+- The hourly and daily restoration caps are deliberate launch safeguards. Raise
+  them only after reviewing Gemini spend and abuse signals.
+- Private originals and outputs expire after the configured retention period.
+  Approved gallery derivatives remain because they are copied to a separate
+  public asset path.
 - Before a storage migration, create and test a backup of the Coolify `/data`
   volume using the recovery procedure in `DEPLOYMENT-GUIDE.md`.
 - Verify a deployment with an actual small image upload after checking the

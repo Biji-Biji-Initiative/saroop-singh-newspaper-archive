@@ -1,4 +1,3 @@
-import { createHash, timingSafeEqual } from 'node:crypto'
 import { readFile, readdir } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 
@@ -23,6 +22,7 @@ import {
   readRestorationAsset,
   readRestorationSession,
 } from '@/lib/restoration-storage'
+import { hasValidAdminBearerToken } from '@/lib/admin-auth'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -257,21 +257,6 @@ async function readLegacyGalleryItems(): Promise<GalleryItem[]> {
   )
 
   return records.filter(isGalleryItem)
-}
-
-function hasValidAdminBearerToken(request: NextRequest): boolean {
-  const configuredToken = process.env.ADMIN_API_TOKEN ?? ''
-  const authorization = request.headers.get('authorization') ?? ''
-  const bearerMatch = /^Bearer ([^\s]+)$/.exec(authorization)
-  const suppliedToken = bearerMatch?.[1] ?? ''
-
-  // Hashes are a fixed length, so timingSafeEqual is always called even for a
-  // malformed or differently sized submitted token.
-  const suppliedHash = createHash('sha256').update(suppliedToken).digest()
-  const configuredHash = createHash('sha256').update(configuredToken).digest()
-  const tokensMatch = timingSafeEqual(suppliedHash, configuredHash)
-
-  return configuredToken.length > 0 && bearerMatch !== null && tokensMatch
 }
 
 async function publishGalleryAssets(

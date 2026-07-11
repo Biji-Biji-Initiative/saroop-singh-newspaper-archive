@@ -34,16 +34,19 @@ published archive content; Coolify should use that Dockerfile with port `3000`.
 Set these values through Infisical and Coolify’s runtime-environment UI. Never
 commit them to the repository or configure them as build-time variables.
 
-| Variable            | Setting                                      |
-| ------------------- | -------------------------------------------- |
-| `NODE_ENV`          | `production`                                 |
-| `ARCHIVE_DATA_DIR`  | `/data`                                      |
-| `GEMINI_API_KEY`    | Dedicated server-side Gemini credential      |
-| `GEMINI_MODEL`      | Optional image-capable model override        |
-| `ADMIN_API_TOKEN`   | High-entropy server-side moderation token    |
-| `REVALIDATE_SECRET` | High-entropy server-side revalidation secret |
-| `RESTORATION_PER_IP_LIMIT` | Optional; defaults to `3` per hour      |
-| `RESTORATION_GLOBAL_LIMIT` | Optional; defaults to `20` per hour     |
+| Variable                         | Setting                                                  |
+| -------------------------------- | -------------------------------------------------------- |
+| `NODE_ENV`                       | `production`                                             |
+| `ARCHIVE_DATA_DIR`               | `/data`                                                  |
+| `GEMINI_API_KEY`                 | Dedicated server-side Gemini credential                  |
+| `GEMINI_MODEL`                   | Optional image-capable model override                    |
+| `ADMIN_API_TOKEN`                | High-entropy server-side moderation token                |
+| `REVALIDATE_SECRET`              | High-entropy server-side revalidation secret             |
+| `RESTORATION_PER_IP_LIMIT`       | Optional; defaults to `3` per hour                       |
+| `RESTORATION_GLOBAL_LIMIT`       | Optional; defaults to `20` per hour                      |
+| `RESTORATION_DAILY_GLOBAL_LIMIT` | Optional; defaults to `12` per day                       |
+| `RESTORATION_RETENTION_HOURS`    | Optional; defaults to `168` (7 days)                     |
+| `CONTRIBUTIONS_ENABLED`          | Set to `false` for an immediate public-write kill switch |
 
 `ARCHIVE_CONTENT_DIR` normally does not need an override: the Docker image
 ships the source-controlled article directory. If it is set explicitly, it
@@ -72,6 +75,9 @@ selected restoration into a separate public-gallery location and does not
 expose the original upload or its private session URL.
 
 ```bash
+curl 'https://saroop.mereka.dev/api/gallery/moderation?status=pending' \
+  -H "Authorization: Bearer $ADMIN_API_TOKEN"
+
 curl -X PATCH 'https://saroop.mereka.dev/api/gallery?id=GALLERY_ID' \
   -H "Authorization: Bearer $ADMIN_API_TOKEN" \
   -H 'Content-Type: application/json' \
@@ -88,11 +94,13 @@ change is deployed with its Git commit. If immediate cache refresh is required,
 use the protected endpoint:
 
 ```text
-POST /api/revalidate?secret=REVALIDATE_SECRET
+POST /api/revalidate
+Authorization: Bearer $REVALIDATE_SECRET
 ```
 
-Use `path` or `tag` parameters only when the target is understood; the default
-refreshes archive article routes.
+Only `path=/`, `path=/articles`, and `tag=articles` are accepted; the default
+refreshes archive article routes. Do not put revalidation secrets in a URL,
+shell history, or proxy log.
 
 ## Rollback and recovery
 

@@ -34,6 +34,11 @@ interface RestorationResponse {
   restorations: RestorationResult[]
 }
 
+interface GallerySubmissionResponse {
+  galleryId?: string
+  message?: string
+}
+
 type ProcessingStatus =
   | 'idle'
   | 'uploading'
@@ -237,9 +242,9 @@ export default function RestorePage() {
 
       if (!response.ok) throw new Error('Failed to submit to gallery')
 
-      await response.json()
+      const submission = (await response.json()) as GallerySubmissionResponse
       alert(
-        `Submitted ${selectedRestorations.length} restoration(s) for archive review.`
+        `Submitted ${selectedRestorations.length} restoration(s) for archive review${submission.galleryId ? ` (reference ${submission.galleryId})` : ''}.`
       )
     } catch {
       setError('Failed to submit to gallery')
@@ -301,7 +306,9 @@ export default function RestorePage() {
                     </Button>
                     <p className="text-sm text-gray-500">
                       This creates one conservative restoration for careful
-                      comparison with the original
+                      comparison with the original. Private uploads are
+                      retained for up to seven days unless approved for the
+                      public gallery.
                     </p>
                   </div>
                 )}

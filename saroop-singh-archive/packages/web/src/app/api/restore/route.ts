@@ -5,12 +5,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import {
   createRestorationSessionAccessToken,
   extensionForImageMimeType,
+  MAX_RESTORATION_REQUEST_BYTES,
   MAX_RESTORATION_UPLOAD_BYTES,
+  purgeExpiredRestorationSessions,
   restorationAssetUrl,
   writeRestorationAsset,
   writeRestorationSession,
 } from '@/lib/restoration-storage'
 import { consumeRestorationQuota } from '@/lib/restoration-rate-limit'
+import { contributionsEnabled } from '@/lib/contributions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -19,6 +22,10 @@ interface GeminiPart {
   inlineData?: {
     data?: string
     mimeType?: string
+  }
+  inline_data?: {
+    data?: string
+    mime_type?: string
   }
 }
 
@@ -31,14 +38,22 @@ interface GeminiResponse {
 }
 
 function requestIp(request: NextRequest): string {
+  const realIp = request.headers.get('x-real-ip')?.trim()
+  if (realIp) {
+    return realIp
+  }
+
+  const cloudflareIp = request.headers.get('cf-connecting-ip')?.trim()
+  if (cloudflareIp) {
+    return cloudflareIp
+  }
+
   const forwardedAddresses = request.headers
     .get('x-forwarded-for')
     ?.split(',')
     .map(address => address.trim())
     .filter(Boolean)
-  return (
-    forwardedAddresses?.at(-1) || request.headers.get('x-real-ip') || 'unknown'
-  )
+  return forwardedAddresses?.at(-1) || 'unknown'
 }
 
 function hasTrustedOrigin(request: NextRequest): boolean {
@@ -92,10 +107,15 @@ function imageFromGeminiResponse(response: GeminiResponse): {
 } | null {
   const imagePart = response.candidates
     ?.flatMap(candidate => candidate.content?.parts || [])
-    .find(part => typeof part.inlineData?.data === 'string')
+    .find(
+      part =>
+        typeof part.inlineData?.data === 'string' ||
+        typeof part.inline_data?.data === 'string'
+    )
 
-  const encodedImage = imagePart?.inlineData?.data
-  const mimeType = imagePart?.inlineData?.mimeType || 'image/png'
+  const encodedImage = imagePart?.inlineData?.data || imagePart?.inline_data?.data
+  const mimeType =
+    imagePart?.inlineData?.mimeType || imagePart?.inline_data?.mime_type || 'image/png'
   if (!encodedImage || !extensionForImageMimeType(mimeType)) {
     return null
   }
@@ -109,6 +129,28 @@ export async function POST(request: NextRequest) {
       { error: 'Untrusted request origin' },
       { status: 403 }
     )
+  }
+
+  if (!contributionsEnabled()) {
+    return NextResponse.json(
+      { error: 'Photo restoration is temporarily unavailable.' },
+      { status: 503 }
+    )
+  }
+
+  const contentLength = request.headers.get('content-length')
+  if (contentLength) {
+    const contentLengthBytes = Number(contentLength)
+    if (
+      !Number.isSafeInteger(contentLengthBytes) ||
+      contentLengthBytes < 0 ||
+      contentLengthBytes > MAX_RESTORATION_REQUEST_BYTES
+    ) {
+      return NextResponse.json(
+        { error: 'Images must be no larger than 10 MB.' },
+        { status: 413 }
+      )
+    }
   }
 
   const geminiApiKey = process.env.GEMINI_API_KEY?.trim()
@@ -154,68 +196,82 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const quota = await consumeRestorationQuota(requestIp(request))
-    if (!quota.allowed) {
-      return NextResponse.json(
-        { error: 'Restoration limit reached. Please try again later.' },
+    const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-image'
+    let generatedImage: { buffer: Buffer; mimeType: string } | null = null
+
+    // Gemini can occasionally finish an image request with a text-only
+    // candidate. A single bounded retry keeps a genuine restoration request
+    // useful without creating an unbounded paid retry loop.
+    for (let attempt = 0; attempt < 2 && !generatedImage; attempt += 1) {
+      // Every provider request (including a bounded retry) spends one durable
+      // quota unit, so the configured cost ceiling remains accurate.
+      const quota = await consumeRestorationQuota(requestIp(request))
+      if (!quota.allowed) {
+        return NextResponse.json(
+          { error: 'Restoration limit reached. Please try again later.' },
+          {
+            status: 429,
+            headers: { 'Retry-After': quota.retryAfterSeconds.toString() },
+          }
+        )
+      }
+
+      if (attempt === 0) {
+        await purgeExpiredRestorationSessions()
+      }
+
+      const geminiResponse = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
         {
-          status: 429,
-          headers: { 'Retry-After': quota.retryAfterSeconds.toString() },
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': geminiApiKey,
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  { text: restorationPrompt() },
+                  {
+                    inlineData: {
+                      mimeType: inputMimeType,
+                      data: inputBuffer.toString('base64'),
+                    },
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              responseModalities: ['TEXT', 'IMAGE'],
+            },
+          }),
+          signal: AbortSignal.timeout(120_000),
         }
       )
-    }
 
-    const model = process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-image'
-    const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': geminiApiKey,
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { text: restorationPrompt() },
-                {
-                  inlineData: {
-                    mimeType: inputMimeType,
-                    data: inputBuffer.toString('base64'),
-                  },
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            responseModalities: ['IMAGE'],
+      if (!geminiResponse.ok) {
+        console.error('Gemini restoration request failed', {
+          status: geminiResponse.status,
+        })
+        const status = geminiResponse.status === 429 ? 429 : 502
+        return NextResponse.json(
+          {
+            error:
+              status === 429
+                ? 'The restoration service is busy. Please try again shortly.'
+                : 'The restoration service could not process this image.',
           },
-        }),
-        signal: AbortSignal.timeout(120_000),
+          { status }
+        )
       }
-    )
 
-    if (!geminiResponse.ok) {
-      console.error('Gemini restoration request failed', {
-        status: geminiResponse.status,
-      })
-      const status = geminiResponse.status === 429 ? 429 : 502
-      return NextResponse.json(
-        {
-          error:
-            status === 429
-              ? 'The restoration service is busy. Please try again shortly.'
-              : 'The restoration service could not process this image.',
-        },
-        { status }
+      generatedImage = imageFromGeminiResponse(
+        (await geminiResponse.json()) as GeminiResponse
       )
     }
 
-    const generatedImage = imageFromGeminiResponse(
-      (await geminiResponse.json()) as GeminiResponse
-    )
     if (!generatedImage || generatedImage.buffer.length === 0) {
       return NextResponse.json(
         { error: 'The restoration service did not return an image.' },

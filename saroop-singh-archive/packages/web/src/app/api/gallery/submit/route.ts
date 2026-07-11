@@ -1,5 +1,3 @@
-import { randomUUID } from 'node:crypto'
-
 import { NextRequest, NextResponse } from 'next/server'
 
 import {
@@ -8,6 +6,7 @@ import {
   assertSafeArchivePathSegment,
   assertUuid,
   galleryItemPath,
+  readJsonFile,
   writeJsonAtomically,
 } from '@/lib/archive-storage'
 import {
@@ -15,6 +14,7 @@ import {
   readRestorationSession,
   restorationAssetUrl,
 } from '@/lib/restoration-storage'
+import { contributionsEnabled } from '@/lib/contributions'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -273,6 +273,13 @@ async function assertRestorationsExistInSession(
 }
 
 export async function POST(request: NextRequest) {
+  if (!contributionsEnabled()) {
+    return NextResponse.json(
+      { error: 'Contributions are temporarily unavailable.' },
+      { status: 503 }
+    )
+  }
+
   try {
     const body: unknown = await request.json()
     const submissionRequest = requireRecord(body, 'Submission')
@@ -286,7 +293,15 @@ export async function POST(request: NextRequest) {
     )
     await assertRestorationsExistInSession(sessionId, restorations)
     const metadata = parseMetadata(submissionRequest.metadata)
-    const galleryId = `gallery-${randomUUID()}`
+    // One moderation record per restoration session prevents duplicate queue
+    // spam while allowing a contributor to select all desired restorations in
+    // one deliberate submission.
+    const galleryId = `gallery-${sessionId}`
+    if ((await readJsonFile<unknown>(galleryItemPath(galleryId))) !== null) {
+      throw new ArchiveStorageValidationError(
+        'This restoration session has already been submitted for review'
+      )
+    }
     const submittedAt = new Date().toISOString()
 
     const submission: GallerySubmission = {

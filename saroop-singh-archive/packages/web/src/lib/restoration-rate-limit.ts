@@ -8,13 +8,16 @@ import {
   writeJsonAtomically,
 } from '@/lib/archive-storage'
 
-const WINDOW_MS = 60 * 60 * 1_000
+const HOUR_WINDOW_MS = 60 * 60 * 1_000
+const DAY_WINDOW_MS = 24 * HOUR_WINDOW_MS
 const DEFAULT_PER_IP_LIMIT = 3
 const DEFAULT_GLOBAL_LIMIT = 20
+const DEFAULT_DAILY_GLOBAL_LIMIT = 12
 const STATE_PATH = archiveDataPath('rate-limits', 'restoration.json')
 
 interface RestorationRateLimitState {
   global: number[]
+  globalDaily: number[]
   byIp: Record<string, number[]>
 }
 
@@ -36,7 +39,11 @@ function configuredLimit(
     : fallback
 }
 
-function timestampsInsideWindow(values: unknown, now: number): number[] {
+function timestampsInsideWindow(
+  values: unknown,
+  now: number,
+  windowMs: number
+): number[] {
   if (!Array.isArray(values)) {
     return []
   }
@@ -45,7 +52,7 @@ function timestampsInsideWindow(values: unknown, now: number): number[] {
     (value): value is number =>
       typeof value === 'number' &&
       Number.isFinite(value) &&
-      value > now - WINDOW_MS &&
+      value > now - windowMs &&
       value <= now
   )
 }
@@ -67,21 +74,34 @@ function normalizedState(
   const byIp: Record<string, number[]> = {}
 
   for (const [ipHash, timestamps] of Object.entries(byIpRecord)) {
-    const activeTimestamps = timestampsInsideWindow(timestamps, now)
+    const activeTimestamps = timestampsInsideWindow(
+      timestamps,
+      now,
+      HOUR_WINDOW_MS
+    )
     if (activeTimestamps.length > 0) {
       byIp[ipHash] = activeTimestamps
     }
   }
 
   return {
-    global: timestampsInsideWindow(record.global, now),
+    global: timestampsInsideWindow(record.global, now, HOUR_WINDOW_MS),
+    globalDaily: timestampsInsideWindow(
+      record.globalDaily,
+      now,
+      DAY_WINDOW_MS
+    ),
     byIp,
   }
 }
 
-function retryAfterSeconds(timestamps: number[], now: number): number {
+function retryAfterSeconds(
+  timestamps: number[],
+  now: number,
+  windowMs: number
+): number {
   const oldestTimestamp = Math.min(...timestamps)
-  return Math.max(1, Math.ceil((oldestTimestamp + WINDOW_MS - now) / 1_000))
+  return Math.max(1, Math.ceil((oldestTimestamp + windowMs - now) / 1_000))
 }
 
 function hashIp(ip: string): string {
@@ -108,24 +128,49 @@ export async function consumeRestorationQuota(
       DEFAULT_GLOBAL_LIMIT,
       200
     )
+    const dailyGlobalLimit = configuredLimit(
+      'RESTORATION_DAILY_GLOBAL_LIMIT',
+      DEFAULT_DAILY_GLOBAL_LIMIT,
+      500
+    )
     const ipHash = hashIp(ipAddress)
     const ipTimestamps = state.byIp[ipHash] ?? []
 
     if (state.global.length >= globalLimit) {
       return {
         allowed: false,
-        retryAfterSeconds: retryAfterSeconds(state.global, now),
+        retryAfterSeconds: retryAfterSeconds(
+          state.global,
+          now,
+          HOUR_WINDOW_MS
+        ),
+      }
+    }
+
+    if (state.globalDaily.length >= dailyGlobalLimit) {
+      return {
+        allowed: false,
+        retryAfterSeconds: retryAfterSeconds(
+          state.globalDaily,
+          now,
+          DAY_WINDOW_MS
+        ),
       }
     }
 
     if (ipTimestamps.length >= perIpLimit) {
       return {
         allowed: false,
-        retryAfterSeconds: retryAfterSeconds(ipTimestamps, now),
+        retryAfterSeconds: retryAfterSeconds(
+          ipTimestamps,
+          now,
+          HOUR_WINDOW_MS
+        ),
       }
     }
 
     state.global.push(now)
+    state.globalDaily.push(now)
     state.byIp[ipHash] = [...ipTimestamps, now]
     await writeJsonAtomically(STATE_PATH, state)
 
