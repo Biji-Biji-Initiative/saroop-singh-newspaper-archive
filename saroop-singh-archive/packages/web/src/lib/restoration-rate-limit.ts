@@ -113,7 +113,7 @@ function hashIp(ip: string): string {
  * if an attacker rotates IPs or the process restarts between requests.
  */
 export async function consumeRestorationQuota(
-  ipAddress: string
+  ipAddress?: string
 ): Promise<RestorationRateLimitResult> {
   const run = async (): Promise<RestorationRateLimitResult> => {
     const now = Date.now()
@@ -133,8 +133,8 @@ export async function consumeRestorationQuota(
       DEFAULT_DAILY_GLOBAL_LIMIT,
       500
     )
-    const ipHash = hashIp(ipAddress)
-    const ipTimestamps = state.byIp[ipHash] ?? []
+    const ipHash = ipAddress ? hashIp(ipAddress) : null
+    const ipTimestamps = ipHash ? state.byIp[ipHash] ?? [] : []
 
     if (state.global.length >= globalLimit) {
       return {
@@ -158,7 +158,7 @@ export async function consumeRestorationQuota(
       }
     }
 
-    if (ipTimestamps.length >= perIpLimit) {
+    if (ipHash && ipTimestamps.length >= perIpLimit) {
       return {
         allowed: false,
         retryAfterSeconds: retryAfterSeconds(
@@ -171,7 +171,9 @@ export async function consumeRestorationQuota(
 
     state.global.push(now)
     state.globalDaily.push(now)
-    state.byIp[ipHash] = [...ipTimestamps, now]
+    if (ipHash) {
+      state.byIp[ipHash] = [...ipTimestamps, now]
+    }
     await writeJsonAtomically(STATE_PATH, state)
 
     return { allowed: true, retryAfterSeconds: 0 }

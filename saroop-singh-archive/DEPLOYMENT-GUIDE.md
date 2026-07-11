@@ -42,7 +42,7 @@ commit them to the repository or configure them as build-time variables.
 | `GEMINI_MODEL`                   | Optional image-capable model override                    |
 | `ADMIN_API_TOKEN`                | High-entropy server-side moderation token                |
 | `REVALIDATE_SECRET`              | High-entropy server-side revalidation secret             |
-| `RESTORATION_PER_IP_LIMIT`       | Optional; defaults to `3` per hour                       |
+| `RESTORATION_PER_IP_LIMIT`       | Reserved until the proxy supplies a server-sanitized client IP; Coolify currently enforces global caps only |
 | `RESTORATION_GLOBAL_LIMIT`       | Optional; defaults to `20` per hour                      |
 | `RESTORATION_DAILY_GLOBAL_LIMIT` | Optional; defaults to `12` per day                       |
 | `RESTORATION_RETENTION_HOURS`    | Optional; defaults to `168` (7 days)                     |
