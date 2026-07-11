@@ -38,6 +38,7 @@ commit them to the repository or configure them as build-time variables.
 | -------------------------------- | -------------------------------------------------------- |
 | `NODE_ENV`                       | `production`                                             |
 | `ARCHIVE_DATA_DIR`               | `/data`                                                  |
+| `ARCHIVE_PUBLIC_ORIGIN`          | `https://saroop.mereka.dev`; used for browser origin checks behind the TLS proxy |
 | `GEMINI_API_KEY`                 | Dedicated server-side Gemini credential                  |
 | `GEMINI_MODEL`                   | Optional image-capable model override                    |
 | `ADMIN_API_TOKEN`                | High-entropy server-side moderation token                |

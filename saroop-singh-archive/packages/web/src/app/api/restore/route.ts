@@ -31,9 +31,33 @@ interface GeminiInteractionResponse {
   }>
 }
 
+function publicOrigin(): string {
+  const configuredOrigin = process.env.ARCHIVE_PUBLIC_ORIGIN?.trim()
+
+  if (configuredOrigin) {
+    try {
+      return new URL(configuredOrigin).origin
+    } catch {
+      console.warn('Ignoring invalid ARCHIVE_PUBLIC_ORIGIN configuration')
+    }
+  }
+
+  // Coolify terminates TLS before forwarding to this Node server. In
+  // production, request.url can therefore be http:// even though the browser
+  // correctly sends the public https Origin header.
+  return process.env.NODE_ENV === 'production'
+    ? 'https://saroop.mereka.dev'
+    : ''
+}
+
 function hasTrustedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin')
-  return !origin || origin === new URL(request.url).origin
+  if (!origin) {
+    return true
+  }
+
+  const expectedOrigin = publicOrigin() || new URL(request.url).origin
+  return origin === expectedOrigin
 }
 
 function isSupportedImage(buffer: Buffer, mimeType: string): boolean {
