@@ -10,9 +10,11 @@ import {
   writeJsonAtomically,
 } from '@/lib/archive-storage'
 import {
+  hasRestorationSessionAccess,
   readRestorationAsset,
   readRestorationSession,
   restorationAssetUrl,
+  type RestorationSession,
 } from '@/lib/restoration-storage'
 import { contributionsEnabled } from '@/lib/contributions'
 
@@ -260,14 +262,9 @@ function parseMetadata(value: unknown): GallerySubmission['metadata'] {
 }
 
 async function assertRestorationsExistInSession(
-  sessionId: string,
+  session: RestorationSession,
   restorations: GalleryRestoration[]
 ): Promise<void> {
-  const session = await readRestorationSession(sessionId)
-  if (!session) {
-    throw new ArchiveStorageValidationError('Restoration session was not found')
-  }
-
   const sessionRestorations = new Map(
     session.restorations.map(restoration => [restoration.id, restoration])
   )
@@ -285,7 +282,7 @@ async function assertRestorationsExistInSession(
     }
 
     const image = await readRestorationAsset(
-      sessionId,
+      session.id,
       storedRestoration.fileName
     )
     if (!image) {
@@ -318,7 +315,25 @@ export async function POST(request: NextRequest) {
       submissionRequest.selectedRestorations,
       sessionId
     )
-    await assertRestorationsExistInSession(sessionId, restorations)
+    const session = await readRestorationSession(sessionId)
+
+    // A restoration session contains private originals and generated images.
+    // Requiring its unguessable access token prevents a leaked UUID from being
+    // used to place someone else's work into the family review queue.
+    if (
+      !session ||
+      !hasRestorationSessionAccess(
+        session,
+        submissionRequest.sessionAccessToken
+      )
+    ) {
+      return NextResponse.json(
+        { error: 'Restoration session not found' },
+        { status: 404 }
+      )
+    }
+
+    await assertRestorationsExistInSession(session, restorations)
     // One moderation record per restoration session prevents duplicate queue
     // spam while allowing a contributor to select all desired restorations in
     // one deliberate submission.

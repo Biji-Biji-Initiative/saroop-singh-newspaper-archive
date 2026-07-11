@@ -46,6 +46,9 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
+      - name: Verify private gallery submission access
+        run: npm run verify:gallery-submission-access
+
       - name: Build production bundle
         run: npm run build
 
