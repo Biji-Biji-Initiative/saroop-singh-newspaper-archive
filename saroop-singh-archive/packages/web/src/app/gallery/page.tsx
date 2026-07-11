@@ -10,11 +10,18 @@ import {
   Grid,
   List,
   Download,
+  Eye,
 } from 'lucide-react'
 import { ResponsiveContainer } from '@/components/layout/responsivecontainer'
 import { VStack } from '@/components/layout/flexlayout'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
 
@@ -64,6 +71,7 @@ export default function GalleryPage() {
   const [selectedTag, setSelectedTag] = useState('')
   const [sortBy, setSortBy] = useState<SortOption>('newest')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null)
 
   // Get unique values for filters
   const [familyMembers, setFamilyMembers] = useState<string[]>([])
@@ -393,15 +401,25 @@ export default function GalleryPage() {
                           </div>
                         )}
 
-                        <Button
-                          onClick={() => handleDownloadItem(item)}
-                          size="sm"
-                          variant="outline"
-                          className="w-full border border-gray-300 hover:border-blue-600 hover:text-blue-600"
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download Preview
-                        </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => setSelectedItem(item)}
+                            size="sm"
+                            className="bg-blue-600 text-white hover:bg-blue-700"
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            View
+                          </Button>
+                          <Button
+                            onClick={() => handleDownloadItem(item)}
+                            size="sm"
+                            variant="outline"
+                            className="border border-gray-300 hover:border-blue-600 hover:text-blue-600"
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
@@ -438,15 +456,25 @@ export default function GalleryPage() {
                                 </p>
                               </div>
 
-                              <Button
-                                onClick={() => handleDownloadItem(item)}
-                                size="sm"
-                                variant="outline"
-                                className="border border-gray-300 hover:border-blue-600 hover:text-blue-600"
-                              >
-                                <Download className="mr-2 h-4 w-4" />
-                                Download Preview
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => setSelectedItem(item)}
+                                  size="sm"
+                                  className="bg-blue-600 text-white hover:bg-blue-700"
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </Button>
+                                <Button
+                                  onClick={() => handleDownloadItem(item)}
+                                  size="sm"
+                                  variant="outline"
+                                  className="border border-gray-300 hover:border-blue-600 hover:text-blue-600"
+                                >
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Download
+                                </Button>
+                              </div>
                             </div>
 
                             {item.tags.length > 0 && (
@@ -497,6 +525,57 @@ export default function GalleryPage() {
           )}
         </VStack>
       </ResponsiveContainer>
+
+      <Dialog
+        open={Boolean(selectedItem)}
+        onOpenChange={open => {
+          if (!open) setSelectedItem(null)
+        }}
+      >
+        {selectedItem && (
+          <DialogContent className="block h-[calc(100dvh-1rem)] max-w-6xl overflow-hidden border-white/10 bg-neutral-950 p-0 text-white sm:h-[min(92dvh,56rem)]">
+            <div className="grid h-full min-h-0 grid-rows-[minmax(0,1fr)_auto]">
+              <div className="relative min-h-0 overflow-hidden bg-black">
+                <Image
+                  src={selectedItem.thumbnailUrl}
+                  alt={`${selectedItem.title}, complete archive image`}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 1024px) 100vw, 80vw"
+                  className="object-contain p-2 sm:p-4"
+                />
+                <span className="absolute bottom-3 left-3 rounded-full bg-black/75 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/20">
+                  Fit to screen · complete image
+                </span>
+              </div>
+              <div className="border-t border-white/10 bg-neutral-900 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-7">
+                <DialogTitle className="pr-12 text-xl text-white sm:text-2xl">
+                  {selectedItem.title}
+                </DialogTitle>
+                <DialogDescription className="mt-2 text-neutral-300">
+                  {displayArchiveDate(selectedItem.date)}
+                  {selectedItem.familyMember
+                    ? ` · ${selectedItem.familyMember}`
+                    : ''}
+                </DialogDescription>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button
+                    onClick={() => handleDownloadItem(selectedItem)}
+                    className="bg-white text-neutral-950 hover:bg-neutral-200"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download image
+                  </Button>
+                  <span className="flex min-h-10 items-center rounded-full bg-white/10 px-4 text-sm text-neutral-200">
+                    {selectedItem.restorationCount} restoration
+                    {selectedItem.restorationCount === 1 ? '' : 's'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   )
 }
