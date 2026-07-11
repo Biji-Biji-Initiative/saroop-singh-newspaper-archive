@@ -1,0 +1,179 @@
+name: PR Intake Dashboard
+
+on:
+  # This workflow intentionally does not check out or execute pull-request code.
+  # That makes the write-scoped dashboard safe for PRs from any remote source.
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - ready_for_review
+      - converted_to_draft
+      - synchronize
+      - edited
+      - closed
+  workflow_run:
+    workflows:
+      - Web CI
+    types:
+      - completed
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: pr-intake-dashboard-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    name: Reconcile PR intake queue
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Refresh the read-only PR dashboard
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const marker = "<!-- pr-intake-dashboard:v1 -->";
+            const title = "PR Intake Dashboard";
+            const expectedCheck = "Verify web build";
+            const { owner, repo } = context.repo;
+
+            const escapeMarkdown = (value) => String(value ?? "")
+              .replace(/[\r\n]+/g, " ")
+              .replace(/\\/g, "\\\\")
+              .replace(/([`*_[\]<>|])/g, "\\$1")
+              .replace(/@/g, "@\u200B");
+
+            const getWebCheck = async (sha) => {
+              const checks = await github.paginate(github.rest.checks.listForRef, {
+                owner,
+                repo,
+                ref: sha,
+                per_page: 100,
+              });
+              const webCheck = checks
+                .filter((check) => check.name === expectedCheck)
+                .sort((left, right) => Date.parse(
+                  right.completed_at || right.started_at || right.created_at,
+                ) - Date.parse(
+                  left.completed_at || left.started_at || left.created_at,
+                ))[0];
+
+              if (!webCheck) {
+                return { state: "no CI", url: null };
+              }
+              if (webCheck.status !== "completed") {
+                return { state: "pending", url: webCheck.details_url || webCheck.html_url };
+              }
+              if (["success", "neutral", "skipped"].includes(webCheck.conclusion)) {
+                return { state: "passed", url: webCheck.details_url || webCheck.html_url };
+              }
+              return { state: "failed", url: webCheck.details_url || webCheck.html_url };
+            };
+
+            const openPulls = await github.paginate(github.rest.pulls.list, {
+              owner,
+              repo,
+              state: "open",
+              per_page: 100,
+            });
+
+            const rows = await Promise.all(openPulls.map(async (summary) => {
+              const { data: pull } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: summary.number,
+              });
+              const webCheck = await getWebCheck(pull.head.sha);
+              const conflicted = pull.mergeable === false || pull.mergeable_state === "dirty";
+              let nextAction = "ready for human review";
+              if (pull.draft) {
+                nextAction = conflicted
+                  ? "draft — resolve conflicts before review"
+                  : "draft — mark ready when the scope is complete";
+              } else if (conflicted) {
+                nextAction = "resolve conflicts";
+              } else if (webCheck.state === "no CI") {
+                nextAction = "verify CI coverage";
+              } else if (webCheck.state === "pending") {
+                nextAction = "wait for Web CI";
+              } else if (webCheck.state === "failed") {
+                nextAction = "inspect failed Web CI";
+              }
+
+              return {
+                action: nextAction,
+                base: pull.base.ref,
+                check: webCheck,
+                draft: pull.draft,
+                mergeState: pull.mergeable_state || "unknown",
+                number: pull.number,
+                title: escapeMarkdown(pull.title),
+                updatedAt: pull.updated_at,
+                url: pull.html_url,
+              };
+            }));
+
+            rows.sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+            const queue = rows.length === 0
+              ? "_No open pull requests._"
+              : rows.map((pull) => {
+                const check = pull.check.url
+                  ? `[${pull.check.state}](${pull.check.url})`
+                  : pull.check.state;
+                return [
+                  `- [#${pull.number}](${pull.url}) — ${pull.title}`,
+                  `  - Base: \`${escapeMarkdown(pull.base)}\` · Draft: \`${pull.draft}\` · Merge state: \`${escapeMarkdown(pull.mergeState)}\``,
+                  `  - Web CI: ${check} · Next action: **${pull.action}**`,
+                ].join("\n");
+              }).join("\n");
+
+            const body = `${marker}
+            # Pull request intake queue
+
+            This is an observer-only dashboard for every open remote pull request. It never approves, merges, pushes, deploys, checks out PR code, or uses application secrets.
+
+            ## Queue
+
+            ${queue}
+
+            ## Integration policy
+
+            - Merge only into \`main\` after the production Web CI gate passes and a maintainer has reviewed scope, security, and deployment compatibility.
+            - Treat conflicting, draft, or alternate-runtime pull requests as selective-port sources rather than automatic merges.
+            - This issue is updated only when the rendered queue changes, so scheduled reconciliation does not create notification churn.
+            `;
+
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: "open",
+              per_page: 100,
+            });
+            const dashboard = issues.find((issue) =>
+              !issue.pull_request && issue.body?.includes(marker),
+            );
+
+            if (!dashboard) {
+              await github.rest.issues.create({ owner, repo, title, body });
+              core.notice(`Created the PR dashboard for ${rows.length} open pull request(s).`);
+            } else if (dashboard.body !== body) {
+              await github.rest.issues.update({
+                owner,
+                repo,
+                issue_number: dashboard.number,
+                body,
+              });
+              core.notice(`Updated the PR dashboard for ${rows.length} open pull request(s).`);
+            } else {
+              core.notice(`PR dashboard is current for ${rows.length} open pull request(s).`);
+            }
