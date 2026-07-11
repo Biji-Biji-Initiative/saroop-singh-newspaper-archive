@@ -18,6 +18,13 @@ out/
 .env.test.local
 .env.production.local
 
+# Local editor snapshots and generated restoration records
+.history/
+backup-*/
+packages/restorations/adk_restoration/audit/*.jsonl
+packages/restorations/adk_restoration/audit/sessions/
+packages/restorations/adk_restoration/logs/
+
 # IDE files
 .vscode/
 .idea/

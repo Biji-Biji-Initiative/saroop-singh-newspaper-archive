@@ -123,6 +123,38 @@ function imageFromGeminiResponse(response: GeminiResponse): {
   return { buffer: Buffer.from(encodedImage, 'base64'), mimeType }
 }
 
+function responseShape(response: GeminiResponse): {
+  candidateCount: number
+  parts: Array<{
+    hasInlineData: boolean
+    dataLength: number
+    mimeType: string | null
+    textLength: number
+  }>
+} {
+  const candidates = response.candidates ?? []
+
+  return {
+    candidateCount: candidates.length,
+    parts: candidates.flatMap(candidate =>
+      (candidate.content?.parts ?? []).map(part => {
+        const camelCaseImage = part.inlineData
+        const snakeCaseImage = part.inline_data
+        return {
+          hasInlineData:
+            typeof camelCaseImage?.data === 'string' ||
+            typeof snakeCaseImage?.data === 'string',
+          dataLength:
+            camelCaseImage?.data?.length ?? snakeCaseImage?.data?.length ?? 0,
+          mimeType:
+            camelCaseImage?.mimeType ?? snakeCaseImage?.mime_type ?? null,
+          textLength: 0,
+        }
+      })
+    ),
+  }
+}
+
 export async function POST(request: NextRequest) {
   if (!hasTrustedOrigin(request)) {
     return NextResponse.json(
@@ -267,9 +299,21 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      generatedImage = imageFromGeminiResponse(
-        (await geminiResponse.json()) as GeminiResponse
-      )
+      const geminiResult = (await geminiResponse.json()) as GeminiResponse
+      generatedImage = imageFromGeminiResponse(geminiResult)
+
+      if (!generatedImage) {
+        console.warn('Gemini restoration result did not include an image', {
+          attempt: attempt + 1,
+          response: responseShape(geminiResult),
+        })
+
+        // A brief pause avoids immediately repeating a model-side text-only
+        // candidate while preserving the two-attempt cost ceiling.
+        if (attempt === 0) {
+          await new Promise(resolve => setTimeout(resolve, 750))
+        }
+      }
     }
 
     if (!generatedImage || generatedImage.buffer.length === 0) {

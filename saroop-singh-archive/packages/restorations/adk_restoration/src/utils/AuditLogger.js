@@ -507,7 +507,7 @@ export class AuditLogger {
       const date = new Date().toISOString().split('T')[0];
       const auditFile = path.join(this.auditDir, `audit_${date}.jsonl`);
       
-      const auditLine = JSON.stringify(auditEntry) + '\\n';
+      const auditLine = JSON.stringify(auditEntry) + '\n';
       await fs.appendFile(auditFile, auditLine);
 
     } catch (error) {
