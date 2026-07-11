@@ -32,16 +32,9 @@ interface GeminiInteractionResponse {
 }
 
 function requestIp(request: NextRequest): string {
-  const realIp = request.headers.get('x-real-ip')?.trim()
-  if (realIp) {
-    return realIp
-  }
-
-  const cloudflareIp = request.headers.get('cf-connecting-ip')?.trim()
-  if (cloudflareIp) {
-    return cloudflareIp
-  }
-
+  // Coolify's Traefik proxy appends the connected peer address to
+  // X-Forwarded-For. Do not accept X-Real-IP or CF-Connecting-IP directly:
+  // a DNS-only caller can supply either header and bypass a per-IP quota.
   const forwardedAddresses = request.headers
     .get('x-forwarded-for')
     ?.split(',')
