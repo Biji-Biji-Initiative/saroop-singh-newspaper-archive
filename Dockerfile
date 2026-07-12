@@ -5,10 +5,6 @@ FROM node:22-bookworm-slim AS dependencies
 ENV NEXT_TELEMETRY_DISABLED=1
 WORKDIR /app
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends python3 make g++ \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY saroop-singh-archive/packages/web/package.json saroop-singh-archive/packages/web/package-lock.json ./
 RUN npm ci
 
