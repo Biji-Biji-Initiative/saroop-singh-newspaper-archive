@@ -1,4 +1,10 @@
-# Saroop Singh Archive Content Reorganization
+# Saroop Singh Archive - Historical Content Reorganization Record
+
+> **Do not run this migration or use its paths for new work.** The supported
+> archive source is `packages/web/content/articles/published/`; use
+> [CONTRIBUTING.md](../CONTRIBUTING.md) and
+> [ARTICLE-CORPUS-DECISION.md](docs/ARTICLE-CORPUS-DECISION.md) instead. This
+> record is kept only to explain an earlier repository migration.
 
 ## Executive Summary
 

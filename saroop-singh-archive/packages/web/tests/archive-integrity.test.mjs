@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import YAML from 'yaml';
+import { spawnSync } from 'node:child_process';
 
 const root = new URL('..', import.meta.url).pathname;
 const articleDir = join(root, 'content/articles/published');
@@ -21,6 +22,29 @@ test('retains the recovered catalogue while excluding withdrawn errors from publ
   const active = articleFiles.filter(file => frontmatter(file).status !== 'withdrawn');
   assert.equal(active.length, 36);
   assert.equal(frontmatter('1957-07-15_straits-times_sikh-runners-state-record-half-mile.md').status, 'withdrawn');
+});
+
+test('uses one canonical validated article corpus with deterministic Markdown fixity', () => {
+  const manifest = JSON.parse(readFileSync(join(root, 'data/generated/preservation-manifest.json'), 'utf8'));
+  const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const validator = spawnSync(process.execPath, ['scripts/validate-content.mjs'], {
+    cwd: root,
+    encoding: 'utf8',
+  });
+
+  assert.equal(existsSync(join(root, '..', '..', 'content', 'articles', 'published')), false);
+  assert.equal(packageJson.scripts['validate:content'], 'node scripts/validate-content.mjs');
+  assert.equal(validator.status, 0, validator.stderr || validator.stdout);
+  assert.equal(
+    manifest.articleCorpus.canonicalRepositoryPath,
+    'saroop-singh-archive/packages/web/content/articles/published',
+  );
+  assert.equal(manifest.articleCorpus.fileCount, articleFiles.length);
+  assert.match(manifest.articleCorpus.sha256, /^[a-f0-9]{64}$/);
+  for (const article of manifest.articleCorpus.files) {
+    assert.match(article.sha256, /^[a-f0-9]{64}$/);
+    assert.ok(article.bytes > 0);
+  }
 });
 
 test('every article has a title and a resolvable scan or explicit placeholder', () => {
@@ -77,6 +101,7 @@ test('preservation manifest verifies every source image, legacy study and articl
     for (const study of collection.studies) assert.match(study.sha256, /^[a-f0-9]{64}$/);
   }
   for (const article of manifest.articleScans) assert.match(article.scan.sha256, /^[a-f0-9]{64}$/);
+  assert.equal(manifest.articleCorpus.fileCount, articleFiles.length);
 });
 
 test('public contribution intake rejects unsafe formats and never auto-publishes', () => {

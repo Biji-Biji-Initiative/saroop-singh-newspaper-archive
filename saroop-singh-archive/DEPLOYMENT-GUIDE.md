@@ -51,9 +51,9 @@ commit them to the repository or configure them as build-time variables.
 | `CONTRIBUTION_RETENTION_DAYS`     | Optional; defaults to `90` days for unreviewed uploads  |
 | `CONTRIBUTIONS_ENABLED`          | Set to `false` for an immediate public-write kill switch |
 
-`ARCHIVE_CONTENT_DIR` normally does not need an override: the Docker image
-ships the source-controlled article directory. If it is set explicitly, it
-must point to the copied published-content directory inside the container.
+The Docker image ships the validated source-controlled articles from
+`packages/web/content/articles/published/`. There is no runtime content-path
+override: changes to published articles are reviewed and deployed through Git.
 
 ## Deployment verification
 
