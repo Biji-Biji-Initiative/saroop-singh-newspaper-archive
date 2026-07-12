@@ -9,6 +9,7 @@ import {
   listArchiveDirectory,
   readJsonFile,
 } from '@/lib/archive-storage'
+import type { PhotoAnalysis } from '@/lib/photo-analysis'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -31,6 +32,7 @@ interface StoredGalleryItem {
     familyMember?: string
     tags?: string[]
   }
+  photoAnalysis?: PhotoAnalysis
 }
 
 function isStoredGalleryItem(value: unknown): value is StoredGalleryItem {
@@ -115,13 +117,19 @@ export async function GET(request: NextRequest) {
         isPublic: item.isPublic,
         submittedAt: item.submittedAt,
         metadata: item.metadata ?? {},
+        photoAnalysis: item.photoAnalysis,
         thumbnailUrl: item.thumbnailUrl ?? null,
         restorationCount: Array.isArray(item.restorations)
           ? item.restorations.length
           : 0,
       }))
 
-    return NextResponse.json({ success: true, status, items, count: items.length })
+    return NextResponse.json({
+      success: true,
+      status,
+      items,
+      count: items.length,
+    })
   } catch (error) {
     if (error instanceof ArchiveStorageValidationError) {
       return NextResponse.json({ error: error.message }, { status: 400 })

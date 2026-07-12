@@ -14,6 +14,10 @@ import {
 } from '@/lib/restoration-storage'
 import { consumeRestorationQuota } from '@/lib/restoration-rate-limit'
 import { contributionsEnabled } from '@/lib/contributions'
+import {
+  analyzePhotoWithGemini,
+  type PhotoAnalysis,
+} from '@/lib/photo-analysis'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -320,6 +324,36 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Keep visual observations private to this restoration session. The
+    // analysis is deliberately advisory: it counts visible faces and offers
+    // neutral archive notes, but never assigns a person's identity. A failed
+    // or quota-limited analysis must not discard a successful restoration.
+    let photoAnalysis: PhotoAnalysis | undefined
+    const analysisQuota = await consumeRestorationQuota()
+    if (analysisQuota.allowed) {
+      try {
+        photoAnalysis =
+          (await analyzePhotoWithGemini({
+            apiKey: geminiApiKey,
+            model: process.env.GEMINI_ANALYSIS_MODEL?.trim() || model,
+            image: inputBuffer,
+            mimeType: inputMimeType,
+          })) ?? undefined
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'TimeoutError') {
+          console.warn('Gemini photo analysis timed out')
+        } else {
+          console.warn('Gemini photo analysis failed', {
+            error: error instanceof Error ? error.message : 'unknown error',
+          })
+        }
+      }
+    } else {
+      console.warn(
+        'Photo analysis skipped because the restoration quota is exhausted'
+      )
+    }
+
     const sessionId = randomUUID()
     const originalFileName = `original.${inputExtension}`
     const restorationFileName = `archival-restoration.${outputExtension}`
@@ -331,6 +365,7 @@ export async function POST(request: NextRequest) {
       accessToken: sessionAccessToken,
       originalFileName,
       originalMimeType: inputMimeType,
+      ...(photoAnalysis ? { photoAnalysis } : {}),
       restorations: [
         {
           id: restorationId,
@@ -359,6 +394,7 @@ export async function POST(request: NextRequest) {
       sessionId,
       sessionAccessToken,
       originalImageUrl: restorationAssetUrl(session, originalFileName),
+      ...(photoAnalysis ? { photoAnalysis } : {}),
       restorations: [
         {
           id: restorationId,

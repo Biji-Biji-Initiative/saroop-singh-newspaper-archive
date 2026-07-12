@@ -38,6 +38,16 @@ interface ReviewItem {
     familyMember?: string
     tags?: string[]
   }
+  photoAnalysis?: {
+    faceCount: number
+    faces: Array<{
+      location: string
+      visibility: 'clear' | 'partial' | 'uncertain'
+    }>
+    photoSummary: string
+    suggestedTags: string[]
+    reviewRequired: true
+  }
 }
 
 interface ReviewQueueResponse {
@@ -203,7 +213,10 @@ export function ArchiveReviewQueue() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form className="flex flex-col gap-3 sm:flex-row" onSubmit={handleLoadQueue}>
+              <form
+                className="flex flex-col gap-3 sm:flex-row"
+                onSubmit={handleLoadQueue}
+              >
                 <label className="sr-only" htmlFor="archive-review-token">
                   Archive review token
                 </label>
@@ -214,9 +227,13 @@ export function ArchiveReviewQueue() {
                   value={adminToken}
                   onChange={event => setAdminToken(event.target.value)}
                   placeholder="Enter the private review token"
-                  className="min-h-11 flex-1 rounded-xl border border-slate-300 px-4 text-sm shadow-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20"
+                  className="min-h-11 flex-1 rounded-xl border border-slate-300 px-4 text-sm shadow-sm transition outline-none focus:border-slate-900 focus:ring-2 focus:ring-slate-900/20"
                 />
-                <Button type="submit" loading={isLoading} leftIcon={<RefreshCw className="h-4 w-4" />}>
+                <Button
+                  type="submit"
+                  loading={isLoading}
+                  leftIcon={<RefreshCw className="h-4 w-4" />}
+                >
                   Load pending contributions
                 </Button>
               </form>
@@ -245,7 +262,10 @@ export function ArchiveReviewQueue() {
           )}
 
           {items.length > 0 && (
-            <section aria-label="Pending family contributions" className="space-y-4">
+            <section
+              aria-label="Pending family contributions"
+              className="space-y-4"
+            >
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-xl font-semibold text-slate-950">
                   Pending contributions ({items.length})
@@ -268,7 +288,10 @@ export function ArchiveReviewQueue() {
                   const title = item.metadata.title || 'Untitled memory'
 
                   return (
-                    <Card key={item.id} className="overflow-hidden border-slate-200 bg-white shadow-md">
+                    <Card
+                      key={item.id}
+                      className="overflow-hidden border-slate-200 bg-white shadow-md"
+                    >
                       {item.thumbnailUrl && (
                         <div className="relative aspect-[4/3] bg-slate-100">
                           <Image
@@ -300,28 +323,71 @@ export function ArchiveReviewQueue() {
                         <dl className="grid gap-2 text-sm text-slate-700">
                           {item.metadata.date && (
                             <div>
-                              <dt className="font-medium text-slate-900">Photo date</dt>
+                              <dt className="font-medium text-slate-900">
+                                Photo date
+                              </dt>
                               <dd>{item.metadata.date}</dd>
                             </div>
                           )}
                           {item.metadata.familyMember && (
                             <div>
-                              <dt className="font-medium text-slate-900">Family connection</dt>
+                              <dt className="font-medium text-slate-900">
+                                Family connection
+                              </dt>
                               <dd>{item.metadata.familyMember}</dd>
                             </div>
                           )}
                         </dl>
-                        {item.metadata.tags && item.metadata.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-2" aria-label="Contribution tags">
-                            {item.metadata.tags.map(tag => (
-                              <span
-                                key={tag}
-                                className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
+                        {item.metadata.tags &&
+                          item.metadata.tags.length > 0 && (
+                            <div
+                              className="flex flex-wrap gap-2"
+                              aria-label="Contribution tags"
+                            >
+                              {item.metadata.tags.map(tag => (
+                                <span
+                                  key={tag}
+                                  className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        {item.photoAnalysis && (
+                          <aside className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
+                            <p className="font-medium">
+                              Private visual notes — verify before publishing
+                            </p>
+                            <p>
+                              {item.photoAnalysis.faceCount} visible{' '}
+                              {item.photoAnalysis.faceCount === 1
+                                ? 'face'
+                                : 'faces'}{' '}
+                              detected. The system does not identify people by
+                              name.
+                            </p>
+                            <p>{item.photoAnalysis.photoSummary}</p>
+                            {item.photoAnalysis.faces.length > 0 && (
+                              <p>
+                                <span className="font-medium">Locations: </span>
+                                {item.photoAnalysis.faces
+                                  .map(
+                                    face =>
+                                      `${face.location} (${face.visibility})`
+                                  )
+                                  .join(', ')}
+                              </p>
+                            )}
+                            {item.photoAnalysis.suggestedTags.length > 0 && (
+                              <p>
+                                <span className="font-medium">
+                                  Suggested tags:{' '}
+                                </span>
+                                {item.photoAnalysis.suggestedTags.join(', ')}
+                              </p>
+                            )}
+                          </aside>
                         )}
                         <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 sm:flex-row">
                           <Button
@@ -331,7 +397,9 @@ export function ArchiveReviewQueue() {
                             disabled={reviewingId !== null}
                             loading={isReviewing}
                             leftIcon={<X className="h-4 w-4" />}
-                            onClick={() => void reviewContribution(item, 'rejected')}
+                            onClick={() =>
+                              void reviewContribution(item, 'rejected')
+                            }
                           >
                             Keep private
                           </Button>
@@ -377,7 +445,8 @@ export function ArchiveReviewQueue() {
                 <p className="font-medium">Please check before publishing</p>
                 <p>
                   You are publishing the selected restoration and its archive
-                  context. The contributor&apos;s original upload remains private.
+                  context. The contributor&apos;s original upload remains
+                  private.
                 </p>
               </div>
               {error && (
@@ -401,9 +470,7 @@ export function ArchiveReviewQueue() {
                     publishCandidate !== null &&
                     reviewingId === publishCandidate.id
                   }
-                  disabled={
-                    publishCandidate === null || reviewingId !== null
-                  }
+                  disabled={publishCandidate === null || reviewingId !== null}
                   leftIcon={<Check className="h-4 w-4" />}
                   onClick={() => {
                     if (publishCandidate) {

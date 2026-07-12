@@ -16,6 +16,7 @@ import {
   writeArchiveFileAtomically,
   writeJsonAtomically,
 } from '@/lib/archive-storage'
+import type { PhotoAnalysis } from '@/lib/photo-analysis'
 
 export const MAX_RESTORATION_UPLOAD_BYTES = 10 * 1024 * 1024
 // Leave room for the multipart envelope while rejecting oversized requests
@@ -50,6 +51,7 @@ export interface RestorationSession {
   accessToken: string
   originalFileName: string
   originalMimeType: string
+  photoAnalysis?: PhotoAnalysis
   restorations: StoredRestoration[]
 }
 
@@ -117,7 +119,7 @@ function isPublishedGalleryRecord(value: unknown): boolean {
     typeof value === 'object' &&
     value !== null &&
     !Array.isArray(value) &&
-    (((value as Record<string, unknown>).status === 'published') ||
+    ((value as Record<string, unknown>).status === 'published' ||
       (value as Record<string, unknown>).isPublic === true)
   )
 }
@@ -130,7 +132,9 @@ function isPublishedGalleryRecord(value: unknown): boolean {
  */
 export async function purgeExpiredRestorationSessions(): Promise<number> {
   const cutoff = Date.now() - configuredRetentionHours() * 60 * 60 * 1_000
-  const sessionIds = (await listArchiveDirectory(archiveDataPath('restorations')))
+  const sessionIds = (
+    await listArchiveDirectory(archiveDataPath('restorations'))
+  )
     .filter(sessionId => RESTORATION_SESSION_ID_PATTERN.test(sessionId))
     .sort()
     .slice(0, MAX_CLEANUP_SESSIONS_PER_RUN)
@@ -144,7 +148,9 @@ export async function purgeExpiredRestorationSessions(): Promise<number> {
     }
 
     const galleryId = `gallery-${sessionId}`
-    const galleryRecord = await readJsonFile<unknown>(galleryItemPath(galleryId))
+    const galleryRecord = await readJsonFile<unknown>(
+      galleryItemPath(galleryId)
+    )
     if (!isPublishedGalleryRecord(galleryRecord)) {
       await removeArchiveFile(galleryItemPath(galleryId))
       await removeArchiveDirectory(galleryPublicAssetDirectory(galleryId))

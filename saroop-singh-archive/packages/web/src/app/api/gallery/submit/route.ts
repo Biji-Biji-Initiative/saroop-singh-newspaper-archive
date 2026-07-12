@@ -17,6 +17,7 @@ import {
   type RestorationSession,
 } from '@/lib/restoration-storage'
 import { contributionsEnabled } from '@/lib/contributions'
+import type { PhotoAnalysis } from '@/lib/photo-analysis'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -44,6 +45,7 @@ interface GallerySubmission {
     contributorConsent: true
     isPublic: false
   }
+  photoAnalysis?: PhotoAnalysis
   submittedAt: string
   isPublic: false
   status: 'pending'
@@ -350,6 +352,12 @@ export async function POST(request: NextRequest) {
       sessionId,
       restorations,
       metadata,
+      // This is server-produced analysis attached to the private restoration
+      // session, not data supplied by the contributor. It is visible only in
+      // the protected review queue and is never copied to public gallery data.
+      ...(session.photoAnalysis
+        ? { photoAnalysis: session.photoAnalysis }
+        : {}),
       submittedAt,
       isPublic: false,
       status: 'pending',

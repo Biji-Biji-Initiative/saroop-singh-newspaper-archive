@@ -50,7 +50,9 @@ async function waitForRoute(baseUrl, child, logs) {
     await delay(100)
   }
 
-  throw new Error(`Gallery access test server did not become ready.\n${logs.value}`)
+  throw new Error(
+    `Gallery access test server did not become ready.\n${logs.value}`
+  )
 }
 
 async function stopServer(child) {
@@ -90,6 +92,16 @@ async function main() {
         accessToken: SESSION_ACCESS_TOKEN,
         originalFileName: 'original.png',
         originalMimeType: 'image/png',
+        photoAnalysis: {
+          faceCount: 2,
+          faces: [
+            { location: 'left foreground', visibility: 'clear' },
+            { location: 'right foreground', visibility: 'partial' },
+          ],
+          photoSummary: 'Two people are visible in a family photograph.',
+          suggestedTags: ['family photograph', 'indoor'],
+          reviewRequired: true,
+        },
         restorations: [
           {
             id: RESTORATION_ID,
@@ -194,7 +206,15 @@ async function main() {
     assert.equal(moderationQueue.status, 200)
     assert.equal(moderationPayload.count, 1)
     assert.equal(moderationPayload.items[0].id, `gallery-${SESSION_ID}`)
-    assert.equal(moderationPayload.items[0].metadata.title, 'Token-gated contribution')
+    assert.equal(
+      moderationPayload.items[0].metadata.title,
+      'Token-gated contribution'
+    )
+    assert.equal(moderationPayload.items[0].photoAnalysis.faceCount, 2)
+    assert.equal(
+      moderationPayload.items[0].photoAnalysis.faces[1].location,
+      'right foreground'
+    )
 
     const publish = await fetch(
       `${baseUrl}/api/gallery?id=gallery-${SESSION_ID}`,
@@ -220,6 +240,7 @@ async function main() {
     )
     assert.ok(publishedFixture)
     assert.equal(publishedFixture.title, 'Token-gated contribution')
+    assert.equal('photoAnalysis' in publishedFixture, false)
 
     const publicAsset = await fetch(
       `${baseUrl}/api/gallery/assets/gallery-${SESSION_ID}/restoration-1.png`

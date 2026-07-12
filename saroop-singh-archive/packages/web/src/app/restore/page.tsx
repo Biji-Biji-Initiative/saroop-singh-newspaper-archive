@@ -35,6 +35,18 @@ interface RestorationResponse {
   sessionAccessToken: string
   originalImageUrl: string
   restorations: RestorationResult[]
+  photoAnalysis?: PhotoAnalysis
+}
+
+interface PhotoAnalysis {
+  faceCount: number
+  faces: Array<{
+    location: string
+    visibility: 'clear' | 'partial' | 'uncertain'
+  }>
+  photoSummary: string
+  suggestedTags: string[]
+  reviewRequired: true
 }
 
 interface GallerySubmissionResponse {
@@ -69,6 +81,7 @@ export default function RestorePage() {
     null
   )
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null)
+  const [photoAnalysis, setPhotoAnalysis] = useState<PhotoAnalysis | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(
     null
@@ -81,6 +94,7 @@ export default function RestorePage() {
     setSessionId(null)
     setSessionAccessToken(null)
     setOriginalImageUrl(null)
+    setPhotoAnalysis(null)
     setProgress(0)
     setSubmissionMessage(null)
   }
@@ -91,6 +105,7 @@ export default function RestorePage() {
     setSessionId(null)
     setSessionAccessToken(null)
     setOriginalImageUrl(null)
+    setPhotoAnalysis(null)
     setProgress(0)
     setProcessingStatus('idle')
     setError(null)
@@ -150,6 +165,7 @@ export default function RestorePage() {
       setSessionId(results.sessionId)
       setSessionAccessToken(results.sessionAccessToken)
       setOriginalImageUrl(results.originalImageUrl)
+      setPhotoAnalysis(results.photoAnalysis ?? null)
       setProgress(100)
       setProcessingStatus('completed')
     } catch (err) {
@@ -447,13 +463,59 @@ export default function RestorePage() {
 
             {/* Results Section */}
             {restorations.length > 0 && (
-              <RestorationGrid
-                restorations={restorations}
-                originalImage={originalImageUrl || ''}
-                onDownloadSingle={handleDownloadSingle}
-                onDownloadAll={handleDownloadAll}
-                onSubmitToGallery={handleSubmitToGallery}
-              />
+              <>
+                {photoAnalysis && (
+                  <Card className="border border-amber-200 bg-amber-50/80 shadow-sm">
+                    <CardHeader>
+                      <CardTitle>Private photo notes for review</CardTitle>
+                      <CardDescription>
+                        The archive detected {photoAnalysis.faceCount} visible{' '}
+                        {photoAnalysis.faceCount === 1 ? 'face' : 'faces'}.
+                        These are suggestions only: the system does not name
+                        anyone, and a family curator must verify every detail
+                        before it is published.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-slate-700">
+                      <p>{photoAnalysis.photoSummary}</p>
+                      {photoAnalysis.faces.length > 0 && (
+                        <p>
+                          <span className="font-medium text-slate-900">
+                            Visible locations:{' '}
+                          </span>
+                          {photoAnalysis.faces
+                            .map(
+                              face => `${face.location} (${face.visibility})`
+                            )
+                            .join(', ')}
+                        </p>
+                      )}
+                      {photoAnalysis.suggestedTags.length > 0 && (
+                        <div
+                          className="flex flex-wrap gap-2"
+                          aria-label="Suggested archive tags"
+                        >
+                          {photoAnalysis.suggestedTags.map(tag => (
+                            <span
+                              key={tag}
+                              className="rounded-full bg-white px-2.5 py-1 text-xs font-medium text-slate-700 shadow-sm"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+                <RestorationGrid
+                  restorations={restorations}
+                  originalImage={originalImageUrl || ''}
+                  onDownloadSingle={handleDownloadSingle}
+                  onDownloadAll={handleDownloadAll}
+                  onSubmitToGallery={handleSubmitToGallery}
+                />
+              </>
             )}
           </div>
         </VStack>
