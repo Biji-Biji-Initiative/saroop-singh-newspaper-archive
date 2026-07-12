@@ -1,0 +1,62 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1783749570534,
+      "tag": "0000_even_kronos",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1783751212629,
+      "tag": "0001_bent_mordo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1783751617888,
+      "tag": "0002_rainy_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1783752397092,
+      "tag": "0003_unknown_madame_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1783756259129,
+      "tag": "0004_blue_roulette",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1783758354715,
+      "tag": "0005_little_paper_doll",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1783760313263,
+      "tag": "0006_lowly_mac_gargan",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1783868833633,
+      "tag": "0007_reflective_iron_patriot",
+      "breakpoints": true
+    }
+  ]
+}

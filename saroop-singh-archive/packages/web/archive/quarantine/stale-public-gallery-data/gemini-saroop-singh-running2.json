@@ -1,0 +1,61 @@
+{
+  "id": "gemini-saroop-singh-running2",
+  "title": "Saroop Singh Running2",
+  "date": "1940s",
+  "submittedAt": "2025-08-31T11:03:23.334Z",
+  "isPublic": true,
+  "metadata": {
+    "title": "Saroop Singh Running2",
+    "date": "1940s",
+    "familyMember": "Saroop Singh",
+    "tags": [
+      "Saroop Singh",
+      "Athletics",
+      "Sports",
+      "Restored",
+      "Gemini AI"
+    ],
+    "isPublic": true,
+    "description": "Restored photograph from the Saroop Singh archive collection."
+  },
+  "thumbnailUrl": "/gallery-images/gemini-saroop-singh-running2-restoration-1.png",
+  "restorations": [
+    {
+      "id": "gemini-saroop-singh-running2-restoration-1",
+      "type": "enhanced",
+      "url": "/gallery-images/gemini-saroop-singh-running2-restoration-1.png",
+      "createdAt": "2025-08-31T11:03:23.317Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running2-restoration-2",
+      "type": "colorized",
+      "url": "/gallery-images/gemini-saroop-singh-running2-restoration-2.png",
+      "createdAt": "2025-08-31T11:03:23.320Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running2-restoration-3",
+      "type": "repaired",
+      "url": "/gallery-images/gemini-saroop-singh-running2-restoration-3.png",
+      "createdAt": "2025-08-31T11:03:23.323Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running2-restoration-4",
+      "type": "denoised",
+      "url": "/gallery-images/gemini-saroop-singh-running2-restoration-4.png",
+      "createdAt": "2025-08-31T11:03:23.326Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running2-restoration-5",
+      "type": "sharpened",
+      "url": "/gallery-images/gemini-saroop-singh-running2-restoration-5.png",
+      "createdAt": "2025-08-31T11:03:23.331Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running2-restoration-6",
+      "type": "artistic",
+      "url": "/gallery-images/gemini-saroop-singh-running2-restoration-6.png",
+      "createdAt": "2025-08-31T11:03:23.334Z"
+    }
+  ],
+  "originalImageUrl": "/gallery-images/saroop-singh-running2.png"
+}

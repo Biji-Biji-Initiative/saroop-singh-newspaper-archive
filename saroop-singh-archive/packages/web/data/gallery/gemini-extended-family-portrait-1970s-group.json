@@ -1,0 +1,62 @@
+{
+  "id": "gemini-extended-family-portrait-1970s-group",
+  "title": "Extended family group portrait",
+  "date": "Date unknown",
+  "submittedAt": "2025-08-31T11:03:23.233Z",
+  "isPublic": true,
+  "metadata": {
+    "title": "Extended family group portrait",
+    "date": "Date unknown",
+    "dateConfidence": "unknown",
+    "sourceType": "recovered family-photo JPEG; physical print and digitisation history unknown",
+    "familyMember": "People not yet identified",
+    "tags": [
+      "Portrait",
+      "Family",
+      "Group Photo",
+      "Identity research"
+    ],
+    "isPublic": true,
+    "description": "A recovered group portrait. Identities, date, location, physical custodian and digitisation history remain unknown."
+  },
+  "thumbnailUrl": "/gallery-images/gemini-extended-family-portrait-1970s-group-original.jpg",
+  "restorations": [
+    {
+      "id": "gemini-extended-family-portrait-1970s-group-restoration-1",
+      "type": "enhanced",
+      "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-1.png",
+      "createdAt": "2025-08-31T11:03:23.212Z"
+    },
+    {
+      "id": "gemini-extended-family-portrait-1970s-group-restoration-2",
+      "type": "colorized",
+      "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-2.png",
+      "createdAt": "2025-08-31T11:03:23.217Z"
+    },
+    {
+      "id": "gemini-extended-family-portrait-1970s-group-restoration-3",
+      "type": "repaired",
+      "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-3.png",
+      "createdAt": "2025-08-31T11:03:23.220Z"
+    },
+    {
+      "id": "gemini-extended-family-portrait-1970s-group-restoration-4",
+      "type": "denoised",
+      "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-4.png",
+      "createdAt": "2025-08-31T11:03:23.223Z"
+    },
+    {
+      "id": "gemini-extended-family-portrait-1970s-group-restoration-5",
+      "type": "sharpened",
+      "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-5.png",
+      "createdAt": "2025-08-31T11:03:23.228Z"
+    },
+    {
+      "id": "gemini-extended-family-portrait-1970s-group-restoration-6",
+      "type": "artistic",
+      "url": "/gallery-images/gemini-extended-family-portrait-1970s-group-restoration-6.png",
+      "createdAt": "2025-08-31T11:03:23.233Z"
+    }
+  ],
+  "originalImageUrl": "/gallery-images/gemini-extended-family-portrait-1970s-group-original.jpg"
+}

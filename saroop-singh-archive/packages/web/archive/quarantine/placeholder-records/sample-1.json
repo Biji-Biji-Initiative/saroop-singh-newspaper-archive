@@ -1,0 +1,22 @@
+{
+  "id": "sample-1",
+  "title": "Sample Historic Photo",
+  "date": "1937-07-18",
+  "submittedAt": "2024-08-31T00:00:00Z",
+  "isPublic": true,
+  "metadata": {
+    "title": "Sample Historic Photo",
+    "date": "1937-07-18",
+    "familyMember": "Saroop Singh",
+    "tags": ["athletics", "sports", "vintage"],
+    "isPublic": true
+  },
+  "thumbnailUrl": "/placeholder-image.svg",
+  "restorations": [{
+    "id": "restoration-1",
+    "type": "enhanced",
+    "url": "/placeholder-restoration.jpg",
+    "createdAt": "2024-08-31T00:00:00Z"
+  }],
+  "originalImageUrl": "/placeholder-original.jpg"
+}
