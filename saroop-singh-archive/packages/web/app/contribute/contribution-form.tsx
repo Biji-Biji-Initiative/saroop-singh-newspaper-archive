@@ -21,24 +21,36 @@ type PhotoDetails = {
   story: string;
 };
 
-const fileKey = (file: File) =>
-  `${file.name}:${file.size}:${file.lastModified}`;
+type ContributionBatch = {
+  receiptToken: string;
+  uploadToken: string;
+};
+
+type ContributionFile = {
+  id: string;
+  file: File;
+};
+
+const opaqueToken = () =>
+  `${crypto.randomUUID()}${crypto.randomUUID().replaceAll("-", "")}`;
 
 export function ContributionForm() {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<ContributionFile[]>([]);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{
     sent: number;
     duplicates: number;
     errors: string[];
+    receiptUrl?: string;
   } | null>(null);
   const [selectionError, setSelectionError] = useState("");
   const [restorationPreference, setRestorationPreference] = useState("clean-preserve");
   const [allowAiStudy, setAllowAiStudy] = useState(false);
   const [fileMetadata, setFileMetadata] = useState<Record<string, PhotoDetails>>({});
+  const [batch, setBatch] = useState<ContributionBatch>();
   const [progress, setProgress] = useState<{ current: number; total: number; name: string }>();
   const previews = useMemo(
-    () => files.map((file) => ({ file, key: fileKey(file), url: URL.createObjectURL(file) })),
+    () => files.map(({ id, file }) => ({ file, key: id, url: URL.createObjectURL(file) })),
     [files],
   );
   useEffect(
@@ -59,36 +71,35 @@ export function ContributionForm() {
       );
     setSelectionError(messages.join(" "));
     setResult(null);
-    setFiles(safe);
-    setFileMetadata((current) =>
+    setBatch(undefined);
+    const selectedFiles = safe.map((file) => ({ id: crypto.randomUUID(), file }));
+    setFiles(selectedFiles);
+    setFileMetadata(
       Object.fromEntries(
-        safe.map((file) => {
-          const key = fileKey(file);
-          return [
-            key,
-            current[key] || {
-              title: file.name.replace(/\.[^.]+$/, ""),
-              estimatedDate: "",
-              people: "",
-              story: "",
-            },
-          ];
-        }),
+        selectedFiles.map(({ id, file }) => [
+          id,
+          {
+            title: file.name.replace(/\.[^.]+$/, ""),
+            estimatedDate: "",
+            people: "",
+            story: "",
+          },
+        ]),
       ),
     );
   }
 
-  function updatePhoto(key: string, updates: Partial<PhotoDetails>) {
+  function updatePhoto(id: string, updates: Partial<PhotoDetails>) {
     setFileMetadata((current) => ({
       ...current,
-      [key]: { ...current[key], ...updates },
+      [id]: { ...current[id], ...updates },
     }));
   }
 
-  function removePhoto(key: string) {
-    setFiles((current) => current.filter((file) => fileKey(file) !== key));
+  function removePhoto(id: string) {
+    setFiles((current) => current.filter((item) => item.id !== id));
     setFileMetadata((current) =>
-      Object.fromEntries(Object.entries(current).filter(([entryKey]) => entryKey !== key)),
+      Object.fromEntries(Object.entries(current).filter(([entryKey]) => entryKey !== id)),
     );
     setResult(null);
   }
@@ -98,14 +109,21 @@ export function ContributionForm() {
     if (!files.length) return;
     setBusy(true);
     setResult(null);
+    const activeBatch = batch || {
+      receiptToken: opaqueToken(),
+      uploadToken: opaqueToken(),
+    };
+    if (!batch) setBatch(activeBatch);
     const base = new FormData(event.currentTarget);
     let sent = 0;
     let duplicates = 0;
     const errors: string[] = [];
-    const failedFiles: File[] = [];
+    const failedFiles: ContributionFile[] = [];
+    let receiptUrl: string | undefined;
     for (let index = 0; index < files.length; index += 1) {
-      const file = files[index];
-      const metadata = fileMetadata[fileKey(file)];
+      const item = files[index];
+      const { file, id: clientItemId } = item;
+      const metadata = fileMetadata[clientItemId];
       setProgress({ current: index + 1, total: files.length, name: file.name });
       const form = new FormData();
       for (const [key, value] of base.entries())
@@ -115,31 +133,42 @@ export function ContributionForm() {
       form.set("estimatedDate", metadata?.estimatedDate || "");
       form.set("people", metadata?.people || "");
       form.set("story", metadata?.story || "");
+      form.set("receiptToken", activeBatch.receiptToken);
+      form.set("uploadToken", activeBatch.uploadToken);
+      form.set("clientItemId", clientItemId);
       try {
         const response = await fetch("/api/contribute", {
           method: "POST",
           body: form,
         });
         const data = await response.json();
-        if (response.ok && data.duplicate) duplicates += 1;
-        else if (response.ok) sent += 1;
-        else if (response.status === 409 && data.existingId) duplicates += 1;
+        if (response.ok && data.duplicate) {
+          duplicates += 1;
+          receiptUrl ||= data.receiptUrl;
+        } else if (response.ok) {
+          sent += 1;
+          receiptUrl ||= data.receiptUrl;
+        } else if (response.status === 409 && data.existingId) duplicates += 1;
         else {
           errors.push(`${file.name}: ${data.error || "Could not submit"}`);
-          failedFiles.push(file);
+          failedFiles.push(item);
         }
       } catch {
         errors.push(`${file.name}: connection failed`);
-        failedFiles.push(file);
+        failedFiles.push(item);
       }
     }
-    setResult({ sent, duplicates, errors });
+    if (sent + duplicates > 0 && errors.length === 0 && receiptUrl) {
+      window.location.href = receiptUrl;
+      return;
+    }
+    setResult({ sent, duplicates, errors, receiptUrl });
     setBusy(false);
     setProgress(undefined);
     setFiles(failedFiles);
     setFileMetadata((current) =>
       Object.fromEntries(
-        failedFiles.map((file) => [fileKey(file), current[fileKey(file)]]),
+        failedFiles.map((item) => [item.id, current[item.id]]),
       ),
     );
   }
@@ -326,6 +355,14 @@ export function ContributionForm() {
                 {error}
               </p>
             ))}
+            {result.receiptUrl && (
+              <Link
+                href={result.receiptUrl}
+                className="mt-4 inline-flex min-h-11 items-center rounded-full border border-current px-4 font-semibold"
+              >
+                Open your private receipt
+              </Link>
+            )}
           </div>
         )}
       </form>

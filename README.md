@@ -20,9 +20,17 @@ AI-assisted restorations.
 
 ## For family contributors
 
-The simplest path is the [family memory page](https://saroop.mereka.dev/contribute):
-preserve up to 12 photographs and their stories privately, without sending them
-to an AI provider. Every item waits for family review before publication.
+The simplest path is the [family contribution page](https://saroop.mereka.dev/contribute):
+preserve up to 12 photographs and their stories privately. Each successful batch
+ends at an unguessable private receipt that shows safe review totals only; it is
+not an account or an upload link. Every item waits for family review before
+publication.
+
+By default, contribution files remain inside the private archive and are not
+sent to an AI provider. An optional, explicit private-study consent allows an
+archive administrator to request a working-copy study after family review; the
+source is never replaced and nothing is published automatically. Leaving it
+unticked means no contribution copy is sent to an AI provider.
 
 Conservative AI-assisted restoration studies are initiated by archive
 administrators only after private intake and explicit consent. The public

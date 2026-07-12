@@ -1,4 +1,4 @@
-const CACHE = "saroop-archive-premiere-v2";
+const CACHE = "saroop-archive-premiere-v3";
 const CORE = [
   "/",
   "/story",
@@ -15,6 +15,7 @@ const PRIVATE_PREFIXES = [
   "/api/",
   "/studio",
   "/memory-receipt",
+  "/contribution-receipt",
   "/contribute",
   "/remember",
   "/signin-with-chatgpt",

@@ -38,22 +38,39 @@ commit them to the repository or configure them as build-time variables.
 | -------------------------------- | -------------------------------------------------------- |
 | `NODE_ENV`                       | `production`                                             |
 | `ARCHIVE_DATA_DIR`               | `/data`                                                  |
-| `ARCHIVE_PUBLIC_ORIGIN`          | `https://saroop.mereka.dev`; used for browser origin checks behind the TLS proxy |
+| `ARCHIVE_PUBLIC_ORIGIN`          | `https://saroop.mereka.dev`; used for trusted browser-origin checks behind TLS |
+| `NEXT_PUBLIC_SITE_ORIGIN`        | `https://saroop.mereka.dev`; canonical public URL        |
+| `ARCHIVE_ADMIN_EMAILS`           | Required comma-separated Studio owner allowlist          |
+| `ARCHIVE_ADMIN_PASSWORD`         | Required long Studio sign-in passphrase                  |
+| `ARCHIVE_SESSION_SECRET`         | Required 32+ character session-signing secret            |
+| `ARCHIVE_SOURCE_HASH_SECRET`     | Separate pepper for daily abuse-limit hashes             |
+| `ADMIN_API_TOKEN`                | Required high-entropy Studio automation token            |
+| `ARCHIVE_REVALIDATE_SECRET`      | Optional bearer credential for `/api/revalidate`         |
+| `OPENAI_API_KEY`                 | Dedicated server-side GPT Image credential               |
 | `GEMINI_API_KEY`                 | Dedicated server-side Gemini credential                  |
-| `GEMINI_MODEL`                   | Optional image-capable model override                    |
-| `ADMIN_API_TOKEN`                | High-entropy server-side moderation token                |
-| `REVALIDATE_SECRET`              | High-entropy server-side revalidation secret             |
-| `RESTORATION_PER_IP_LIMIT`       | Reserved until the proxy supplies a server-sanitized client IP; Coolify currently enforces global caps only |
-| `RESTORATION_GLOBAL_LIMIT`       | Optional; defaults to `20` per hour                      |
-| `RESTORATION_DAILY_GLOBAL_LIMIT` | Optional; defaults to `12` per day                       |
-| `RESTORATION_RETENTION_HOURS`    | Optional; defaults to `168` (7 days)                     |
-| `CONTRIBUTION_DAILY_GLOBAL_LIMIT` | Optional; defaults to `100` private uploads per day     |
-| `CONTRIBUTION_RETENTION_DAYS`     | Optional; defaults to `90` days for unreviewed uploads  |
-| `CONTRIBUTIONS_ENABLED`          | Set to `false` for an immediate public-write kill switch |
+| `GEMINI_ANALYSIS_MODEL`          | Optional private face-observation model override         |
+| `CONTRIBUTION_DAILY_GLOBAL_LIMIT`| Optional global private-photo cap; defaults to `500`/day |
+| `MEMORY_DAILY_GLOBAL_LIMIT`      | Optional global private-memory cap; defaults to `1000`/day |
+| `CONTRIBUTIONS_ENABLED`          | Set `false`, `0`, or `off` to close public photo intake immediately |
+
+There is no automatic retention timer or off-host backup in the application.
+Treat private-upload retention and backup destinations as an explicit archive
+policy, then prove recovery before relying on either. The contribution switch
+closes photo intake only; Memory Room submissions remain separately available.
 
 The Docker image ships the validated source-controlled articles from
 `packages/web/content/articles/published/`. There is no runtime content-path
 override: changes to published articles are reviewed and deployed through Git.
+
+## Continuous delivery
+
+`Deploy production` runs after a successful `Web CI` push to `main`. It checks
+that the proven SHA is still the current `main`, triggers Coolify through its
+scoped API, polls the deployment, and requires Coolify to report that exact
+commit before it succeeds. The repository Action secrets `COOLIFY_API_URL` and
+`COOLIFY_API_TOKEN` are copied from the Infisical `/platform/coolify` scope;
+they are never committed. A manual workflow dispatch is available for a
+controlled replay, but normal deployments should flow through verified `main`.
 
 ## Deployment verification
 

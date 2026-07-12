@@ -116,6 +116,28 @@ function tinyPng(width = 12, height = 9) {
   return bytes;
 }
 
+function contributionForm({
+  receiptToken,
+  uploadToken,
+  clientItemId,
+  bytes = tinyPng(),
+  filename = "family-memory.png",
+}) {
+  const form = new FormData();
+  form.set("file", new Blob([bytes], { type: "image/png" }), filename);
+  form.set("contributorName", "Archive Test Family");
+  form.set("relationship", "test relative");
+  form.set("contact", "private@example.com");
+  form.set("title", "Private integration photograph");
+  form.set("people", "People awaiting identification");
+  form.set("story", "A private workflow test record.");
+  form.set("consent", "yes");
+  form.set("receiptToken", receiptToken);
+  form.set("uploadToken", uploadToken);
+  form.set("clientItemId", clientItemId);
+  return form;
+}
+
 test("persists private family workflows behind signed Studio and AI consent gates", async () => {
   const login = new FormData();
   login.set("email", "archive-test@example.com");
@@ -141,27 +163,161 @@ test("persists private family workflows behind signed Studio and AI consent gate
   assert.equal(logoutResponse.status, 303);
   assert.equal(logoutResponse.headers.get("location"), `${publicOrigin}/`);
 
-  const contribution = new FormData();
-  contribution.set(
-    "file",
-    new Blob([tinyPng()], { type: "image/png" }),
-    "family-memory.png",
-  );
-  contribution.set("contributorName", "Archive Test Family");
-  contribution.set("relationship", "test relative");
-  contribution.set("contact", "private@example.com");
-  contribution.set("title", "Private integration photograph");
-  contribution.set("people", "People awaiting identification");
-  contribution.set("story", "A private workflow test record.");
-  contribution.set("consent", "yes");
+  const contributionReceiptToken = `receipt-${"a".repeat(64)}`;
+  const contributionUploadToken = `upload-${"b".repeat(64)}`;
+  const firstClientItemId = "00000000-0000-4000-8000-000000000001";
+  const secondClientItemId = "00000000-0000-4000-8000-000000000002";
   const contributionResponse = await fetch(`${origin}/api/contribute`, {
     method: "POST",
     headers: { origin: publicOrigin },
-    body: contribution,
+    body: contributionForm({
+      receiptToken: contributionReceiptToken,
+      uploadToken: contributionUploadToken,
+      clientItemId: firstClientItemId,
+    }),
   });
   assert.equal(contributionResponse.status, 201);
+  assert.equal(contributionResponse.headers.get("cache-control"), "private, no-store");
   const contributionResult = await contributionResponse.json();
   assert.ok(contributionResult.id);
+  assert.equal(
+    contributionResult.receiptUrl,
+    `/contribution-receipt/${contributionReceiptToken}`,
+  );
+
+  const secondContributionResponse = await fetch(`${origin}/api/contribute`, {
+    method: "POST",
+    headers: { origin: publicOrigin },
+    body: contributionForm({
+      receiptToken: contributionReceiptToken,
+      uploadToken: contributionUploadToken,
+      clientItemId: secondClientItemId,
+      bytes: tinyPng(13, 9),
+      filename: "second-family-memory.png",
+    }),
+  });
+  assert.equal(secondContributionResponse.status, 201);
+  const secondContributionResult = await secondContributionResponse.json();
+  assert.notEqual(secondContributionResult.id, contributionResult.id);
+
+  const retryResponse = await fetch(`${origin}/api/contribute`, {
+    method: "POST",
+    headers: { origin: publicOrigin },
+    body: contributionForm({
+      receiptToken: contributionReceiptToken,
+      uploadToken: contributionUploadToken,
+      clientItemId: firstClientItemId,
+    }),
+  });
+  assert.equal(retryResponse.status, 200);
+  const retryResult = await retryResponse.json();
+  assert.equal(retryResult.id, contributionResult.id);
+  assert.equal(retryResult.receiptUrl, contributionResult.receiptUrl);
+
+  const conflictingRetryResponse = await fetch(`${origin}/api/contribute`, {
+    method: "POST",
+    headers: { origin: publicOrigin },
+    body: contributionForm({
+      receiptToken: contributionReceiptToken,
+      uploadToken: contributionUploadToken,
+      clientItemId: firstClientItemId,
+      bytes: tinyPng(14, 9),
+    }),
+  });
+  assert.equal(conflictingRetryResponse.status, 409);
+
+  const wrongUploadTokenResponse = await fetch(`${origin}/api/contribute`, {
+    method: "POST",
+    headers: { origin: publicOrigin },
+    body: contributionForm({
+      receiptToken: contributionReceiptToken,
+      uploadToken: `upload-${"c".repeat(64)}`,
+      clientItemId: "00000000-0000-4000-8000-000000000003",
+      bytes: tinyPng(15, 9),
+    }),
+  });
+  assert.equal(wrongUploadTokenResponse.status, 403);
+
+  const sharedCapabilityToken = `session-${"c".repeat(64)}`;
+  const sharedCapabilityResponse = await fetch(`${origin}/api/contribute`, {
+    method: "POST",
+    headers: { origin: publicOrigin },
+    body: contributionForm({
+      receiptToken: sharedCapabilityToken,
+      uploadToken: sharedCapabilityToken,
+      clientItemId: "00000000-0000-4000-8000-000000000003",
+      bytes: tinyPng(16, 9),
+    }),
+  });
+  assert.equal(sharedCapabilityResponse.status, 400);
+
+  const contributionReceiptResponse = await fetch(
+    `${origin}/api/contributions/${contributionReceiptToken}`,
+  );
+  assert.equal(contributionReceiptResponse.status, 200);
+  assert.equal(
+    contributionReceiptResponse.headers.get("cache-control"),
+    "private, no-store",
+  );
+  const contributionReceipt = await contributionReceiptResponse.json();
+  assert.equal(contributionReceipt.receivedCount, 2);
+  assert.equal(contributionReceipt.duplicateCount, 0);
+  assert.equal(contributionReceipt.pendingReviewCount, 2);
+  assert.equal(contributionReceipt.status, "submitted");
+  assert.match(contributionReceipt.createdAt, /^\d{4}-\d{2}-\d{2}/);
+  const contributionReceiptText = JSON.stringify(contributionReceipt);
+  assert.doesNotMatch(
+    contributionReceiptText,
+    /Archive Test Family|private@example\.com|People awaiting identification|originals\/sha256|imageId|originalSha256/,
+  );
+  assert.doesNotMatch(contributionReceiptText, new RegExp(contributionResult.id));
+  const contributionReceiptPage = await fetch(
+    `${origin}${contributionResult.receiptUrl}`,
+    { headers: { accept: "text/html" } },
+  );
+  assert.equal(contributionReceiptPage.status, 200);
+  assert.match(
+    await contributionReceiptPage.text(),
+    /name="robots" content="noindex, nofollow"/,
+  );
+
+  const missingContributionReceipt = await fetch(
+    `${origin}/api/contributions/receipt-${"d".repeat(64)}`,
+  );
+  assert.equal(missingContributionReceipt.status, 404);
+
+  const duplicateReceiptToken = `receipt-${"e".repeat(64)}`;
+  const duplicateResponse = await fetch(`${origin}/api/contribute`, {
+    method: "POST",
+    headers: { origin: publicOrigin },
+    body: contributionForm({
+      receiptToken: duplicateReceiptToken,
+      uploadToken: `upload-${"f".repeat(64)}`,
+      clientItemId: "00000000-0000-4000-8000-000000000004",
+    }),
+  });
+  assert.equal(duplicateResponse.status, 200);
+  assert.equal((await duplicateResponse.json()).duplicate, true);
+  const duplicateReceiptResponse = await fetch(
+    `${origin}/api/contributions/${duplicateReceiptToken}`,
+  );
+  assert.equal(duplicateReceiptResponse.status, 200);
+  const duplicateReceipt = await duplicateReceiptResponse.json();
+  assert.match(duplicateReceipt.createdAt, /^\d{4}-\d{2}-\d{2}/);
+  assert.deepEqual(
+    {
+      receivedCount: duplicateReceipt.receivedCount,
+      duplicateCount: duplicateReceipt.duplicateCount,
+      pendingReviewCount: duplicateReceipt.pendingReviewCount,
+      status: duplicateReceipt.status,
+    },
+    {
+      receivedCount: 0,
+      duplicateCount: 1,
+      pendingReviewCount: 0,
+      status: "received",
+    },
+  );
 
   const automationHeaders = {
     authorization:
@@ -229,12 +385,141 @@ test("persists private family workflows behind signed Studio and AI consent gate
   });
   assert.equal(memoryResponse.status, 201);
   const memoryResult = await memoryResponse.json();
-  const receiptToken = memoryResult.receiptUrl.split("/").at(-1);
-  const receiptResponse = await fetch(
-    `${origin}/api/memories/${receiptToken}`,
+  const memoryReceiptToken = memoryResult.receiptUrl.split("/").at(-1);
+  const memoryReceiptResponse = await fetch(
+    `${origin}/api/memories/${memoryReceiptToken}`,
   );
-  assert.equal(receiptResponse.status, 200);
-  const receiptText = await receiptResponse.text();
-  assert.doesNotMatch(receiptText, /Private Test Claimant|Family Name Under Review/);
-  assert.match(receiptText, /submitted/);
+  assert.equal(memoryReceiptResponse.status, 200);
+  const memoryReceiptText = await memoryReceiptResponse.text();
+  assert.doesNotMatch(memoryReceiptText, /Private Test Claimant|Family Name Under Review/);
+  assert.match(memoryReceiptText, /submitted/);
+});
+
+test("serializes concurrent contribution receipts without losing a photograph", async () => {
+  const request = (form) =>
+    fetch(`${origin}/api/contribute`, {
+      method: "POST",
+      headers: { origin: publicOrigin },
+      body: form,
+    });
+
+  const batchReceiptToken = `receipt-${"g".repeat(64)}`;
+  const batchUploadToken = `upload-${"h".repeat(64)}`;
+  const [firstBatchResponse, secondBatchResponse] = await Promise.all([
+    request(
+      contributionForm({
+        receiptToken: batchReceiptToken,
+        uploadToken: batchUploadToken,
+        clientItemId: "00000000-0000-4000-8000-000000000005",
+        bytes: tinyPng(17, 9),
+      }),
+    ),
+    request(
+      contributionForm({
+        receiptToken: batchReceiptToken,
+        uploadToken: batchUploadToken,
+        clientItemId: "00000000-0000-4000-8000-000000000006",
+        bytes: tinyPng(18, 9),
+      }),
+    ),
+  ]);
+  assert.deepEqual(
+    [firstBatchResponse.status, secondBatchResponse.status].sort(),
+    [201, 201],
+  );
+  const [firstBatchResult, secondBatchResult] = await Promise.all([
+    firstBatchResponse.json(),
+    secondBatchResponse.json(),
+  ]);
+  assert.notEqual(firstBatchResult.id, secondBatchResult.id);
+  const sharedBatchReceipt = await fetch(
+    `${origin}/api/contributions/${batchReceiptToken}`,
+  );
+  assert.equal(sharedBatchReceipt.status, 200);
+  const sharedBatchSummary = await sharedBatchReceipt.json();
+  assert.match(sharedBatchSummary.createdAt, /^\d{4}-\d{2}-\d{2}/);
+  assert.deepEqual(
+    {
+      receivedCount: sharedBatchSummary.receivedCount,
+      duplicateCount: sharedBatchSummary.duplicateCount,
+      pendingReviewCount: sharedBatchSummary.pendingReviewCount,
+      status: sharedBatchSummary.status,
+    },
+    {
+      receivedCount: 2,
+      duplicateCount: 0,
+      pendingReviewCount: 2,
+      status: "submitted",
+    },
+  );
+
+  const retryReceiptToken = `receipt-${"i".repeat(64)}`;
+  const retryUploadToken = `upload-${"j".repeat(64)}`;
+  const retryInput = {
+    receiptToken: retryReceiptToken,
+    uploadToken: retryUploadToken,
+    clientItemId: "00000000-0000-4000-8000-000000000007",
+    bytes: tinyPng(19, 9),
+  };
+  const [firstRetryResponse, secondRetryResponse] = await Promise.all([
+    request(contributionForm(retryInput)),
+    request(contributionForm(retryInput)),
+  ]);
+  assert.deepEqual(
+    [firstRetryResponse.status, secondRetryResponse.status].sort(),
+    [200, 201],
+  );
+  const [firstRetryResult, secondRetryResult] = await Promise.all([
+    firstRetryResponse.json(),
+    secondRetryResponse.json(),
+  ]);
+  assert.equal(firstRetryResult.id, secondRetryResult.id);
+  const retryReceipt = await fetch(`${origin}/api/contributions/${retryReceiptToken}`);
+  assert.equal(retryReceipt.status, 200);
+  const retrySummary = await retryReceipt.json();
+  assert.equal(retrySummary.receivedCount, 1);
+  assert.equal(retrySummary.duplicateCount, 0);
+  assert.equal(retrySummary.pendingReviewCount, 1);
+
+  const sharedSource = tinyPng(20, 9);
+  const firstSourceReceiptToken = `receipt-${"k".repeat(64)}`;
+  const secondSourceReceiptToken = `receipt-${"m".repeat(64)}`;
+  const [firstSourceResponse, secondSourceResponse] = await Promise.all([
+    request(
+      contributionForm({
+        receiptToken: firstSourceReceiptToken,
+        uploadToken: `upload-${"l".repeat(64)}`,
+        clientItemId: "00000000-0000-4000-8000-000000000008",
+        bytes: sharedSource,
+      }),
+    ),
+    request(
+      contributionForm({
+        receiptToken: secondSourceReceiptToken,
+        uploadToken: `upload-${"n".repeat(64)}`,
+        clientItemId: "00000000-0000-4000-8000-000000000009",
+        bytes: sharedSource,
+      }),
+    ),
+  ]);
+  assert.deepEqual(
+    [firstSourceResponse.status, secondSourceResponse.status].sort(),
+    [200, 201],
+  );
+  const [firstSourceResult, secondSourceResult] = await Promise.all([
+    firstSourceResponse.json(),
+    secondSourceResponse.json(),
+  ]);
+  assert.equal(firstSourceResult.id, secondSourceResult.id);
+  assert.equal(
+    Number(Boolean(firstSourceResult.duplicate)) + Number(Boolean(secondSourceResult.duplicate)),
+    1,
+  );
+  const [firstSourceReceipt, secondSourceReceipt] = await Promise.all([
+    fetch(`${origin}/api/contributions/${firstSourceReceiptToken}`).then(response => response.json()),
+    fetch(`${origin}/api/contributions/${secondSourceReceiptToken}`).then(response => response.json()),
+  ]);
+  assert.equal(firstSourceReceipt.receivedCount + secondSourceReceipt.receivedCount, 1);
+  assert.equal(firstSourceReceipt.duplicateCount + secondSourceReceipt.duplicateCount, 1);
+  assert.equal(firstSourceReceipt.pendingReviewCount + secondSourceReceipt.pendingReviewCount, 1);
 });

@@ -64,6 +64,30 @@ export const archiveEvents = sqliteTable("archive_events", {
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, table => [index("archive_events_image_idx").on(table.imageId), index("archive_events_created_idx").on(table.createdAt)]);
 
+export const contributionBatches = sqliteTable("contribution_batches", {
+  id: text("id").primaryKey(),
+  receiptTokenHash: text("receipt_token_hash").notNull(),
+  uploadTokenHash: text("upload_token_hash").notNull(),
+  submissionSourceHash: text("submission_source_hash"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, table => [
+  uniqueIndex("contribution_batch_receipt_unique").on(table.receiptTokenHash),
+  uniqueIndex("contribution_batch_upload_unique").on(table.uploadTokenHash),
+]);
+
+export const contributionBatchItems = sqliteTable("contribution_batch_items", {
+  id: text("id").primaryKey(),
+  batchId: text("batch_id").notNull().references(() => contributionBatches.id),
+  clientItemId: text("client_item_id").notNull(),
+  imageId: text("image_id").notNull().references(() => archiveImages.id),
+  originalSha256: text("original_sha256").notNull(),
+  disposition: text("disposition").notNull(),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, table => [
+  uniqueIndex("contribution_batch_client_item_unique").on(table.batchId, table.clientItemId),
+  index("contribution_batch_item_batch_idx").on(table.batchId),
+]);
+
 export const memorySubmissions = sqliteTable("memory_submissions", {
   id: text("id").primaryKey(),
   kind: text("kind").notNull(),

@@ -114,14 +114,11 @@ test("each contributed photograph carries its own metadata and AI remains opt-in
 
   assert.match(form, /const \[allowAiStudy, setAllowAiStudy\] = useState\(false\)/);
   assert.match(form, /const \[fileMetadata, setFileMetadata\]/);
-  assert.match(form, /const metadata = fileMetadata\[fileKey\(file\)\]/);
-  for (const field of ["title", "estimatedDate", "people", "story"]) {
-    assert.match(
-      form,
-      new RegExp(`form\\.set\\("${field}", metadata\\?\\.${field}`),
-      `${field} must be copied from the current file's metadata`,
-    );
-  }
+  assert.match(form, /type ContributionFile = \{[\s\S]*?id: string;[\s\S]*?file: File;/);
+  assert.match(form, /const \{ file, id: clientItemId \} = item/);
+  assert.match(form, /const metadata = fileMetadata\[clientItemId\]/);
+  assert.match(form, /form\.set\("clientItemId", clientItemId\)/);
+  assert.doesNotMatch(form, /fileKey/);
   assert.match(form, /name="aiProcessingConsent"/);
   assert.match(form, /checked=\{allowAiStudy\}/);
   assert.match(route, /const aiConsentGranted = form\.get\("aiProcessingConsent"\) === "yes"/);

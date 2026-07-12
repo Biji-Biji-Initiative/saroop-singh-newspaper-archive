@@ -1,0 +1,105 @@
+name: Deploy production
+
+on:
+  workflow_run:
+    workflows:
+      - Web CI
+    types:
+      - completed
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  checks: read
+
+concurrency:
+  group: saroop-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy verified main to Coolify
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_UUID: xyj2isfzcr7s3127on7jyxoa
+      COOLIFY_API_URL: ${{ secrets.COOLIFY_API_URL }}
+      COOLIFY_API_TOKEN: ${{ secrets.COOLIFY_API_TOKEN }}
+      EXPECTED_WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Require deployment credentials
+        run: |
+          test -n "$COOLIFY_API_URL"
+          test -n "$COOLIFY_API_TOKEN"
+
+      - name: Skip stale Web CI results
+        id: target
+        run: |
+          current_sha="$(gh api "repos/${GITHUB_REPOSITORY}/commits/main" --jq .sha)"
+          if [ "${{ github.event_name }}" != "workflow_run" ]; then
+            ci_conclusion="$(gh api "repos/${GITHUB_REPOSITORY}/commits/$current_sha/check-runs" --jq '[.check_runs[] | select(.name == "Verify web build")] | max_by(.completed_at // .started_at // "") | .conclusion // ""')"
+            if [ "$ci_conclusion" != "success" ]; then
+              echo "Current main $current_sha has not passed Verify web build; refusing manual deployment."
+              echo "expected_sha=$current_sha" >> "$GITHUB_OUTPUT"
+              echo "deploy=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            echo "expected_sha=$current_sha" >> "$GITHUB_OUTPUT"
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$current_sha" != "$EXPECTED_WORKFLOW_SHA" ]; then
+            echo "Web CI proved $EXPECTED_WORKFLOW_SHA, but main is now $current_sha; a newer CI run will deploy it."
+            echo "expected_sha=$EXPECTED_WORKFLOW_SHA" >> "$GITHUB_OUTPUT"
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "expected_sha=$EXPECTED_WORKFLOW_SHA" >> "$GITHUB_OUTPUT"
+          echo "deploy=true" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger Coolify deployment
+        if: steps.target.outputs.deploy == 'true'
+        id: trigger
+        run: |
+          response="$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $COOLIFY_API_TOKEN" \
+            --header "content-type: application/json" \
+            "$COOLIFY_API_URL/deploy" \
+            --data "{\"uuid\":\"$APP_UUID\",\"force\":false}")"
+          deployment_uuid="$(printf '%s' "$response" | jq -r '.deployments[0].deployment_uuid // empty')"
+          test -n "$deployment_uuid"
+          echo "deployment_uuid=$deployment_uuid" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for Coolify completion
+        if: steps.target.outputs.deploy == 'true'
+        env:
+          DEPLOYMENT_UUID: ${{ steps.trigger.outputs.deployment_uuid }}
+          EXPECTED_SHA: ${{ steps.target.outputs.expected_sha }}
+        run: |
+          for _ in $(seq 1 80); do
+            response="$(curl --fail-with-body --silent --show-error \
+              --header "Authorization: Bearer $COOLIFY_API_TOKEN" \
+              "$COOLIFY_API_URL/deployments/$DEPLOYMENT_UUID")"
+            deployment_status="$(printf '%s' "$response" | jq -r '.status // empty')"
+            deployment_commit="$(printf '%s' "$response" | jq -r '.commit // empty')"
+            echo "Coolify deployment $DEPLOYMENT_UUID: $deployment_status ($deployment_commit)"
+            case "$deployment_status" in
+              finished)
+                test "$deployment_commit" = "$EXPECTED_SHA"
+                exit 0
+                ;;
+              failed|cancelled-by-user|cancelled-by-system)
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+          echo "Timed out waiting for Coolify deployment $DEPLOYMENT_UUID"
+          exit 1
