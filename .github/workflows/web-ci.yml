@@ -37,6 +37,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci --workspaces=false
 
+      - name: Validate the canonical published article corpus
+        run: npm run validate:content
+
       - name: Lint
         run: npm run lint
 

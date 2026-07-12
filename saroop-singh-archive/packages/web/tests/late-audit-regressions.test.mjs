@@ -21,16 +21,20 @@ test("media authorization resolves the complete object key instead of assuming a
   assert.doesNotMatch(route, /\bgetImage\s*\(/);
 });
 
-test("standalone memory uploads cannot inherit the first gallery photograph", () => {
+test("stories only attach a photograph the contributor explicitly chose", () => {
   const room = read("app/remember/memory-room.tsx");
   const start = room.indexOf("const shouldAttachSubject");
   const end = room.indexOf("if (anchor)", start);
   assert.ok(start >= 0 && end > start, "subject attachment guard must exist in submit()");
   const attachment = room.slice(start, end);
+  const galleryStart = room.indexOf("const acceptGallery");
+  const galleryEnd = room.indexOf("const requestGallery", galleryStart);
+  assert.ok(galleryStart >= 0 && galleryEnd > galleryStart, "gallery selection must be explicit");
+  const gallerySelection = room.slice(galleryStart, galleryEnd);
 
   assert.match(
     attachment,
-    /\["identify", "story", "correction"\]\.includes\(kind\)\s*\|\|\s*Boolean\(initialSubject\)/,
+    /\["identify", "correction"\]\.includes\(kind\)\s*\|\|\s*Boolean\(initialSubject\)\s*\|\|\s*\(kind === "story" && Boolean\(subject\)\)/,
   );
   assert.match(
     attachment,
@@ -41,12 +45,28 @@ test("standalone memory uploads cannot inherit the first gallery photograph", ()
     /else if \(shouldAttachSubject && initialSubject\)\s*form\.set\("subjectId", initialSubject\)/,
   );
   assert.match(attachment, /kind === "reverse" && reverseSubjectId/);
-  assert.doesNotMatch(attachment, /\["photograph", "reverse", "voice"\]/);
+  assert.doesNotMatch(attachment, /\["identify", "story", "correction"\]/);
+  assert.doesNotMatch(gallerySelection, /loaded\[0\]/);
   assert.equal(
     (room.match(/form\.set\("subjectId"/g) || []).length,
     3,
-    "subject assignment is limited to the guarded record actions and an explicit reverse-scan link",
+    "subject assignment is limited to required record actions, an explicit story link, and an explicit reverse-scan link",
   );
+});
+
+test("memory room gallery remains inside its narrow-screen grid column", () => {
+  const room = read("app/remember/memory-room.tsx");
+
+  assert.match(
+    room,
+    /lg:grid-cols-\[minmax\(0,1\.05fr\)_minmax\(0,\.95fr\)\]/,
+  );
+  assert.equal(
+    (room.match(/<div className="min-w-0">/g) || []).length >= 2,
+    true,
+    "both form columns must be allowed to shrink",
+  );
+  assert.match(room, /mt-4 flex min-w-0 gap-3 overflow-x-auto pb-3/);
 });
 
 test("identifications require a subject, a name, and either an anchor or position description", () => {
@@ -61,12 +81,14 @@ test("identifications require a subject, a name, and either an anchor or positio
   assert.match(route, /normalizedAnchorX < 0 \|\| normalizedAnchorX > 1/);
   assert.match(route, /normalizedAnchorY < 0 \|\| normalizedAnchorY > 1/);
   assert.match(route, /kind === "identify" && !subjectId/);
+  assert.match(route, /kind === "correction" && !subjectId/);
   assert.match(route, /kind === "identify" && !proposedName/);
   assert.match(
     route,
     /kind === "identify" && \(anchorX === null \|\| anchorY === null\) && !positionDescription/,
   );
   assert.match(route, /Position in photograph: \$\{positionDescription\}/);
+  assert.match(route, /\["story", "correction"\]\.includes\(kind\) && !submittedStory\.trim\(\)/);
 });
 
 test("each contributed photograph carries its own metadata and AI remains opt-in", () => {

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "collection": "Saroop Singh Archive — recovered source corpus",
   "fixityAlgorithm": "SHA-256",
   "counts": {
@@ -1073,5 +1073,241 @@
         "provenanceStatus": "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"
       }
     }
-  ]
+  ],
+  "articleCorpus": {
+    "canonicalRepositoryPath": "saroop-singh-archive/packages/web/content/articles/published",
+    "fileCount": 38,
+    "totalBytes": 54783,
+    "sha256": "3923b0cd668a8baeca90ecc15e59ce964aa9c7a86aff0a153fd98e07bc082f96",
+    "files": [
+      {
+        "slug": "1936-07-18_straits-times_athletic-results-saroop-singh",
+        "filename": "1936-07-18_straits-times_athletic-results-saroop-singh.md",
+        "bytes": 1771,
+        "sha256": "18f4d0f74a63ed48dd4fe98e702c8555961974bdfd59b9044f41cb805f27665c"
+      },
+      {
+        "slug": "1937-02-01_unknown-newspaper_selangor-harriers-compete-ipoh-saroop-singh",
+        "filename": "1937-02-01_unknown-newspaper_selangor-harriers-compete-ipoh-saroop-singh.md",
+        "bytes": 1609,
+        "sha256": "2663ffe5b7867451622cfd5aca838a541b7b050931312651a4e4e3424edcfb0c"
+      },
+      {
+        "slug": "1937-07-16_unknown-newspaper_some-good-times-recorded",
+        "filename": "1937-07-16_unknown-newspaper_some-good-times-recorded.md",
+        "bytes": 1495,
+        "sha256": "8bcb1df56d64a3b7b78574430f5a8f159507a89751878f1719d33a30b93ae28a"
+      },
+      {
+        "slug": "1937-07-17_singapore-free-press_selangor-aa-meeting-opens",
+        "filename": "1937-07-17_singapore-free-press_selangor-aa-meeting-opens.md",
+        "bytes": 1212,
+        "sha256": "f5548b5069d1f9a1fd4b584d0cb42e87ccce9df1a0ef04fc0bf3a9952df2bbd4"
+      },
+      {
+        "slug": "1937-07-17_unknown-newspaper_selangor-athletic-championships-sikh-runner-record",
+        "filename": "1937-07-17_unknown-newspaper_selangor-athletic-championships-sikh-runner-record.md",
+        "bytes": 1143,
+        "sha256": "0c85677f6681a28ab5892ac43e1e45ee775dc985f23fab23295f901cb8590711"
+      },
+      {
+        "slug": "1937-07-18_straits-times_selangor-athletic-meeting-saroop-singh-record",
+        "filename": "1937-07-18_straits-times_selangor-athletic-meeting-saroop-singh-record.md",
+        "bytes": 1656,
+        "sha256": "690e7b9dbf5a6349a9401e63cb59d7c868d1a94dc01a75d180a635bc006a588d"
+      },
+      {
+        "slug": "1937-07-19_straits-times_saroop-singh-half-mile-winner-state-record-photo",
+        "filename": "1937-07-19_straits-times_saroop-singh-half-mile-winner-state-record-photo.md",
+        "bytes": 596,
+        "sha256": "f792b6c509e74c613f1bd8453fbab47cfd2723a73d2deedd32b4320ea15d94d5"
+      },
+      {
+        "slug": "1937-07-19_straits-times_selangor-athletic-championships-full-page",
+        "filename": "1937-07-19_straits-times_selangor-athletic-championships-full-page.md",
+        "bytes": 854,
+        "sha256": "6824554f0ca17a0f032c3dece2dfc742224f56418c3698a0c1199a11156f5748"
+      },
+      {
+        "slug": "1937-07-24_morning-tribune_half-mile-record-broken-at-selangor-aaa-meet",
+        "filename": "1937-07-24_morning-tribune_half-mile-record-broken-at-selangor-aaa-meet.md",
+        "bytes": 1235,
+        "sha256": "878f76fa783de82f6178d637aa31f4e200093cff93edbcaa6798da5772ce4786"
+      },
+      {
+        "slug": "1937-08-03_singapore-free-press_fmsr-annual-sports",
+        "filename": "1937-08-03_singapore-free-press_fmsr-annual-sports.md",
+        "bytes": 980,
+        "sha256": "d1df109698bda561119da01b2f2b07b264bf5c159200465265ca3554584fa7e6"
+      },
+      {
+        "slug": "1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion",
+        "filename": "1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion.md",
+        "bytes": 1100,
+        "sha256": "88aa9bfce710db0ff888248200703721c5f1884bd37582ef02fcc16cc4a34e3a"
+      },
+      {
+        "slug": "1938-06-17_singapore-free-press_athletic-sports-at-seremban",
+        "filename": "1938-06-17_singapore-free-press_athletic-sports-at-seremban.md",
+        "bytes": 1656,
+        "sha256": "42048c2163318ce879ff97e05a8dc81d1d2710f7dc1325cf8a1c086be2901188"
+      },
+      {
+        "slug": "1938-06-30_malaya-tribune_saaa-meeting",
+        "filename": "1938-06-30_malaya-tribune_saaa-meeting.md",
+        "bytes": 1399,
+        "sha256": "e84436f1509895c23a42a126c9a66adc3fdb5bdc0d520392fa6f524b36e10774"
+      },
+      {
+        "slug": "1938-07-24_unknown-newspaper_malayan-aaa-council-olympic-games",
+        "filename": "1938-07-24_unknown-newspaper_malayan-aaa-council-olympic-games.md",
+        "bytes": 3128,
+        "sha256": "949858bb0c1e8e6254f62e7d528584995fc0c45726f7935b0cf49e224f6a3cfe"
+      },
+      {
+        "slug": "1939-02-03_straits-times_inter-club-cross-country-race",
+        "filename": "1939-02-03_straits-times_inter-club-cross-country-race.md",
+        "bytes": 1698,
+        "sha256": "60ecbea4d1f445d3a89a1c90bc5b3136e93af9745afa2940f7997b42af9853b2"
+      },
+      {
+        "slug": "1940-01-27_pinang-gazette-straits-chronicle_six-miles-trial-in-selangor",
+        "filename": "1940-01-27_pinang-gazette-straits-chronicle_six-miles-trial-in-selangor.md",
+        "bytes": 1446,
+        "sha256": "29a3e58d9684b72e01ee75ddcfd2ce19211563abd7d29e125879b17a30b4960d"
+      },
+      {
+        "slug": "1940-02-01_unknown-newspaper_selangor-harriers-expected-strongest-team",
+        "filename": "1940-02-01_unknown-newspaper_selangor-harriers-expected-strongest-team.md",
+        "bytes": 1471,
+        "sha256": "5e651ec82073ede1afe8b538ecad4882a0ec2f2e7e4f023779c8b5877e196a0a"
+      },
+      {
+        "slug": "1940-02-02_straits-times_selangor-harriers-to-compete-at-ipoh",
+        "filename": "1940-02-02_straits-times_selangor-harriers-to-compete-at-ipoh.md",
+        "bytes": 1060,
+        "sha256": "79c1a6ad61b43ff4e1ef6aec68e4c5257c7ce1cc1b589ef5bc6ac6efc98a54fe"
+      },
+      {
+        "slug": "1940-02-03_pinang-gazette-straits-chronicle_selangor-harriers-for-ipoh",
+        "filename": "1940-02-03_pinang-gazette-straits-chronicle_selangor-harriers-for-ipoh.md",
+        "bytes": 1282,
+        "sha256": "f4fec31192485b3a7ecc55a0e92e2eaca91c1b34adb633493e4b9980df4bb662"
+      },
+      {
+        "slug": "1940-02-05_pinang-gazette-straits-chronicle_only-three-teams-entered-for-race",
+        "filename": "1940-02-05_pinang-gazette-straits-chronicle_only-three-teams-entered-for-race.md",
+        "bytes": 1892,
+        "sha256": "293e3bbcda671330a80a446fe9f10340e1a389d978b4ae82ed53bd725fd7a3b5"
+      },
+      {
+        "slug": "1940-02-05_unknown-newspaper_cross-country-entries-saroop-singh",
+        "filename": "1940-02-05_unknown-newspaper_cross-country-entries-saroop-singh.md",
+        "bytes": 1699,
+        "sha256": "97e3c97764b8fd0d0f9732a1be7989364c227c2bbde1b6c4dc57dc1d87cd78a6"
+      },
+      {
+        "slug": "1940-02-07_straits-times_cross-country-race-on-saturday",
+        "filename": "1940-02-07_straits-times_cross-country-race-on-saturday.md",
+        "bytes": 1775,
+        "sha256": "31ea58e5994e2b19ead582b8a3c6c6c6c56b20bf0c7381785c9a5675400b1bd1"
+      },
+      {
+        "slug": "1940-08-07_straits-times_st-john-ambulance-brigade-sports-saroop-singh",
+        "filename": "1940-08-07_straits-times_st-john-ambulance-brigade-sports-saroop-singh.md",
+        "bytes": 1382,
+        "sha256": "76440a47531c5d5e4c5a94e46a22a39301093953af7bb92853220bcdc1c151e7"
+      },
+      {
+        "slug": "1949-04-17_indian-daily-mail_first-malayan-sikh-ladies-athletic-meet",
+        "filename": "1949-04-17_indian-daily-mail_first-malayan-sikh-ladies-athletic-meet.md",
+        "bytes": 1911,
+        "sha256": "95a90d781258da4433617802bd20ef4559dc6dadd2c5aebd4ebc553112931c11"
+      },
+      {
+        "slug": "1949-12-18_indian-daily-mail_selangor-sikh-sportsmen-singapore-visit",
+        "filename": "1949-12-18_indian-daily-mail_selangor-sikh-sportsmen-singapore-visit.md",
+        "bytes": 2125,
+        "sha256": "c2eb783da8dc9c240a79d0bb2a54cd4846ad8b9469ee39dc5109e5ff97476e5e"
+      },
+      {
+        "slug": "1953-06-04_singapore-standard_selangor-hockey",
+        "filename": "1953-06-04_singapore-standard_selangor-hockey.md",
+        "bytes": 769,
+        "sha256": "f06704ccc48a83a7cb4389de49546567ad025a53e7309fbe35cee7e614faa552"
+      },
+      {
+        "slug": "1954-11-07_straits-times_johore-police-routed-at-kl",
+        "filename": "1954-11-07_straits-times_johore-police-routed-at-kl.md",
+        "bytes": 730,
+        "sha256": "7fcf65f4dcfed7ce6f00c0bd655cfa52ac8470923445dcace4e8953f1dc8d5d0"
+      },
+      {
+        "slug": "1957-07-15_straits-times_sikh-runners-state-record-half-mile",
+        "filename": "1957-07-15_straits-times_sikh-runners-state-record-half-mile.md",
+        "bytes": 994,
+        "sha256": "44fdc43440a97ff8bc2d41e980cf01834e9bdfeb13eacb320e294ef779bf3fd5"
+      },
+      {
+        "slug": "unknown-date_tribune_mile-race-winners-photo",
+        "filename": "unknown-date_tribune_mile-race-winners-photo.md",
+        "bytes": 518,
+        "sha256": "99917c602cc94fdf45dc05a80c44f3d6f068dba420ded33a54dd7219ea04970a"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_athletic-championships-entries",
+        "filename": "unknown-date_unknown-newspaper_athletic-championships-entries.md",
+        "bytes": 2433,
+        "sha256": "1e3fcdf19569ff38c90db775e843c96889cab675a6c9712ad30835052fc928a2"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_athletic-results-saroop-singh-mile",
+        "filename": "unknown-date_unknown-newspaper_athletic-results-saroop-singh-mile.md",
+        "bytes": 1790,
+        "sha256": "3ab1d17144adc6237c62678d80ed0ac37d2c9142fa79267adb6226f99dab2168"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_fmsr-sports-saroop-singh",
+        "filename": "unknown-date_unknown-newspaper_fmsr-sports-saroop-singh.md",
+        "bytes": 1066,
+        "sha256": "c88e4726a05eef4b556a9a14fb034883ad716605849e507859fbe42876e3cf28"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_inter-state-athletic-match-seremban",
+        "filename": "unknown-date_unknown-newspaper_inter-state-athletic-match-seremban.md",
+        "bytes": 1956,
+        "sha256": "64617eaded1c47dce855fef2b12fa5f2d9099a886acffc44bafce13cebf394fc"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_malaya-tokyo-olympics-saroop-singh-mention",
+        "filename": "unknown-date_unknown-newspaper_malaya-tokyo-olympics-saroop-singh-mention.md",
+        "bytes": 2499,
+        "sha256": "b3ed556ece253da4f3791d7a3e93deaae3a8c513fc76d4f6f2e53edadc827c59"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_saroop-singh-half-mile-record-improvement",
+        "filename": "unknown-date_unknown-newspaper_saroop-singh-half-mile-record-improvement.md",
+        "bytes": 1602,
+        "sha256": "58a4865c09f1a9bbec7514f2408b7ac7660adaf1a85ae463889f9dfabd6e2541"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_saroop-singh-half-mile-winner-photo",
+        "filename": "unknown-date_unknown-newspaper_saroop-singh-half-mile-winner-photo.md",
+        "bytes": 582,
+        "sha256": "5682c28b8ae1cada7dcbe10b22d9f131559f4c8e13063af266af380387ecf9e4"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_selangor-harriers-for-ipoh-cross-country",
+        "filename": "unknown-date_unknown-newspaper_selangor-harriers-for-ipoh-cross-country.md",
+        "bytes": 1349,
+        "sha256": "ed57d63d64310996c40960dc73f550ac6ef84ce50c17fe740a2243f0512b775f"
+      },
+      {
+        "slug": "unknown-date_unknown-newspaper_sports-contributions-saroop-singh",
+        "filename": "unknown-date_unknown-newspaper_sports-contributions-saroop-singh.md",
+        "bytes": 920,
+        "sha256": "676cf8d34d1f979ab5e8651352968c1f0a91d85e4f15d3baadbc707b9ae096c0"
+      }
+    ]
+  }
 }

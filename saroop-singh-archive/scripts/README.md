@@ -1,4 +1,10 @@
-# Content Reorganization Scripts
+# Historical content reorganization scripts
+
+> **Do not run these scripts.** They are retained only as an historical record
+> of a completed migration and target retired paths, old local machines, and
+> obsolete symlink assumptions. The live archive has one validated source:
+> `../packages/web/content/articles/published/`. For current contribution
+> work, use [CONTRIBUTING.md](../../CONTRIBUTING.md).
 
 This directory contains scripts to reorganize the Saroop Singh Archive project into a clean, scalable content management system.
 

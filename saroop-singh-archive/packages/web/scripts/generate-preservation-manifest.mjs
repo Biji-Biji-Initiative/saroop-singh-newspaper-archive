@@ -28,12 +28,22 @@ for (const summary of index.items) {
 }
 
 const articleScans = [];
+const articleCorpusFiles = [];
 const articleDirectory = join(root, "content/articles/published");
-for (const filename of (await readdir(articleDirectory)).filter((name) => name.endsWith(".md") && name !== "README.md")) {
-  const markdown = await readFile(join(articleDirectory, filename), "utf8");
+for (const filename of (await readdir(articleDirectory))
+  .filter((name) => name.endsWith(".md") && name !== "README.md")
+  .sort()) {
+  const markdownBytes = await readFile(join(articleDirectory, filename));
+  const markdown = markdownBytes.toString("utf8");
   const match = markdown.match(/^---\s*\n([\s\S]*?)\n---\s*\n?/);
   if (!match) continue;
   const metadata = YAML.parse(match[1]) || {};
+  articleCorpusFiles.push({
+    slug: filename.replace(/\.md$/, ""),
+    filename,
+    bytes: markdownBytes.byteLength,
+    sha256: createHash("sha256").update(markdownBytes).digest("hex"),
+  });
   if (metadata.status === "withdrawn" || !String(metadata.image || "").startsWith("/")) continue;
   articleScans.push({
     slug: filename.replace(/\.md$/, ""),
@@ -43,15 +53,25 @@ for (const filename of (await readdir(articleDirectory)).filter((name) => name.e
     scan: await describe(metadata.image, "newspaper-access-capture", "best-available-catalogue-source-scan-screenshot-crop-or-placeholder"),
   });
 }
+const articleCorpus = {
+  canonicalRepositoryPath: "saroop-singh-archive/packages/web/content/articles/published",
+  fileCount: articleCorpusFiles.length,
+  totalBytes: articleCorpusFiles.reduce((total, article) => total + article.bytes, 0),
+  sha256: createHash("sha256")
+    .update(articleCorpusFiles.map((article) => `${article.filename}\0${article.sha256}`).join("\n"))
+    .digest("hex"),
+  files: articleCorpusFiles,
+};
 
 const manifest = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   collection: "Saroop Singh Archive — recovered source corpus",
   fixityAlgorithm: "SHA-256",
   counts: { collections: collections.length, bestAvailableSources: collections.length, legacyAiExperiments: collections.reduce((total, item) => total + item.studies.length, 0), articleScans: articleScans.length },
   totalBytes: collections.reduce((total, item) => total + item.original.bytes + item.studies.reduce((sum, study) => sum + study.bytes, 0), 0) + articleScans.reduce((total, item) => total + item.scan.bytes, 0),
   collections,
   articleScans,
+  articleCorpus,
 };
 
 const output = join(root, "data/generated/preservation-manifest.json");
