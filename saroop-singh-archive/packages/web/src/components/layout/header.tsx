@@ -9,11 +9,13 @@ import { cn } from '@/lib/utils'
 
 const navigationItems = [
   { href: '/', label: 'Home' },
+  { href: '/story', label: 'Story' },
   { href: '/articles', label: 'Articles' },
   { href: '/timeline', label: 'Timeline' },
-  { href: '/contribute', label: 'Share a Memory' },
-  { href: '/restore', label: 'Restore a Photo' },
-  { href: '/gallery', label: 'Gallery' },
+  { href: '/people', label: 'People' },
+  { href: '/gallery', label: 'Photographs' },
+  { href: '/remember', label: 'Remember' },
+  { href: '/methodology', label: 'Archive Method' },
   { href: '/about', label: 'About' },
 ]
 
@@ -33,8 +35,8 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="group flex items-center gap-2">
             <div className="relative">
-              <div className="from-primary-500 to-primary-600 absolute inset-0 rounded-lg bg-gradient-to-br opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-30" />
-              <span className="relative bg-gradient-to-br from-neutral-800 to-neutral-600 bg-clip-text text-xl font-bold text-transparent sm:text-2xl">
+              <div className="absolute inset-0 rounded-lg bg-amber-300 opacity-0 blur-md transition-opacity duration-300 group-hover:opacity-25" />
+              <span className="relative font-serif text-xl font-bold text-[#17241d] sm:text-2xl">
                 <span className="hidden sm:inline">Saroop Singh Archive</span>
                 <span className="sm:hidden">SS Archive</span>
               </span>
@@ -42,7 +44,7 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav aria-label="Primary navigation" className="hidden lg:block">
+          <nav aria-label="Primary navigation" className="hidden xl:block">
             <ul className="flex items-center gap-1">
               {navigationItems.map(item => (
                 <li key={item.href} className="relative">
@@ -52,16 +54,16 @@ export function Header() {
                       'relative rounded-xl px-4 py-2.5 text-[15px] font-medium transition-all duration-300',
                       'hover:bg-neutral-100/80',
                       isActive(item.href)
-                        ? 'text-primary-600'
+                        ? 'text-amber-950'
                         : 'text-neutral-600 hover:text-neutral-900'
                     )}
                   >
                     {isActive(item.href) && (
-                      <div className="from-primary-100 to-primary-50 absolute inset-0 rounded-xl bg-gradient-to-r" />
+                      <div className="absolute inset-0 rounded-xl bg-amber-100" />
                     )}
                     <span className="relative">{item.label}</span>
                     {isActive(item.href) && (
-                      <div className="from-primary-500 to-primary-400 absolute right-4 bottom-0 left-4 h-[2px] rounded-full bg-gradient-to-r" />
+                      <div className="absolute right-4 bottom-0 left-4 h-[2px] rounded-full bg-amber-700" />
                     )}
                   </Link>
                 </li>
@@ -70,7 +72,7 @@ export function Header() {
           </nav>
 
           {/* Mobile Navigation */}
-          <MobileNav className="lg:hidden" />
+          <MobileNav className="xl:hidden" />
         </HStack>
       </ResponsiveContainer>
     </header>

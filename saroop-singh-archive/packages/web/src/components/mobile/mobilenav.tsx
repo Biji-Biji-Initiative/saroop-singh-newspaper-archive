@@ -10,10 +10,12 @@ import {
   Home,
   FileText,
   Clock,
+  BookOpen,
   Heart,
   Sparkles,
   Image,
   User,
+  Users,
   ChevronRight,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -24,12 +26,15 @@ interface MobileNavProps {
 
 const navigationItems = [
   { href: '/', label: 'Home', icon: Home },
+  { href: '/story', label: 'Begin His Story', icon: Sparkles },
   { href: '/articles', label: 'Articles', icon: FileText },
   { href: '/timeline', label: 'Timeline', icon: Clock },
-  { href: '/contribute', label: 'Share a Memory', icon: Heart },
-  { href: '/restore', label: 'Restore a Photo', icon: Sparkles },
-  { href: '/gallery', label: 'Gallery', icon: Image },
+  { href: '/people', label: 'People', icon: Users },
+  { href: '/gallery', label: 'Photographs', icon: Image },
+  { href: '/remember', label: 'Family Memory Room', icon: Heart },
+  { href: '/methodology', label: 'Archive Method', icon: BookOpen },
   { href: '/about', label: 'About', icon: User },
+  { href: '/contribute', label: 'Add Photographs', icon: Image },
 ]
 
 export function MobileNav({ className }: MobileNavProps) {

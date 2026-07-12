@@ -1,116 +1,108 @@
-import Link from 'next/link';
-import { ResponsiveContainer } from '@/components/layout/responsivecontainer';
-import { VStack } from '@/components/layout/flexlayout';
-import { Heart } from 'lucide-react';
-
+import Link from 'next/link'
+import { ResponsiveContainer } from '@/components/layout/responsivecontainer'
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-
   return (
-    <footer className="relative bg-gradient-to-b from-neutral-50 to-neutral-100 border-t border-neutral-200/50">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-50/20 via-transparent to-transparent" />
-      <ResponsiveContainer className="relative py-12 sm:py-16">
-        <VStack gap="xl" align="center" className="text-center sm:text-left">
-          {/* Main Footer Content */}
-          <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
-            {/* About Section */}
-            <div className="space-y-4">
-              <h3 className="text-[17px] font-semibold text-neutral-900">About the Archive</h3>
-              <p className="text-[15px] text-neutral-600 leading-relaxed">
-                Preserving the legacy of Saroop Singh, a pioneering Sikh athlete who shaped Malaysian athletics history.
-              </p>
-            </div>
-
-            {/* Quick Links */}
-            <div className="space-y-4">
-              <h3 className="text-[17px] font-semibold text-neutral-900">Explore</h3>
-              <nav className="space-y-3">
-                <Link href="/articles" className="group block text-[15px] text-neutral-600 hover:text-primary-600 transition-all duration-200">
-                  <span className="relative">
-                    Historical Articles
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary-500 group-hover:w-full transition-all duration-300" />
-                  </span>
-                </Link>
-                <Link href="/timeline" className="group block text-[15px] text-neutral-600 hover:text-primary-600 transition-all duration-200">
-                  <span className="relative">
-                    Timeline
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary-500 group-hover:w-full transition-all duration-300" />
-                  </span>
-                </Link>
-                <Link href="/about" className="group block text-[15px] text-neutral-600 hover:text-primary-600 transition-all duration-200">
-                  <span className="relative">
-                    About
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary-500 group-hover:w-full transition-all duration-300" />
-                  </span>
-                </Link>
-              </nav>
-            </div>
-
-            {/* Resources */}
-            <div className="space-y-4">
-              <h3 className="text-[17px] font-semibold text-neutral-900">Resources</h3>
-              <nav className="space-y-3">
-                <a href="#" className="group block text-[15px] text-neutral-600 hover:text-primary-600 transition-all duration-200">
-                  <span className="relative">
-                    Research Guidelines
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary-500 group-hover:w-full transition-all duration-300" />
-                  </span>
-                </a>
-                <a href="#" className="group block text-[15px] text-neutral-600 hover:text-primary-600 transition-all duration-200">
-                  <span className="relative">
-                    Citation Format
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary-500 group-hover:w-full transition-all duration-300" />
-                  </span>
-                </a>
-                <a href="#" className="group block text-[15px] text-neutral-600 hover:text-primary-600 transition-all duration-200">
-                  <span className="relative">
-                    Contact Us
-                    <span className="absolute bottom-0 left-0 w-0 h-[1px] bg-primary-500 group-hover:w-full transition-all duration-300" />
-                  </span>
-                </a>
-              </nav>
-            </div>
-
-            {/* Connect */}
-            <div className="space-y-4">
-              <h3 className="text-[17px] font-semibold text-neutral-900">Connect</h3>
-              <div className="space-y-3">
-                <p className="text-[15px] text-neutral-600">
-                  Contribute to preserving Malaysian sports history
-                </p>
-                <a 
-                  href="mailto:info@saroopsingharchive.com" 
-                  className="inline-block text-[15px] text-primary-600 hover:text-primary-700 font-medium transition-colors duration-200"
-                >
-                  Submit Historical Materials →
-                </a>
-              </div>
-            </div>
+    <footer className="border-t border-stone-700 bg-[#1f2a24] text-stone-300">
+      <ResponsiveContainer className="py-14 sm:py-18">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_0.7fr_0.7fr_1fr]">
+          <div>
+            <p className="font-serif text-2xl text-white">
+              Saroop Singh Archive
+            </p>
+            <p className="mt-4 max-w-sm text-sm leading-7 text-stone-300">
+              A family-led archive of Saroop Singh, a Sikh middle-distance
+              runner documented in pre-war Malaya.
+            </p>
           </div>
-
-          {/* Divider */}
-          <div className="w-full border-t border-neutral-200/60" />
-
-          {/* Bottom Footer */}
-          <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-[14px] text-neutral-600">
-              <span>&copy; {currentYear} Saroop Singh Archive.</span>
-              <span className="hidden sm:inline">Made with</span>
-              <Heart className="w-4 h-4 text-accent-500 fill-current animate-pulse" />
-              <span>for Malaysian sports history.</span>
-            </div>
-            
-            <div className="flex items-center gap-6 text-[14px]">
-              <a href="#" className="text-neutral-600 hover:text-primary-600 transition-colors duration-200">
-                Privacy Policy
-              </a>
-              <a href="#" className="text-neutral-600 hover:text-primary-600 transition-colors duration-200">
-                Terms of Use
-              </a>
-            </div>
+          <nav aria-label="Explore archive">
+            <p className="text-xs font-semibold tracking-[0.2em] text-amber-300 uppercase">
+              Explore
+            </p>
+            <ul className="mt-4 space-y-3 text-sm">
+              <li>
+                <Link className="hover:text-white" href="/story">
+                  Guided family story
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/articles">
+                  Newspaper collection
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/timeline">
+                  Chronology
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/people">
+                  People in the records
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/gallery">
+                  Photographs
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/contribute">
+                  Contribute photographs
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/remember">
+                  Family Memory Room
+                </Link>
+              </li>
+            </ul>
+          </nav>
+          <nav aria-label="Archive information">
+            <p className="text-xs font-semibold tracking-[0.2em] text-amber-300 uppercase">
+              Archive
+            </p>
+            <ul className="mt-4 space-y-3 text-sm">
+              <li>
+                <Link className="hover:text-white" href="/methodology">
+                  Archive method
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/about">
+                  About Saroop Singh
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/restore">
+                  Private preservation studio
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:text-white" href="/privacy">
+                  Privacy and contributions
+                </Link>
+              </li>
+            </ul>
+          </nav>
+          <div>
+            <p className="text-xs font-semibold tracking-[0.2em] text-amber-300 uppercase">
+              Contribute
+            </p>
+            <p className="mt-4 text-sm leading-6 text-stone-300">
+              Have a clipping, photograph, correction, or family account?
+            </p>
+            <Link
+              href="/contribute"
+              className="mt-4 inline-block text-sm font-semibold text-white underline decoration-amber-400 underline-offset-4"
+            >
+              Share it with the archive
+            </Link>
           </div>
-        </VStack>
+        </div>
+        <div className="mt-12 flex flex-col gap-2 border-t border-stone-700 pt-6 text-xs text-stone-400 sm:flex-row sm:items-center sm:justify-between">
+          <span>© {new Date().getFullYear()} Saroop Singh Archive</span>
+          <span>Historical uncertainty is documented, not concealed.</span>
+        </div>
       </ResponsiveContainer>
     </footer>
-  );
+  )
 }

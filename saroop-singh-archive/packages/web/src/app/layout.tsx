@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Cormorant_Garamond, Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { Header } from '@/components/layout/header'
 import { Footer } from '@/components/layout/footer'
@@ -16,14 +16,20 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
+const archiveSerif = Cormorant_Garamond({
+  variable: '--font-archive-serif',
+  subsets: ['latin'],
+  weight: ['500', '600', '700'],
+})
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://saroop.mereka.dev'),
   title: {
     template: '%s | Saroop Singh Archive',
-    default: 'Saroop Singh Archive | Malaysian Athletics Pioneer',
+    default: 'Saroop Singh Archive | Runner in Pre-war Malaya',
   },
   description:
-    'Preserving the legacy of Saroop Singh, a pioneering Sikh athlete who made significant contributions to Malaysian athletics in the 1930s and 1940s.',
+    'A family-led archive of Saroop Singh, a Sikh middle-distance runner documented in athletics in pre-war Malaya.',
   keywords: [
     'Saroop Singh',
     'Malaysian athletics',
@@ -49,7 +55,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Saroop Singh Archive',
-    description: 'Preserving the legacy of a Malaysian athletics pioneer',
+    description:
+      'A family-led archive of a runner documented in pre-war Malaya',
     images: ['/opengraph-image'],
   },
   robots: {
@@ -82,7 +89,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} overflow-x-hidden bg-white text-gray-900 antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} ${archiveSerif.variable} overflow-x-hidden bg-white text-gray-900 antialiased`}
       >
         <Providers>
           <div className="flex min-h-screen flex-col">

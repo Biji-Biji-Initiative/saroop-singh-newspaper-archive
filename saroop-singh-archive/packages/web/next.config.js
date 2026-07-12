@@ -10,7 +10,12 @@ const nextConfig = {
   },
 
   images: {
-    domains: ['localhost'],
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
     unoptimized: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
