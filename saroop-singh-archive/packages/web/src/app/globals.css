@@ -187,6 +187,27 @@
     }
   }
 
+  @media print {
+    header,
+    footer,
+    .skip-link,
+    .family-day-page > *:not(.family-card) {
+      display: none !important;
+    }
+
+    .family-day-page .family-card {
+      display: flex;
+      min-height: 95vh;
+      max-width: none !important;
+      margin: 0 !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      break-after: page;
+      print-color-adjust: exact;
+    }
+  }
+
   /* Improve text readability on mobile */
   @media (max-width: 640px) {
     /* Increase minimum font size for text-xs on mobile */

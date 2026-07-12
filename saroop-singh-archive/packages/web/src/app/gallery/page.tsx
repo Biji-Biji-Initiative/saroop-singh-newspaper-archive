@@ -1,29 +1,22 @@
 'use client'
 
-import React, { useCallback, useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import {
-  Search,
-  Filter,
-  Calendar,
-  User,
-  Tag,
-  Grid,
-  List,
   Download,
-  Eye,
+  ExternalLink,
+  Images,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
 } from 'lucide-react'
-import { ResponsiveContainer } from '@/components/layout/responsivecontainer'
-import { VStack } from '@/components/layout/flexlayout'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { cn } from '@/lib/utils'
-import Image from 'next/image'
 
 interface GalleryItem {
   id: string
@@ -32,8 +25,6 @@ interface GalleryItem {
   date?: string
   familyMember?: string
   tags: string[]
-  isPublic: boolean
-  submittedAt: string
   thumbnailUrl: string
   restorationCount: number
 }
@@ -41,495 +32,271 @@ interface GalleryItem {
 interface GalleryResponse {
   success: boolean
   items: GalleryItem[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
   hasNextPage: boolean
-  hasPreviousPage: boolean
+  totalPages: number
 }
 
-type SortOption = 'newest' | 'oldest' | 'title'
-type ViewMode = 'grid' | 'list'
+type SortOrder = 'newest' | 'oldest' | 'title'
 
-function displayArchiveDate(date?: string): string {
-  if (!date) {
-    return 'Date unknown'
-  }
-
+function displayArchiveDate(date?: string) {
+  if (!date) return 'Date unknown'
   const parsed = new Date(date)
-  return Number.isNaN(parsed.getTime()) ? date : parsed.toLocaleDateString()
+  return Number.isNaN(parsed.getTime())
+    ? date
+    : parsed.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })
 }
 
 export default function GalleryPage() {
-  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([])
+  const [items, setItems] = useState<GalleryItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [hasNextPage, setHasNextPage] = useState(false)
-  const [hasPreviousPage, setHasPreviousPage] = useState(false)
-
-  // Filter and search states
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedFamily, setSelectedFamily] = useState('')
-  const [selectedTag, setSelectedTag] = useState('')
-  const [sortBy, setSortBy] = useState<SortOption>('newest')
-  const [viewMode, setViewMode] = useState<ViewMode>('grid')
+  const [error, setError] = useState(false)
+  const [query, setQuery] = useState('')
+  const [tag, setTag] = useState('')
+  const [sortOrder, setSortOrder] = useState<SortOrder>('newest')
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null)
 
-  // Get unique values for filters
-  const [familyMembers, setFamilyMembers] = useState<string[]>([])
-  const [availableTags, setAvailableTags] = useState<string[]>([])
-
-  const fetchGalleryItems = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: '12',
-        sort: sortBy,
-      })
-
-      if (selectedFamily) params.append('family', selectedFamily)
-      if (selectedTag) params.append('tag', selectedTag)
-
-      const response = await fetch(`/api/gallery?${params}`)
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch gallery items')
-      }
-
-      const data: GalleryResponse = await response.json()
-
-      setGalleryItems(data.items)
-      setTotalPages(data.totalPages)
-      setHasNextPage(data.hasNextPage)
-      setHasPreviousPage(data.hasPreviousPage)
-
-      // Extract unique family members and tags for filters
-      const families = new Set<string>()
-      const tags = new Set<string>()
-
-      data.items.forEach(item => {
-        if (item.familyMember) families.add(item.familyMember)
-        item.tags.forEach(tag => tags.add(tag))
-      })
-
-      setFamilyMembers(Array.from(families).sort())
-      setAvailableTags(Array.from(tags).sort())
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
-      setLoading(false)
-    }
-  }, [page, selectedFamily, selectedTag, sortBy])
-
   useEffect(() => {
-    void fetchGalleryItems()
-  }, [fetchGalleryItems])
+    let active = true
 
-  // Filter items by search term (client-side)
-  const filteredItems = galleryItems.filter(
-    item =>
-      searchTerm === '' ||
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.tags.some(tag =>
-        tag.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+    async function loadCollection() {
+      try {
+        const collected = new Map<string, GalleryItem>()
+        for (let page = 1; page <= 100; page += 1) {
+          const response = await fetch(`/api/gallery?page=${page}&limit=48`)
+          if (!response.ok) throw new Error('Gallery request failed')
+          const data: GalleryResponse = await response.json()
+          data.items.forEach(item => collected.set(item.id, item))
+          if (!data.hasNextPage || page >= data.totalPages) break
+        }
+        if (active) setItems(Array.from(collected.values()))
+      } catch {
+        if (active) setError(true)
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    void loadCollection()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const tags = useMemo(
+    () =>
+      Array.from(new Set(items.flatMap(item => item.tags))).sort((a, b) =>
+        a.localeCompare(b)
+      ),
+    [items]
   )
 
-  const handleDownloadItem = async (item: GalleryItem) => {
-    try {
-      const response = await fetch(item.thumbnailUrl)
-      if (!response.ok) {
-        throw new Error('Gallery image is unavailable')
-      }
+  const filteredItems = useMemo(() => {
+    const term = query.trim().toLowerCase()
 
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${item.id}-preview`
-      document.body.appendChild(link)
-      link.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(link)
-    } catch {
-      setError('Failed to download item')
-    }
-  }
+    return items
+      .filter(item => {
+        if (tag && !item.tags.includes(tag)) return false
+        if (!term) return true
 
-  const handleNextPage = () => {
-    if (hasNextPage) {
-      setPage(prev => prev + 1)
-    }
-  }
-
-  const handlePreviousPage = () => {
-    if (hasPreviousPage) {
-      setPage(prev => prev - 1)
-    }
-  }
-
-  const clearFilters = () => {
-    setSearchTerm('')
-    setSelectedFamily('')
-    setSelectedTag('')
-    setSortBy('newest')
-    setPage(1)
-  }
+        return [item.title, item.description, item.familyMember, ...item.tags]
+          .filter(Boolean)
+          .some(value => String(value).toLowerCase().includes(term))
+      })
+      .sort((left, right) => {
+        if (sortOrder === 'title') return left.title.localeCompare(right.title)
+        const leftDate = Date.parse(left.date || '') || 0
+        const rightDate = Date.parse(right.date || '') || 0
+        return sortOrder === 'oldest'
+          ? leftDate - rightDate
+          : rightDate - leftDate
+      })
+  }, [items, query, tag, sortOrder])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-      <ResponsiveContainer className="py-8 sm:py-12">
-        <VStack gap="xl">
-          {/* Header */}
-          <div className="space-y-4 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl lg:text-5xl">
-              Restoration Gallery
-            </h1>
-            <p className="mx-auto max-w-3xl text-lg leading-relaxed text-gray-600 sm:text-xl">
-              Browse archive-approved, AI-assisted restorations of historical
-              photographs. Every result should be compared with its source image
-              before reuse or publication.
-            </p>
+    <main className="min-h-screen bg-[#f6f1e8] text-[#17241d]">
+      <section className="border-b border-amber-900/10 bg-[#1f2a24] text-[#f7f0df]">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
+          <p className="flex items-center gap-2 text-xs font-semibold tracking-[.22em] text-amber-300 uppercase">
+            <Images className="h-4 w-4" /> Photographic collection
+          </p>
+          <h1 className="mt-5 max-w-4xl font-serif text-5xl leading-[.95] sm:text-7xl">
+            Family memory, kept distinct from the historical record.
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-stone-300">
+            Public photographs from the archive. Some are family images, some
+            are newspaper crops, and some have a separate restoration series.
+            The catalogue does not treat an enhanced image as the original
+            evidence.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Link
+              href="/methodology"
+              className="inline-flex min-h-11 items-center rounded-full border border-white/20 px-5 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              How the archive handles sources
+            </Link>
+            <Link
+              href="/contribute"
+              className="inline-flex min-h-11 items-center rounded-full bg-amber-300 px-5 text-sm font-semibold text-[#17241d] transition hover:bg-amber-200"
+            >
+              Contribute a family photograph
+            </Link>
           </div>
+        </div>
+      </section>
 
-          {/* Filters and Search */}
-          <Card className="border border-white/20 bg-white/80 shadow-xl backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Filter className="h-5 w-5" />
-                <span>Search & Filter</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search by title or tags..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 bg-white py-3 pr-4 pl-10 transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-
-              {/* Filter Controls */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {/* Family Member Filter */}
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
-                    <User className="mr-1 h-4 w-4" />
-                    Family Member
-                  </label>
-                  <select
-                    value={selectedFamily}
-                    onChange={e => setSelectedFamily(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 transition-colors hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  >
-                    <option value="">All Members</option>
-                    {familyMembers.map(member => (
-                      <option key={member} value={member}>
-                        {member}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Tag Filter */}
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
-                    <Tag className="mr-1 h-4 w-4" />
-                    Style Tag
-                  </label>
-                  <select
-                    value={selectedTag}
-                    onChange={e => setSelectedTag(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 transition-colors hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  >
-                    <option value="">All Styles</option>
-                    {availableTags.map(tag => (
-                      <option key={tag} value={tag}>
-                        {tag}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Sort Options */}
-                <div className="space-y-2">
-                  <label className="flex items-center text-sm font-medium text-gray-700">
-                    <Calendar className="mr-1 h-4 w-4" />
-                    Sort By
-                  </label>
-                  <select
-                    value={sortBy}
-                    onChange={e => setSortBy(e.target.value as SortOption)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 transition-colors hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  >
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="title">Title A-Z</option>
-                  </select>
-                </div>
-
-                {/* View Mode */}
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">
-                    View Mode
-                  </label>
-                  <div className="flex items-center space-x-1 rounded-lg bg-gray-100 p-1">
-                    <button
-                      onClick={() => setViewMode('grid')}
-                      className={cn(
-                        'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
-                        viewMode === 'grid'
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
-                      )}
-                    >
-                      <Grid className="mr-1 inline h-4 w-4" />
-                      Grid
-                    </button>
-                    <button
-                      onClick={() => setViewMode('list')}
-                      className={cn(
-                        'flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200',
-                        viewMode === 'list'
-                          ? 'bg-white text-gray-900 shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
-                      )}
-                    >
-                      <List className="mr-1 inline h-4 w-4" />
-                      List
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Filter Actions */}
-              <div className="flex items-center justify-between border-t border-gray-200 pt-2">
-                <div className="text-sm text-gray-600">
-                  Showing {filteredItems.length} of {galleryItems.length} items
-                </div>
-                <Button
-                  onClick={clearFilters}
-                  size="sm"
-                  variant="ghost"
-                  className="text-gray-600 hover:text-gray-900"
-                >
-                  Clear Filters
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Gallery Content */}
-          {loading ? (
-            <div className="py-12 text-center">
-              <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-              <p className="text-gray-600">Loading gallery items...</p>
-            </div>
-          ) : error ? (
-            <div className="py-12 text-center">
-              <div className="mb-4 text-red-600">
-                <p className="text-lg font-semibold">Error loading gallery</p>
-                <p className="text-sm">{error}</p>
-              </div>
-              <Button onClick={fetchGalleryItems} variant="outline">
-                Try Again
-              </Button>
-            </div>
-          ) : filteredItems.length === 0 ? (
-            <div className="py-12 text-center">
-              <div className="text-gray-500">
-                <Search className="mx-auto mb-4 h-12 w-12 opacity-50" />
-                <p className="mb-2 text-lg font-medium">No items found</p>
-                <p className="text-sm">
-                  Try adjusting your search or filter criteria.
+      <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
+        <div className="rounded-[2rem] border border-amber-950/10 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="rounded-2xl bg-amber-100 p-3 text-amber-900">
+                <SlidersHorizontal className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-serif text-2xl">Explore the collection</h2>
+                <p className="text-sm text-neutral-500">
+                  Search titles, family notes, and archive tags.
                 </p>
               </div>
             </div>
-          ) : (
-            <>
-              {/* Gallery Items */}
-              {viewMode === 'grid' ? (
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredItems.map(item => (
-                    <Card
-                      key={item.id}
-                      className="group overflow-hidden border border-gray-200 bg-white shadow-md transition-all duration-300 hover:shadow-lg"
-                    >
-                      <div className="relative aspect-square overflow-hidden bg-gray-100">
-                        <Image
-                          src={item.thumbnailUrl}
-                          alt={item.title}
-                          fill
-                          className="object-cover transition-transform duration-300 group-hover:scale-105"
-                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                          unoptimized
-                        />
-                      </div>
-                      <CardContent className="space-y-3 p-4">
-                        <div className="space-y-1">
-                          <h3 className="line-clamp-2 font-semibold text-gray-900">
-                            {item.title}
-                          </h3>
-                          <p className="text-sm text-gray-600">
-                            {displayArchiveDate(item.date)}
-                          </p>
-                          <p className="text-sm text-blue-600">
-                            {item.restorationCount} restorations
-                          </p>
-                        </div>
+            <span className="rounded-full bg-[#17241d] px-4 py-2 text-sm font-semibold text-white">
+              {loading ? 'Loading…' : `${filteredItems.length} photographs`}
+            </span>
+          </div>
+          <div className="mt-6 grid gap-3 lg:grid-cols-[1fr_12rem_11rem]">
+            <label className="relative block">
+              <span className="sr-only">Search photographs</span>
+              <Search className="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-neutral-400" />
+              <input
+                value={query}
+                onChange={event => setQuery(event.target.value)}
+                placeholder="Search photographs, people, or tags"
+                className="field pl-12"
+              />
+            </label>
+            <label>
+              <span className="sr-only">Filter by tag</span>
+              <select
+                value={tag}
+                onChange={event => setTag(event.target.value)}
+                className="field"
+              >
+                <option value="">All tags</option>
+                {tags.map(value => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">Sort photographs</span>
+              <select
+                value={sortOrder}
+                onChange={event =>
+                  setSortOrder(event.target.value as SortOrder)
+                }
+                className="field"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="title">Title A–Z</option>
+              </select>
+            </label>
+          </div>
+        </div>
 
-                        {item.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {item.tags.slice(0, 2).map(tag => (
-                              <span
-                                key={tag}
-                                className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                            {item.tags.length > 2 && (
-                              <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                                +{item.tags.length - 2}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            onClick={() => setSelectedItem(item)}
-                            size="sm"
-                            className="bg-blue-600 text-white hover:bg-blue-700"
-                          >
-                            <Eye className="mr-2 h-4 w-4" />
-                            View
-                          </Button>
-                          <Button
-                            onClick={() => handleDownloadItem(item)}
-                            size="sm"
-                            variant="outline"
-                            className="border border-gray-300 hover:border-blue-600 hover:text-blue-600"
-                          >
-                            <Download className="mr-2 h-4 w-4" />
-                            Download
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+        {error ? (
+          <div
+            role="alert"
+            className="mt-10 rounded-[2rem] border border-red-200 bg-white p-8 text-center"
+          >
+            <h2 className="font-serif text-3xl">
+              The photographic catalogue could not be loaded.
+            </h2>
+            <p className="mt-3 text-neutral-600">
+              Nothing has been changed. Refresh this page to try again.
+            </p>
+          </div>
+        ) : loading ? (
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }, (_, index) => (
+              <div
+                key={index}
+                className="aspect-[4/5] animate-pulse rounded-[2rem] bg-white"
+              />
+            ))}
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="mt-10 rounded-[2rem] border border-dashed border-amber-900/25 bg-white p-12 text-center">
+            <h2 className="font-serif text-3xl">
+              No photographs match that search.
+            </h2>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery('')
+                setTag('')
+                setSortOrder('newest')
+              }}
+              className="mt-5 min-h-11 rounded-full bg-[#17241d] px-5 font-semibold text-white"
+            >
+              Clear search
+            </button>
+          </div>
+        ) : (
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredItems.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setSelectedItem(item)}
+                className="group overflow-hidden rounded-[2rem] border border-amber-950/10 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:ring-4 focus:ring-amber-700/20 focus:outline-none"
+              >
+                <div className="relative aspect-[4/3] overflow-hidden bg-stone-100">
+                  <Image
+                    src={item.thumbnailUrl}
+                    alt={item.title}
+                    fill
+                    unoptimized
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover transition duration-500 group-hover:scale-[1.03]"
+                  />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {filteredItems.map(item => (
-                    <Card
-                      key={item.id}
-                      className="border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md"
-                    >
-                      <CardContent className="p-6">
-                        <div className="flex items-center space-x-4">
-                          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                            <Image
-                              src={item.thumbnailUrl}
-                              alt={item.title}
-                              fill
-                              className="object-cover"
-                              sizes="80px"
-                              unoptimized
-                            />
-                          </div>
-
-                          <div className="flex-grow space-y-2">
-                            <div className="flex items-start justify-between">
-                              <div>
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                  {item.title}
-                                </h3>
-                                <p className="text-sm text-gray-600">
-                                  {displayArchiveDate(item.date)} •{' '}
-                                  {item.restorationCount} restorations
-                                </p>
-                              </div>
-
-                              <div className="flex gap-2">
-                                <Button
-                                  onClick={() => setSelectedItem(item)}
-                                  size="sm"
-                                  className="bg-blue-600 text-white hover:bg-blue-700"
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </Button>
-                                <Button
-                                  onClick={() => handleDownloadItem(item)}
-                                  size="sm"
-                                  variant="outline"
-                                  className="border border-gray-300 hover:border-blue-600 hover:text-blue-600"
-                                >
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Download
-                                </Button>
-                              </div>
-                            </div>
-
-                            {item.tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {item.tags.map(tag => (
-                                  <span
-                                    key={tag}
-                                    className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-700"
-                                  >
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                <div className="p-6">
+                  <p className="flex items-center gap-2 text-xs font-semibold tracking-[.13em] text-emerald-800 uppercase">
+                    <ShieldCheck className="h-3.5 w-3.5" /> Archive photograph
+                    {item.restorationCount
+                      ? ` · ${item.restorationCount} related ${item.restorationCount === 1 ? 'study' : 'studies'}`
+                      : ''}
+                  </p>
+                  <h2 className="mt-3 font-serif text-2xl leading-tight">
+                    {item.title}
+                  </h2>
+                  <p className="mt-2 text-sm text-neutral-500">
+                    {displayArchiveDate(item.date)}
+                    {item.familyMember ? ` · ${item.familyMember}` : ''}
+                  </p>
+                  <p className="mt-4 line-clamp-2 text-sm leading-6 text-neutral-600">
+                    {item.description ||
+                      'Open the archival image and its available public information.'}
+                  </p>
+                  <div className="mt-5 flex items-center justify-between gap-3 border-t border-amber-950/10 pt-4">
+                    <span className="text-sm font-semibold text-amber-900">
+                      Open photograph
+                    </span>
+                    <ExternalLink className="h-4 w-4 text-amber-900" />
+                  </div>
                 </div>
-              )}
-
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center space-x-4">
-                  <Button
-                    onClick={handlePreviousPage}
-                    disabled={!hasPreviousPage}
-                    variant="outline"
-                  >
-                    Previous
-                  </Button>
-
-                  <span className="text-sm text-gray-600">
-                    Page {page} of {totalPages}
-                  </span>
-
-                  <Button
-                    onClick={handleNextPage}
-                    disabled={!hasNextPage}
-                    variant="outline"
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </VStack>
-      </ResponsiveContainer>
+              </button>
+            ))}
+          </div>
+        )}
+      </section>
 
       <Dialog
         open={Boolean(selectedItem)}
@@ -543,49 +310,56 @@ export default function GalleryPage() {
               <div className="relative min-h-0 overflow-hidden bg-black">
                 <Image
                   src={selectedItem.thumbnailUrl}
-                  alt={`${selectedItem.title}, complete archive image`}
+                  alt={`${selectedItem.title}, public archive image`}
                   fill
                   unoptimized
                   sizes="(max-width: 1024px) 100vw, 80vw"
                   className="object-contain p-2 sm:p-4"
                 />
                 <span className="absolute bottom-3 left-3 rounded-full bg-black/75 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/20">
-                  Fit to screen · complete image
+                  Fit to screen · public archive image
                 </span>
               </div>
-              <div className="border-t border-white/10 bg-neutral-900 px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-7">
-                <DialogTitle className="pr-12 text-xl text-white sm:text-2xl">
+              <div className="border-t border-white/10 bg-[#1f2a24] px-5 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-7">
+                <DialogTitle className="pr-12 font-serif text-2xl text-white sm:text-3xl">
                   {selectedItem.title}
                 </DialogTitle>
-                <DialogDescription className="mt-2 text-neutral-300">
-                  {displayArchiveDate(selectedItem.date)}
-                  {selectedItem.familyMember
-                    ? ` · ${selectedItem.familyMember}`
-                    : ''}
+                <DialogDescription className="mt-2 text-stone-300">
+                  {selectedItem.description || 'Public archive photograph.'}
                 </DialogDescription>
-                {selectedItem.description && (
-                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-neutral-200 sm:text-base">
-                    {selectedItem.description}
-                  </p>
-                )}
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Button
-                    onClick={() => handleDownloadItem(selectedItem)}
-                    className="bg-white text-neutral-950 hover:bg-neutral-200"
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download image
-                  </Button>
-                  <span className="flex min-h-10 items-center rounded-full bg-white/10 px-4 text-sm text-neutral-200">
-                    {selectedItem.restorationCount} restoration
-                    {selectedItem.restorationCount === 1 ? '' : 's'}
+                <div className="mt-4 flex flex-wrap gap-3 text-sm text-stone-300">
+                  <span>{displayArchiveDate(selectedItem.date)}</span>
+                  {selectedItem.familyMember && (
+                    <span>{selectedItem.familyMember}</span>
+                  )}
+                  <span>
+                    {selectedItem.restorationCount
+                      ? `${selectedItem.restorationCount} related public studies`
+                      : 'No related public study'}
                   </span>
+                </div>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <a
+                    href={selectedItem.thumbnailUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 px-5 font-semibold text-white hover:bg-white/10"
+                  >
+                    <ExternalLink className="h-4 w-4" /> Open image
+                  </a>
+                  <a
+                    href={selectedItem.thumbnailUrl}
+                    download
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-300 px-5 font-semibold text-[#17241d]"
+                  >
+                    <Download className="h-4 w-4" /> Download public copy
+                  </a>
                 </div>
               </div>
             </div>
           </DialogContent>
         )}
       </Dialog>
-    </div>
+    </main>
   )
 }

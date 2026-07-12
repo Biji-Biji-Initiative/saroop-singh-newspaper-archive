@@ -1,313 +1,245 @@
-'use client'
-
-import { useState, useEffect, useCallback } from 'react'
-import { Calendar, Clock, MapPin, Users, Tag, FileText } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Article } from '@/types'
+import type { Metadata } from 'next'
 import Image from 'next/image'
+import Link from 'next/link'
+import {
+  ArrowRight,
+  CalendarDays,
+  CircleHelp,
+  FileText,
+  ShieldCheck,
+} from 'lucide-react'
+import { lifeChapters } from '@/data/knowledge/chapters'
+import { getAllArticles } from '@/lib/articles'
 
-interface TimelineEvent {
-  year: number
-  articles: Article[]
+export const metadata: Metadata = {
+  title: 'Timeline',
+  description:
+    'An evidence-led chronology of Saroop Singh and the records preserved in this archive.',
 }
 
-export default function TimelinePage() {
-  const [articles, setArticles] = useState<Article[]>([])
-  const [timeline, setTimeline] = useState<TimelineEvent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedYear, setSelectedYear] = useState<string>('all')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+function displayDate(date?: string, fallback?: string) {
+  if (!date) return fallback || 'Date unknown'
 
-  useEffect(() => {
-    fetchArticles()
-  }, [])
+  const parsed = new Date(`${date}T00:00:00`)
+  return Number.isNaN(parsed.getTime())
+    ? fallback || 'Date unknown'
+    : parsed.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+}
 
-  const fetchArticles = async () => {
-    try {
-      const response = await fetch('/api/articles')
-      if (response.ok) {
-        const data = await response.json()
-        setArticles(data)
-      }
-    } catch (error) {
-      console.error('Failed to fetch articles:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const createTimeline = useCallback((articlesData: Article[]) => {
-    const filteredArticles = selectedYear === 'all' 
-      ? articlesData 
-      : articlesData.filter(article => {
-          if (!article.date) return false
-          const year = new Date(article.date).getFullYear()
-          return year.toString() === selectedYear
-        })
-
-    const groupedByYear: Record<number, Article[]> = {}
-    
-    filteredArticles.forEach(article => {
-      if (article.date) {
-        const year = new Date(article.date).getFullYear()
-        if (!groupedByYear[year]) {
-          groupedByYear[year] = []
-        }
-        groupedByYear[year].push(article)
-      }
-    })
-
-    const timelineData = Object.entries(groupedByYear)
-      .map(([year, yearArticles]) => ({
-        year: parseInt(year),
-        articles: yearArticles.sort((a, b) => {
-          const dateA = new Date(a.date || 0)
-          const dateB = new Date(b.date || 0)
-          return sortOrder === 'desc' 
-            ? dateB.getTime() - dateA.getTime()
-            : dateA.getTime() - dateB.getTime()
-        })
-      }))
-      .sort((a, b) => sortOrder === 'desc' ? b.year - a.year : a.year - b.year)
-
-    setTimeline(timelineData)
-  }, [selectedYear, sortOrder])
-
-  useEffect(() => {
-    if (articles.length > 0) {
-      createTimeline(articles)
-    }
-  }, [articles, createTimeline])
-
-  const getAvailableYears = () => {
-    const years = new Set<number>()
-    articles.forEach(article => {
-      if (article.date) {
-        years.add(new Date(article.date).getFullYear())
-      }
-    })
-    return Array.from(years).sort((a, b) => b - a)
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    })
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-vintage-50 to-sepia-100 p-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center min-h-[60vh]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-vintage-600 mx-auto mb-4"></div>
-              <p className="text-lg text-vintage-700">Loading timeline...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+export default async function TimelinePage() {
+  const articles = await getAllArticles()
+  const dated = articles
+    .filter(article => article.date)
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+  const unknown = articles.filter(article => !article.date)
+  const underReview = articles.filter(article =>
+    article.slug.includes('olympic-games')
+  )
+  const unresolved = Array.from(
+    new Map(
+      [...underReview, ...unknown].map(article => [article.slug, article])
+    ).values()
+  )
+  const years = new Set(dated.map(article => String(article.date).slice(0, 4)))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-vintage-50 to-sepia-100 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-5xl font-bold text-vintage-800 mb-4 font-serif">
-            Timeline
-          </h1>
-          <p className="text-xl text-vintage-600 mb-8 leading-relaxed">
-            Follow Saroop Singh&rsquo;s athletic journey through the years
+    <main className="min-h-screen bg-[#f6f1e8] text-[#17241d]">
+      <header className="relative overflow-hidden bg-[#17241d] text-[#f8f1e4]">
+        <div className="absolute inset-0 opacity-15 [background:radial-gradient(circle_at_80%_20%,#f6c453,transparent_35%)]" />
+        <div className="relative mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
+          <p className="flex items-center gap-2 text-xs font-semibold tracking-[.2em] text-amber-300 uppercase">
+            <ShieldCheck className="h-4 w-4" /> Evidence-led chronology
           </p>
-          
-          {/* Controls */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-vintage-600" />
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Select year" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Years</SelectItem>
-                  {getAvailableYears().map(year => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-vintage-600" />
-              <Select value={sortOrder} onValueChange={(value: 'asc' | 'desc') => setSortOrder(value)}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="desc">Newest First</SelectItem>
-                  <SelectItem value="asc">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <h1 className="mt-5 max-w-4xl font-serif text-6xl leading-[.86] font-semibold sm:text-8xl">
+            A life, assembled from surviving traces.
+          </h1>
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-stone-300">
+            This is not a polished legend. It is a readable path through{' '}
+            {dated.length} dated newspaper records, with uncertainty left
+            visible wherever the evidence stops.
+          </p>
+          <div className="mt-9 flex flex-wrap gap-3 text-sm">
+            <span className="rounded-full bg-white/10 px-4 py-2">
+              {years.size} documented years
+            </span>
+            <span className="rounded-full bg-white/10 px-4 py-2">
+              {articles.length} total records
+            </span>
+            <span className="rounded-full bg-white/10 px-4 py-2">
+              {unresolved.length} needing dates or corroboration
+            </span>
+          </div>
+          <Link
+            href="/people"
+            className="mt-9 inline-flex min-h-12 items-center gap-2 rounded-full bg-amber-300 px-6 font-semibold text-[#17241d] transition hover:bg-amber-200"
+          >
+            Meet Saroop through the evidence <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </header>
+
+      <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20">
+        <div className="max-w-2xl">
+          <p className="text-xs font-semibold tracking-[.18em] text-amber-800 uppercase">
+            The archival arc
+          </p>
+          <h2 className="mt-3 font-serif text-5xl leading-none sm:text-6xl">
+            Six chapters. No invented connective tissue.
+          </h2>
+        </div>
+        <div className="mt-10 grid gap-5 md:grid-cols-2">
+          {lifeChapters.map((chapter, index) => {
+            const article = articles.find(
+              item => item.slug === chapter.featuredSlug
+            )
+
+            return (
+              <article
+                key={chapter.id}
+                className="overflow-hidden rounded-[2rem] border border-amber-950/10 bg-white shadow-sm"
+              >
+                <div className="grid h-full sm:grid-cols-[.72fr_1.28fr]">
+                  <div className="relative min-h-52 bg-stone-200">
+                    {article?.image && (
+                      <Image
+                        src={article.image}
+                        alt=""
+                        fill
+                        unoptimized
+                        sizes="(max-width: 640px) 100vw, 30vw"
+                        className="object-cover"
+                      />
+                    )}
+                    <span className="absolute top-4 left-4 rounded-full bg-[#17241d] px-3 py-1 text-xs font-bold text-white">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-xs font-semibold tracking-[.16em] text-amber-800 uppercase">
+                      {chapter.years} · {chapter.eyebrow}
+                    </p>
+                    <h3 className="mt-3 font-serif text-3xl leading-none">
+                      {chapter.title}
+                    </h3>
+                    <p className="mt-4 text-sm leading-6 text-neutral-600">
+                      {chapter.summary}
+                    </p>
+                    <p className="mt-4 text-xs font-semibold text-neutral-500">
+                      {chapter.evidence}
+                    </p>
+                    {article && (
+                      <Link
+                        href={`/articles/${article.slug}`}
+                        className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-amber-900 transition hover:text-amber-950"
+                      >
+                        Open source <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+      </section>
+
+      <section className="bg-white">
+        <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8 sm:py-20">
+          <p className="text-xs font-semibold tracking-[.18em] text-amber-800 uppercase">
+            Record by record
+          </p>
+          <h2 className="mt-3 font-serif text-5xl sm:text-6xl">
+            The documented chronology
+          </h2>
+          <div className="relative mt-10 before:absolute before:top-0 before:bottom-0 before:left-[1.15rem] before:w-px before:bg-amber-900/20 sm:before:left-[5.45rem]">
+            {dated
+              .filter(article => !underReview.includes(article))
+              .map(article => (
+                <article
+                  key={article.slug}
+                  className="relative grid grid-cols-[2.4rem_1fr] gap-4 pb-8 sm:grid-cols-[9rem_1fr] sm:gap-6"
+                >
+                  <div className="relative z-10 flex items-start sm:justify-end">
+                    <span className="mt-1 h-3 w-3 rounded-full border-[3px] border-white bg-amber-700 ring-1 ring-amber-900/20 sm:order-2 sm:ml-4" />
+                    <time className="hidden pt-0.5 text-right text-xs font-semibold text-neutral-500 sm:block">
+                      {displayDate(article.date, article.date_text)}
+                    </time>
+                  </div>
+                  <Link
+                    href={`/articles/${article.slug}`}
+                    className="group rounded-2xl border border-amber-950/10 bg-[#f6f1e8] p-5 transition hover:-translate-y-0.5 hover:shadow-lg"
+                  >
+                    <time className="text-xs font-semibold tracking-[.12em] text-amber-800 uppercase sm:hidden">
+                      {displayDate(article.date, article.date_text)}
+                    </time>
+                    <h3 className="mt-1 font-serif text-2xl leading-tight sm:mt-0">
+                      {article.title}
+                    </h3>
+                    <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-500">
+                      <span className="flex items-center gap-1">
+                        <FileText className="h-3.5 w-3.5" />
+                        {article.publication ||
+                          article.source ||
+                          'Publication unknown'}
+                      </span>
+                      {article.location && <span>{article.location}</span>}
+                    </p>
+                  </Link>
+                </article>
+              ))}
           </div>
         </div>
+      </section>
 
-        {/* Timeline */}
-        <div className="space-y-12">
-          {timeline.map((yearData, yearIndex) => (
-            <div key={yearData.year} className="relative">
-              {/* Year Header */}
-              <div className="sticky top-4 z-10 mb-8">
-                <div className="bg-vintage-200 backdrop-blur-sm border border-vintage-300 rounded-full px-6 py-3 inline-flex items-center gap-2 shadow-soft">
-                  <Calendar className="h-5 w-5 text-vintage-700" />
-                  <span className="text-2xl font-bold text-vintage-800 font-serif">{yearData.year}</span>
-                  <Badge variant="secondary" className="bg-vintage-100">
-                    {yearData.articles.length} article{yearData.articles.length !== 1 ? 's' : ''}
-                  </Badge>
-                </div>
-              </div>
-
-              {/* Timeline Line */}
-              <div className="relative">
-                {yearIndex < timeline.length - 1 && (
-                  <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-vintage-300 to-vintage-200"></div>
-                )}
-
-                {/* Articles */}
-                <div className="space-y-6">
-                  {yearData.articles.map((article) => (
-                    <div key={article.slug} className="relative flex items-start gap-6">
-                      {/* Timeline Dot */}
-                      <div className="flex-shrink-0 w-4 h-4 bg-vintage-500 border-4 border-vintage-100 rounded-full shadow-sm mt-6"></div>
-
-                      {/* Article Card */}
-                      <Card className="flex-1 bg-white/80 backdrop-blur-sm border-vintage-200 shadow-soft hover:shadow-medium transition-all duration-300 hover:bg-white/90">
-                        <CardHeader>
-                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                            <div className="flex-1">
-                              <CardTitle className="text-xl text-vintage-800 font-serif leading-tight mb-2">
-                                {article.title}
-                              </CardTitle>
-                              
-                              {/* Article Metadata */}
-                              <div className="flex flex-wrap items-center gap-4 text-sm text-vintage-600">
-                                {article.date && (
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-4 w-4" />
-                                    <span>{formatDate(article.date)}</span>
-                                  </div>
-                                )}
-                                
-                                {article.source && (
-                                  <div className="flex items-center gap-1">
-                                    <FileText className="h-4 w-4" />
-                                    <span>{article.source}</span>
-                                  </div>
-                                )}
-                                
-                                {article.location && (
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="h-4 w-4" />
-                                    <span>{article.location}</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Article Image */}
-                            {article.image && (
-                              <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 relative">
-                                <Image
-                                  src={article.image}
-                                  alt={article.title}
-                                  fill
-                                  className="object-cover rounded-lg border border-vintage-200"
-                                  sizes="(max-width: 640px) 80px, 96px"
-                                  unoptimized
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </CardHeader>
-
-                        <CardContent>
-                          {/* People */}
-                          {article.people && article.people.length > 0 && (
-                            <div className="flex items-center gap-2 mb-3">
-                              <Users className="h-4 w-4 text-vintage-600" />
-                              <div className="flex flex-wrap gap-1">
-                                {article.people.map(person => (
-                                  <Badge key={person} variant="outline" className="text-xs">
-                                    {person}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Tags */}
-                          {article.tags && article.tags.length > 0 && (
-                            <div className="flex items-center gap-2 mb-4">
-                              <Tag className="h-4 w-4 text-vintage-600" />
-                              <div className="flex flex-wrap gap-1">
-                                {article.tags.map(tag => (
-                                  <Badge key={tag} variant="secondary" className="text-xs bg-vintage-100">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Content Preview */}
-                          <div className="prose prose-sm max-w-none text-vintage-700 mb-4">
-                            <p className="line-clamp-3">
-                              {article.content.replace(/[#*]/g, '').trim().substring(0, 200)}...
-                            </p>
-                          </div>
-
-                          {/* Read More Button */}
-                          <Button 
-                            asChild 
-                            variant="outline" 
-                            size="sm"
-                            className="border-vintage-300 text-vintage-700 hover:bg-vintage-50"
-                          >
-                            <a href={`/articles/${article.slug}`}>Read Full Article</a>
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  ))}
-                </div>
+      {unresolved.length > 0 && (
+        <section className="bg-amber-200/55">
+          <div className="mx-auto max-w-5xl px-5 py-14 sm:px-8 sm:py-20">
+            <div className="flex items-start gap-4">
+              <CircleHelp className="mt-1 h-7 w-7 shrink-0 text-amber-900" />
+              <div>
+                <p className="text-xs font-semibold tracking-[.18em] text-amber-900 uppercase">
+                  Research desk
+                </p>
+                <h2 className="mt-3 font-serif text-4xl sm:text-5xl">
+                  Uncertainty belongs in the archive.
+                </h2>
+                <p className="mt-5 max-w-3xl leading-7 text-amber-950/75">
+                  Records without reliable dates, and entries that need more
+                  corroboration, stay visible. The archive distinguishes a
+                  documented report from a fully resolved family history.
+                </p>
               </div>
             </div>
-          ))}
-        </div>
-
-        {timeline.length === 0 && (
-          <div className="text-center py-12">
-            <Calendar className="h-16 w-16 text-vintage-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-vintage-700 mb-2">No articles found</h3>
-            <p className="text-vintage-600">
-              {selectedYear === 'all' 
-                ? 'No articles are available in the archive.'
-                : `No articles found for ${selectedYear}.`
-              }
-            </p>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+              {unresolved.map(article => (
+                <Link
+                  key={article.slug}
+                  href={`/articles/${article.slug}`}
+                  className="rounded-2xl border border-amber-900/15 bg-white/65 p-5 transition hover:bg-white"
+                >
+                  <p className="flex items-center gap-2 text-xs font-semibold tracking-[.13em] text-amber-900 uppercase">
+                    <CalendarDays className="h-4 w-4" /> Under review ·{' '}
+                    {displayDate(article.date, article.date_text)}
+                  </p>
+                  <h3 className="mt-2 font-serif text-2xl leading-tight">
+                    {article.title}
+                  </h3>
+                </Link>
+              ))}
+            </div>
+            <Link
+              href="/remember"
+              className="mt-8 inline-flex min-h-12 items-center rounded-full bg-[#17241d] px-6 font-semibold text-white transition hover:bg-[#2b3b30]"
+            >
+              Share corroborating evidence
+            </Link>
           </div>
-        )}
-      </div>
-    </div>
+        </section>
+      )}
+    </main>
   )
 }

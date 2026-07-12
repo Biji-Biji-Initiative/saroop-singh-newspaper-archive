@@ -54,6 +54,11 @@ export function Footer() {
                   Family Memory Room
                 </Link>
               </li>
+              <li>
+                <Link className="hover:text-white" href="/family-day">
+                  Family archive day
+                </Link>
+              </li>
             </ul>
           </nav>
           <nav aria-label="Archive information">
