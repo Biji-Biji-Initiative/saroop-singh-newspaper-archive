@@ -269,6 +269,8 @@ export function MemoryRoom({
   const requiresPhoto =
     ["identify", "story", "correction"].includes(kind) && !externalCorrection;
   const hasSubject = Boolean(subject || initialSubject);
+  const subjectRequired =
+    ["identify", "correction"].includes(kind) && !hasSubject;
   return (
     <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-16">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -299,7 +301,7 @@ export function MemoryRoom({
               <span className="mt-4 block font-serif text-2xl">
                 {action.title}
               </span>
-              <span className="mt-1 block text-sm leading-6 text-neutral-500">
+              <span className="mt-1 block text-sm leading-6 text-neutral-600">
                 {action.note}
               </span>
             </button>
@@ -484,6 +486,15 @@ export function MemoryRoom({
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-amber-800">
             What you know
           </p>
+          {subjectRequired && (
+            <p
+              id="memory-subject-required"
+              role="status"
+              className="mt-3 rounded-xl bg-amber-50 p-3 text-sm leading-6 text-amber-950"
+            >
+              Choose a photograph above before sending this {kind === "identify" ? "identification" : "correction"}.
+            </p>
+          )}
           <div className="mt-4 grid gap-4">
             {kind === "identify" && (
               <><label className="text-sm font-semibold">
@@ -583,10 +594,11 @@ export function MemoryRoom({
             <button
               disabled={
                 busy ||
-                ((kind === "identify" || kind === "correction") && !hasSubject) ||
+                subjectRequired ||
                 (kind === "identify" && !anchor && !positionDescription.trim())
               }
               aria-busy={busy}
+              aria-describedby={subjectRequired ? "memory-subject-required" : undefined}
               className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-[#17241d] px-5 font-semibold text-white disabled:opacity-40"
             >
               {busy ? (

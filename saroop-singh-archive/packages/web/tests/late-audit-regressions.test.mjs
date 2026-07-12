@@ -67,6 +67,23 @@ test("memory room gallery remains inside its narrow-screen grid column", () => {
     "both form columns must be allowed to shrink",
   );
   assert.match(room, /mt-4 flex min-w-0 gap-3 overflow-x-auto pb-3/);
+  assert.match(room, /text-sm leading-6 text-neutral-600/);
+});
+
+test("photo-bound Memory Room actions explain why submission is disabled", () => {
+  const room = read("app/remember/memory-room.tsx");
+
+  assert.match(
+    room,
+    /const subjectRequired =\s*\["identify", "correction"\]\.includes\(kind\) && !hasSubject/,
+  );
+  assert.match(room, /id="memory-subject-required"/);
+  assert.match(room, /role="status"/);
+  assert.match(
+    room,
+    /aria-describedby=\{subjectRequired \? "memory-subject-required" : undefined\}/,
+  );
+  assert.match(room, /subjectRequired \|\|/);
 });
 
 test("identifications require a subject, a name, and either an anchor or position description", () => {
