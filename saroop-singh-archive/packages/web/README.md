@@ -1,280 +1,138 @@
-# Saroop Singh Archive - Next.js Web Application
+# Saroop Singh Archive
 
-A modern, performant web application for browsing and exploring the historical newspaper archive of Saroop Singh, a pioneering athlete from Malaya (1936-1957).
+A family-led digital archive of Saroop Singh, a Sikh middle-distance runner
+documented in athletics in pre-war Malaya. The project combines a reviewed
+newspaper catalogue, best-available photographic sources, private family
+contributions, and a source-first restoration review studio.
 
-## 🚀 Features
+## Archive principles
 
-- **📰 Article Browser**: Browse 38 historical newspaper clippings with advanced search and filtering
-- **🔍 Smart Search**: Full-text search with debouncing and auto-suggestions
-- **🎯 Advanced Filtering**: Filter by people, sources, locations, tags, and date ranges
-- **📅 Timeline View**: Chronological visualization of articles grouped by year
-- **📱 Responsive Design**: Mobile-first design that works on all devices
-- **🎨 Vintage Theme**: Authentic newspaper archive aesthetic with sepia tones
-- **⚡ Performance**: Server-side rendering, static generation, and optimized images
-- **♿ Accessibility**: Keyboard navigation, ARIA labels, and semantic HTML
+- Source files remain independently downloadable and never get overwritten by
+  an AI derivative.
+- Catalogue errors are withdrawn or redirected, not quietly rewritten.
+- Family memories are private claims until a human review decision.
+- Public contributions require no account and never publish automatically.
+- AI processing is optional, default-off, recorded separately from preservation
+  consent, and blocked server-side when permission is absent.
+- Recovered legacy AI outputs are speculative experiments with unknown prompts
+  and unreliable likeness—not conservation restorations.
 
-## 🛠️ Tech Stack
+The recovered image set contains JPG/PNG source files only. Some are scans,
+some are newspaper crops or screenshots, and one is a known crop of another
+group portrait. No physical-print register, reverse scans, TIFF/DNG/RAW masters,
+or complete digitisation histories were recovered.
 
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS 4
-- **UI Components**: shadcn/ui
-- **Data**: Markdown files with YAML frontmatter
-- **Deployment**: Dockerized for Coolify
+## Main surfaces
 
-## 📦 Getting Started
+- `/story` — guided family exhibition
+- `/articles` — reviewed catalogue entries and source scans
+- `/timeline` and `/people` — evidence-led discovery
+- `/gallery` — source-first photographic records and optional comparisons
+- `/remember` — private names, stories, corrections, voice, fronts and backs
+- `/contribute` — multi-photo family intake with per-photo metadata
+- `/studio` — owner-only preservation, restoration review and publication
+- `/methodology` — evidence, provenance, originals and restoration policy
 
-### Prerequisites
+## Runtime and storage
 
-- Node.js 18+
-- npm or pnpm
+The production archive runs as a standard Next.js service on Coolify at
+`https://saroop.mereka.dev`. Metadata is stored in SQLite at
+`$ARCHIVE_DATA_DIR/archive.sqlite`; private originals, memory recordings and
+restoration derivatives are stored under `$ARCHIVE_DATA_DIR/objects`. Coolify
+mounts `/data` as the durable volume. Database migrations run automatically and
+idempotently when the application opens the database.
 
-### Installation
+The private Studio uses a signed, HttpOnly, SameSite=Strict session. Browser
+sign-in requires an allowlisted email and a long archive passphrase. A separate
+bearer token supports trusted operator automation. No proxy-supplied identity
+headers are trusted.
+
+Important runtime values:
+
+- `ARCHIVE_DATA_DIR` — durable metadata and media root; `/data` in production
+- `ARCHIVE_PUBLIC_ORIGIN` / `NEXT_PUBLIC_SITE_ORIGIN` — canonical
+  `https://saroop.mereka.dev` origin
+- `ARCHIVE_ADMIN_EMAILS` — comma-separated owner allowlist; required
+- `ARCHIVE_ADMIN_PASSWORD` — long private browser sign-in passphrase
+- `ARCHIVE_SESSION_SECRET` — at least 32 random characters for signed sessions
+- `ARCHIVE_SOURCE_HASH_SECRET` — separate pepper for daily abuse-limit hashes
+- `ADMIN_API_TOKEN` — separate long bearer token for trusted automation
+- `CONTRIBUTION_DAILY_GLOBAL_LIMIT` — durable daily photograph intake cap
+- `MEMORY_DAILY_GLOBAL_LIMIT` — durable daily memory intake cap
+- `OPENAI_API_KEY` — GPT Image restoration provider
+- `GEMINI_API_KEY` — Gemini restoration and private face-observation provider
+- `GEMINI_ANALYSIS_MODEL` — optional Gemini model override for face observations
+- `ARCHIVE_REVALIDATE_SECRET` — optional private revalidation credential
+
+Secrets are sourced from Infisical and injected into Coolify. They never belong
+in tracked environment files.
+
+Run from this package inside the monorepo:
 
 ```bash
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Open http://localhost:3000
+npm ci --workspaces=false
+npm run type-check
+npm run lint
+npm test
+npm run db:generate   # only after editing db/schema.ts
 ```
 
-## 🗂️ Project Structure
+`npm test` builds the production Next.js artifact, verifies source/media
+integrity and restoration safety, then boots the real production server to
+exercise public discovery, signed Studio login, private contribution storage,
+media isolation, AI consent gates and receipt privacy.
 
-```
-packages/web/
-├── app/                    # Next.js App Router pages
-│   ├── articles/          # Article listing and detail pages
-│   ├── timeline/          # Timeline view page
-│   ├── about/             # About page
-│   └── api/               # API routes
-├── components/            # React components
-│   ├── ui/               # shadcn/ui components
-│   ├── article-*.tsx     # Article-specific components
-│   ├── filter-*.tsx      # Filter components
-│   └── timeline-*.tsx    # Timeline components
-├── lib/                   # Utilities and data fetching
-│   ├── articles.ts       # Article data functions
-│   ├── markdown.ts       # Markdown parsing
-│   └── types.ts          # TypeScript types
-├── data/                  # Content
-│   └── articles/         # Markdown article files
-└── public/               # Static assets
-```
+## Restoration contract
 
-## 📝 Available Scripts
+The family chooses one of three optional intentions: Clean & preserve, Repair
+damage, or Explore colour. The owner chooses the engine in the advanced panel.
+Each run records the exact provider model, versioned prompt, preset and output
+checksum. Gemini calls use stateless storage settings. Outputs with material
+aspect-ratio drift are rejected before storage, and publication requires an
+explicit human comparison checklist.
 
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm start           # Start production server
-npm run lint        # Run ESLint
-npm run type-check  # Run TypeScript type checking
-npm run format      # Format code with Prettier
-npm run format:check # Check code formatting
-```
+The slider is a review instrument, not proof of geometric registration. Legacy
+pairs have different canvases and are disclosed as illustrative comparisons.
+Fresh output still requires human landmark/alignment inspection.
 
-## 🎯 Key Features
+## Face observations and family identification
 
-### Article Management
+Face assistance is deliberately split into two stages. After a family
+contribution is accepted into private review and affirmative AI consent is
+recorded, the curator may ask Gemini to count visible faces and describe broad
+image positions. The provider call is stateless, observations remain private,
+and the model is forbidden from naming people or inferring age, gender,
+ethnicity, health, emotion or relationships.
 
-- Server-side rendering for SEO
-- Static generation for article pages
-- Dynamic metadata for each article
-- Related article suggestions
+Actual identification belongs to the family. The Memory Room lets relatives
+anchor a proposed name and certainty statement to a person in a photograph.
+Those claims remain private until human review; AI observations never become
+identity records automatically.
 
-### Search & Filter System
+## Coolify deployment contract
 
-- Real-time search with 300ms debounce
-- Multi-criteria filtering
-- Filter suggestions based on data
-- Active filter badges with removal
+The container uses Node 22, a standard Next.js standalone artifact and a
+non-root runtime user. Startup initializes `/data`, applies SQLite migrations,
+and then drops privileges. `/api/health` proves that both metadata and object
+storage are writable while reporting only boolean auth/provider configuration.
 
-### Timeline Visualization
+Before every production promotion:
 
-- Articles grouped by year
-- Decade quick filters
-- Expandable article groups
-- Chronological sorting
+1. keep the existing `/data` persistent-volume mount;
+2. inject the Infisical-managed auth, OpenAI and Gemini values;
+3. keep `ARCHIVE_ADMIN_EMAILS` fail-closed and use separate session/password/API
+   secrets;
+4. set both public-origin variables to `https://saroop.mereka.dev`;
+5. preserve proxy request-body and rate limits;
+6. run the full test suite and container health check;
+7. verify backup and restore for `archive.sqlite*` and the `objects/` tree;
+8. exercise contribution, memory receipt, Studio login, restoration review,
+   publication and withdrawal on the deployed domain.
 
-### Performance Optimizations
+## Preservation exports
 
-- Image optimization with Next.js Image
-- Code splitting and lazy loading
-- Static generation where possible
-- Efficient data caching
-
-## 🔧 Data Integration
-
-The application works with the monorepo's content structure:
-
-- Article data: `../../content/articles/published/`
-- Images: `../../content/media/`
-- Metadata: `../../content/metadata/`
-
-Articles are stored as Markdown files with YAML frontmatter:
-
-```yaml
----
-title: "Article Title"
-date: "1937-07-18"
-date_text: "18 July 1937"
-source: "The Straits Times, Page 15"
-location: "Kuala Lumpur"
-people:
-  - "Saroop Singh"
-  - "Other Person"
-tags: ["athletics", "records"]
-image: "../../assets/images/article.jpg"
----
-Article content in Markdown...
-```
-
-## 🎨 Customization
-
-### Theming
-
-The application uses a custom vintage newspaper theme:
-
-- `vintage.*` - Warm brown tones
-- `sepia.*` - Aged yellow/brown tones
-
-Colors are defined in `tailwind.config.ts`.
-
-### Typography
-
-- **Inter** - Modern sans-serif for body text and UI
-- **Playfair Display** - Elegant serif for headlines
-
-### Components
-
-UI components are built with shadcn/ui and can be customized in `components/ui/`.
-
-## 🚀 Deployment
-
-### Coolify (Production)
-
-The repository-root Dockerfile builds this package and the published archive
-content together. Deploy that image through Coolify, expose port `3000`, and
-attach durable storage at `/data`. The target public domain is
-`https://saroop.mereka.dev`.
-
-### Environment Variables
-
-For local development, create `.env.local` only if needed. Production values
-are managed in Infisical and injected by Coolify:
-
-```env
-GEMINI_API_KEY=development-only-key
-ARCHIVE_DATA_DIR=archive-data
-CONTRIBUTION_DAILY_GLOBAL_LIMIT=100
-CONTRIBUTION_RETENTION_DAYS=90
-```
-
-`CONTRIBUTION_DAILY_GLOBAL_LIMIT` bounds durable private uploads across the
-whole service. `CONTRIBUTION_RETENTION_DAYS` controls how long an unreviewed or
-rejected preserve-first family contribution remains private (published copies
-are stored separately and are not purged with the private session).
-
-See the root [deployment guide](../../DEPLOYMENT-GUIDE.md) for production
-variables, volume requirements, and verification steps.
-
-## 📊 Performance Metrics
-
-- **Lighthouse Score**: 95+ (Performance, Accessibility, SEO)
-- **Core Web Vitals**: All green
-- **Bundle Size**: Optimized with code splitting
-- **Load Time**: < 2s on 3G networks
-
-## 📚 API
-
-### Search API
-
-```typescript
-GET /api/search
-Query parameters:
-{
-  query?: string
-  people?: string[]
-  sources?: string[]
-  locations?: string[]
-  tags?: string[]
-  dateFrom?: string
-  dateTo?: string
-  sortBy?: 'date' | 'title' | 'source'
-  sortOrder?: 'asc' | 'desc'
-}
-```
-
-### Articles API
-
-```typescript
-GET / api / articles;
-GET / api / articles / [slug];
-GET / api / unique - values;
-```
-
-## 🏗️ Architecture Decisions
-
-- **App Router**: Next.js 15's stable App Router for better performance
-- **TypeScript**: Type safety and better developer experience
-- **Tailwind CSS 4**: Rapid, consistent styling with custom design system
-- **shadcn/ui**: Accessible, customizable UI components
-- **Server Components**: Better performance with React Server Components
-- **Static Generation**: Using SSG where possible for optimal performance
-
-## 🧪 Development
-
-### Component Development
-
-```tsx
-import { Button } from "@/components/ui/button"
-import { ArticleCard } from "@/components/article-card"
-
-// Use pre-built components
-<Button variant="vintage">Browse Archive</Button>
-<ArticleCard article={article} variant="featured" />
-```
-
-### Data Fetching
-
-```typescript
-import { getAllArticles, searchArticles } from "@/lib/articles";
-
-// Server component
-const articles = await getAllArticles();
-
-// With filters
-const filtered = await searchArticles({
-  query: "athletics",
-  people: ["Saroop Singh"],
-  dateFrom: "1936-01-01",
-});
-```
-
-## 🤝 Contributing
-
-1. Follow existing code style
-2. Run `npm run lint` and `npm run type-check`
-3. Use conventional commit messages
-4. Ensure responsive design works
-5. Test on multiple browsers
-
-## 📄 License
-
-MIT License - See LICENSE file for details
-
-## 🙏 Acknowledgments
-
-- Historical content from Malaysian newspapers (1936-1957)
-- Built with Next.js, React, and Tailwind CSS
-- UI components from shadcn/ui
-- Archive of Saroop Singh's athletic achievements
-
----
-
-**Documentation**: [View Full Docs](./docs)
-**Issues**: [Report Issues](https://github.com/your-repo/issues)
-**Live Demo**: Coming Soon
+`/api/archive/manifest` publishes checksums for recovered gallery sources,
+legacy experiments and active article scans. The owner Studio metadata export
+includes image records, restoration runs, audit events and private memory
+metadata. Media bytes still require a separate versioned object-storage backup
+and tested restore process.

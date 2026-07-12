@@ -30,15 +30,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: saroop-singh-archive/packages/web/package-lock.json
 
       - name: Install locked dependencies
-        run: npm ci --ignore-scripts --workspaces=false
-
-      - name: Validate published archive content
-        run: npm run validate:content
+        run: npm ci --workspaces=false
 
       - name: Lint
         run: npm run lint
@@ -46,11 +43,16 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
-      - name: Verify private contribution pipeline
-        run: npm run verify:gallery-submission-access
+      - name: Build and run the complete archive suite
+        env:
+          ARCHIVE_DATA_DIR: /tmp/saroop-archive-ci
+          NEXT_PUBLIC_SITE_ORIGIN: https://saroop.mereka.dev
+          ARCHIVE_PUBLIC_ORIGIN: https://saroop.mereka.dev
+        run: npm test
 
-      - name: Build production bundle
-        run: npm run build
+      - name: Build the production Coolify image
+        working-directory: .
+        run: docker build --tag saroop-archive:ci .
 
       - name: Reject high-severity production dependency findings
         run: npm audit --omit=dev --audit-level=high

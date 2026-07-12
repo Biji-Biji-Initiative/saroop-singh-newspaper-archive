@@ -1,0 +1,62 @@
+{
+  "id": "gemini-saroop-singh-running1",
+  "title": "M. Thomas and Saroop Singh after a mile race",
+  "date": "Publication date not visible",
+  "submittedAt": "2025-08-31T11:03:23.312Z",
+  "isPublic": true,
+  "metadata": {
+    "title": "M. Thomas and Saroop Singh after a mile race",
+    "date": "Publication date not visible",
+    "dateConfidence": "unknown",
+    "sourceType": "newspaper photograph crop from a Tribune page; not a family-print scan",
+    "familyMember": "M. Thomas and Saroop Singh",
+    "tags": [
+      "Saroop Singh",
+      "Athletics",
+      "Sports",
+      "Newspaper crop"
+    ],
+    "isPublic": true,
+    "description": "A newspaper crop captioned as M. Thomas and Saroop Singh, second and first respectively in a mile race at Kuala Lumpur. The publication date is not visible in the crop."
+  },
+  "thumbnailUrl": "/gallery-images/gemini-saroop-singh-running1-original.jpg",
+  "restorations": [
+    {
+      "id": "gemini-saroop-singh-running1-restoration-1",
+      "type": "enhanced",
+      "url": "/gallery-images/gemini-saroop-singh-running1-restoration-1.png",
+      "createdAt": "2025-08-31T11:03:23.291Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running1-restoration-2",
+      "type": "colorized",
+      "url": "/gallery-images/gemini-saroop-singh-running1-restoration-2.png",
+      "createdAt": "2025-08-31T11:03:23.295Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running1-restoration-3",
+      "type": "repaired",
+      "url": "/gallery-images/gemini-saroop-singh-running1-restoration-3.png",
+      "createdAt": "2025-08-31T11:03:23.298Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running1-restoration-4",
+      "type": "denoised",
+      "url": "/gallery-images/gemini-saroop-singh-running1-restoration-4.png",
+      "createdAt": "2025-08-31T11:03:23.306Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running1-restoration-5",
+      "type": "sharpened",
+      "url": "/gallery-images/gemini-saroop-singh-running1-restoration-5.png",
+      "createdAt": "2025-08-31T11:03:23.309Z"
+    },
+    {
+      "id": "gemini-saroop-singh-running1-restoration-6",
+      "type": "artistic",
+      "url": "/gallery-images/gemini-saroop-singh-running1-restoration-6.png",
+      "createdAt": "2025-08-31T11:03:23.312Z"
+    }
+  ],
+  "originalImageUrl": "/gallery-images/gemini-saroop-singh-running1-original.jpg"
+}

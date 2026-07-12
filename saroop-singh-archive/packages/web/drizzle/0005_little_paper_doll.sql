@@ -1,0 +1,1 @@
+ALTER TABLE `archive_images` ADD `restoration_preference` text DEFAULT 'clean-preserve' NOT NULL;
