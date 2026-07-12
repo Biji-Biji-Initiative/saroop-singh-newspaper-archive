@@ -94,6 +94,7 @@ export async function POST(request: Request) {
   const proposedName = String(form.get("proposedName") || "").trim().slice(0, 180);
   const positionDescription = String(form.get("positionDescription") || "").trim().slice(0, 300);
   if (kind === "identify" && !subjectId) return Response.json({ error: "Choose the photograph you are identifying." }, { status: 400 });
+  if (kind === "correction" && !subjectId) return Response.json({ error: "Choose the record you are correcting." }, { status: 400 });
   if (kind === "identify" && !proposedName) return Response.json({ error: "Tell us the person’s name or nickname." }, { status: 400 });
   if (kind === "identify" && (anchorX === null || anchorY === null) && !positionDescription) return Response.json({ error: "Tap the person or describe where they are in the photograph." }, { status: 400 });
   const requestedCertainty = String(form.get("certainty") || "unsure");
@@ -101,6 +102,7 @@ export async function POST(request: Request) {
   const requestedAttribution = String(form.get("attribution") || "named");
   const attribution = attributions.has(requestedAttribution) ? requestedAttribution : "named";
   const submittedStory = String(form.get("story") || "").slice(0, 8000);
+  if (["story", "correction"].includes(kind) && !submittedStory.trim()) return Response.json({ error: "Please add the memory or correction you want us to review." }, { status: 400 });
   const story = positionDescription ? `${submittedStory}${submittedStory ? "\n\n" : ""}Position in photograph: ${positionDescription}`.slice(0, 8000) : submittedStory;
   await getDb().insert(memorySubmissions).values({ id, kind, subjectId, anchorX, anchorY, claimantName, claimantRelationship: String(form.get("relationship") || "").slice(0, 160), claimantContact: String(form.get("contact") || "").slice(0, 240), proposedName, certainty, story, howKnown: String(form.get("howKnown") || "").slice(0, 1000), assetKey: asset?.key, assetName: asset?.name, assetType: asset?.type, assetBytes: asset?.bytes, assetSha256: asset?.sha256, consentScope: "private-review", attribution, status: "submitted", receiptTokenHash, submissionSourceHash });
   return Response.json({ received: true, id, receiptUrl: `/memory-receipt/${receiptToken}` }, { status: 201 });

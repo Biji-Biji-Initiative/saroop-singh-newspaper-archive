@@ -144,11 +144,12 @@ export function MemoryRoom({
     const loaded = result.items;
     setItems(loaded);
     setGalleryDegraded(result.degraded);
-    setSubject((current) =>
-      loaded.find((item) => item.id === initialSubject) ||
-      loaded.find((item) => item.id === current?.id) ||
-      (!initialSubject ? loaded[0] : undefined),
-    );
+    setSubject((current) => {
+      const requestedId = initialSubject || current?.id;
+      return requestedId
+        ? loaded.find((item) => item.id === requestedId)
+        : undefined;
+    });
   }, [initialSubject]);
   const requestGallery = useCallback(() => fetchAllPublicGallery<GalleryItem>(), []);
   const loadGallery = useCallback(() => {
@@ -224,12 +225,12 @@ export function MemoryRoom({
     setError("");
     const form = new FormData(event.currentTarget);
     form.set("kind", kind);
-    // A standalone photo, reverse scan, or voice memory is not automatically
-    // about whichever gallery card happened to load first. Only photo-bound
-    // actions, or links that explicitly supplied a subject, carry a subject.
+    // A story may stand on its own or deliberately link a selected photograph.
+    // Only identification and correction actions require a photo-bound subject;
     const shouldAttachSubject =
-      ["identify", "story", "correction"].includes(kind) ||
-      Boolean(initialSubject);
+      ["identify", "correction"].includes(kind) ||
+      Boolean(initialSubject) ||
+      (kind === "story" && Boolean(subject));
     if (kind === "reverse" && reverseSubjectId) form.set("subjectId", reverseSubjectId);
     else if (shouldAttachSubject && subject) form.set("subjectId", subject.id);
     else if (shouldAttachSubject && initialSubject)
@@ -267,6 +268,7 @@ export function MemoryRoom({
     kind === "correction" && Boolean(initialSubject) && !subject;
   const requiresPhoto =
     ["identify", "story", "correction"].includes(kind) && !externalCorrection;
+  const hasSubject = Boolean(subject || initialSubject);
   return (
     <section className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-16">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -307,9 +309,9 @@ export function MemoryRoom({
       <form
         ref={formRef}
         onSubmit={submit}
-        className="mt-8 grid gap-7 rounded-[2rem] border border-amber-950/10 bg-white p-5 shadow-xl sm:p-8 lg:grid-cols-[1.05fr_.95fr]"
+        className="mt-8 grid gap-7 rounded-[2rem] border border-amber-950/10 bg-white p-5 shadow-xl sm:p-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,.95fr)]"
       >
-        <div>
+        <div className="min-w-0">
           {externalCorrection ? (
             <div className="rounded-2xl bg-amber-100 p-6">
               <p className="text-xs font-semibold uppercase tracking-[.15em] text-amber-800">Correction attached to record</p>
@@ -319,13 +321,13 @@ export function MemoryRoom({
           ) : requiresPhoto ? (
             <>
               <p className="text-xs font-semibold uppercase tracking-[.16em] text-amber-800">
-                Choose a photograph
+                {kind === "story" ? "Choose a photograph (optional)" : "Choose a photograph"}
               </p>
               {galleryLoading && <p className="mt-4 rounded-xl bg-stone-100 p-4 text-sm text-neutral-600">Loading the complete public collection…</p>}
               {galleryError && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-900"><p>The photographs could not be loaded.</p><button type="button" onClick={loadGallery} className="mt-3 min-h-11 rounded-full bg-red-900 px-5 font-semibold text-white">Try again</button></div>}
               {galleryDegraded && !galleryError && <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">Recently published family photographs are temporarily unavailable; the recovered collection is still shown.</p>}
               {!galleryLoading && !galleryError && items.length === 0 && <p className="mt-4 rounded-xl bg-stone-100 p-4 text-sm text-neutral-600">No public photographs are available yet.</p>}
-              <div className="mt-4 flex gap-3 overflow-x-auto pb-3">
+              <div className="mt-4 flex min-w-0 gap-3 overflow-x-auto pb-3">
                 {items.map((item) => (
                   <button
                     type="button"
@@ -478,7 +480,7 @@ export function MemoryRoom({
             </div>
           )}
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-amber-800">
             What you know
           </p>
@@ -520,10 +522,11 @@ export function MemoryRoom({
               />
             </label>
             <label className="text-sm font-semibold">
-              Memory or correction
+              {["story", "correction"].includes(kind) ? "Memory or correction *" : "Memory or correction"}
               <textarea
                 name="story"
                 rows={5}
+                required={["story", "correction"].includes(kind)}
                 className="field mt-2 resize-y font-normal"
                 placeholder="What happened, where, when, who else remembers, and what you are unsure about…"
               />
@@ -578,7 +581,11 @@ export function MemoryRoom({
               </p>
             )}
             <button
-              disabled={busy || (kind === "identify" && !anchor && !positionDescription.trim())}
+              disabled={
+                busy ||
+                ((kind === "identify" || kind === "correction") && !hasSubject) ||
+                (kind === "identify" && !anchor && !positionDescription.trim())
+              }
               aria-busy={busy}
               className="flex min-h-13 items-center justify-center gap-2 rounded-xl bg-[#17241d] px-5 font-semibold text-white disabled:opacity-40"
             >
