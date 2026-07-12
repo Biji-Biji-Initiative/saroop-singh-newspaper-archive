@@ -23,6 +23,8 @@ interface GeminiInteractionPart {
 }
 
 interface GeminiInteractionResponse {
+  output_text?: string
+  outputText?: string
   steps?: Array<{
     content?: GeminiInteractionPart[]
   }>
@@ -82,6 +84,11 @@ function asBoundedText(value: unknown, maximumLength: number): string | null {
 }
 
 function outputText(response: GeminiInteractionResponse): string | null {
+  const directText = response.output_text ?? response.outputText
+  if (typeof directText === 'string' && directText.trim().length > 0) {
+    return directText.trim()
+  }
+
   const text = response.steps
     ?.flatMap(step => step.content ?? [])
     .map(part => part.text)
