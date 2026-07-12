@@ -23,6 +23,11 @@ export function publicArchiveOrigin(): string {
     : ''
 }
 
+export function publicArchiveUrl(path: string, requestUrl: string): URL {
+  const configuredOrigin = publicArchiveOrigin()
+  return new URL(path, configuredOrigin ? `${configuredOrigin}/` : requestUrl)
+}
+
 /**
  * Form submissions from a browser must originate at this archive. Requests
  * without an Origin header remain supported for same-process tests and trusted

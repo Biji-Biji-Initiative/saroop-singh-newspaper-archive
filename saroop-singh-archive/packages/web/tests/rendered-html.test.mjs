@@ -9,6 +9,7 @@ import test, { after, before } from "node:test";
 let archiveDataDir;
 let productionServer;
 let origin;
+const publicOrigin = "https://archive.example.test";
 let serverOutput = "";
 
 async function availablePort() {
@@ -50,8 +51,8 @@ before(async () => {
         ...process.env,
         NODE_ENV: "production",
         ARCHIVE_DATA_DIR: archiveDataDir,
-        NEXT_PUBLIC_SITE_ORIGIN: origin,
-        ARCHIVE_PUBLIC_ORIGIN: origin,
+        NEXT_PUBLIC_SITE_ORIGIN: publicOrigin,
+        ARCHIVE_PUBLIC_ORIGIN: publicOrigin,
         ARCHIVE_ADMIN_EMAILS: "archive-test@example.com",
         ARCHIVE_ADMIN_PASSWORD: "test-only-password-that-is-not-secret",
         ADMIN_API_TOKEN: "test-only-automation-token-with-more-than-16-characters",
@@ -122,15 +123,23 @@ test("persists private family workflows behind signed Studio and AI consent gate
   login.set("returnTo", "/studio");
   const loginResponse = await fetch(`${origin}/api/studio/session`, {
     method: "POST",
-    headers: { origin },
+    headers: { origin: publicOrigin },
     body: login,
     redirect: "manual",
   });
   assert.equal(loginResponse.status, 303);
+  assert.equal(loginResponse.headers.get("location"), `${publicOrigin}/studio`);
   const setCookie = loginResponse.headers.get("set-cookie") || "";
   assert.match(setCookie, /saroop_archive_admin=/);
   assert.match(setCookie, /HttpOnly/i);
   assert.match(setCookie, /SameSite=Strict/i);
+
+  const logoutResponse = await fetch(
+    `${origin}/api/studio/session/logout?return_to=%2F`,
+    { redirect: "manual" },
+  );
+  assert.equal(logoutResponse.status, 303);
+  assert.equal(logoutResponse.headers.get("location"), `${publicOrigin}/`);
 
   const contribution = new FormData();
   contribution.set(
@@ -147,7 +156,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
   contribution.set("consent", "yes");
   const contributionResponse = await fetch(`${origin}/api/contribute`, {
     method: "POST",
-    headers: { origin },
+    headers: { origin: publicOrigin },
     body: contribution,
   });
   assert.equal(contributionResponse.status, 201);
@@ -179,7 +188,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
 
   const blockedAnalysis = await fetch(
     `${origin}/api/studio/images/${image.id}/analyze`,
-    { method: "POST", headers: { ...automationHeaders, origin } },
+    { method: "POST", headers: { ...automationHeaders, origin: publicOrigin } },
   );
   assert.equal(blockedAnalysis.status, 409);
 
@@ -189,7 +198,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
       method: "PATCH",
       headers: {
         ...automationHeaders,
-        origin,
+        origin: publicOrigin,
         "content-type": "application/json",
       },
       body: JSON.stringify({ status: "private" }),
@@ -199,7 +208,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
 
   const stillConsentBlocked = await fetch(
     `${origin}/api/studio/images/${image.id}/analyze`,
-    { method: "POST", headers: { ...automationHeaders, origin } },
+    { method: "POST", headers: { ...automationHeaders, origin: publicOrigin } },
   );
   assert.equal(stillConsentBlocked.status, 409);
 
@@ -215,7 +224,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
   memory.set("consent", "yes");
   const memoryResponse = await fetch(`${origin}/api/memories`, {
     method: "POST",
-    headers: { origin },
+    headers: { origin: publicOrigin },
     body: memory,
   });
   assert.equal(memoryResponse.status, 201);
