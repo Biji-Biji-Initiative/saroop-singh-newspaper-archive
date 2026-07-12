@@ -6,18 +6,23 @@ but a clear story and original source make it useful for generations.
 
 ## The easiest way to share a family photo
 
-1. Open [the family memory page](https://saroop.mereka.dev/contribute).
-2. Upload up to 12 JPG, PNG, or WEBP scans (up to 25 MB each). This preservation
-   path does not send files to an AI provider.
+1. Open [the family contribution page](https://saroop.mereka.dev/contribute).
+2. Upload up to 12 JPG, PNG, or WEBP scans (up to 25 MB each). By default this
+   preserves the original for private family review only.
 3. Add only what your family knows: title, approximate date, people pictured,
    tags, and story. “Unknown” is always useful information.
 4. Confirm that you have permission to share the material. Every photograph and
    your follow-up details remain private until an archive administrator reviews
    it.
+5. Keep the private receipt link shown after a successful submission. It is not
+   a login, shows only safe review totals, and cannot be used to add more files.
 
-AI-assisted restoration studies are currently performed only by archive
-administrators after private intake and explicit consent. The public
-contribution path preserves the original without sending it to an AI provider.
+By default, this contribution path does not send material to an AI provider. If
+someone explicitly ticks the optional private AI-study consent, an archive
+administrator may later send a working copy and the submitted notes to the
+selected provider for a private study after family review. The preserved source
+is never replaced, and nothing is published automatically. Leaving the option
+unticked means no contribution copy is sent to an AI provider.
 
 Please do not submit material that contains private personal information,
 copyrighted images you cannot share, or images of living people without their

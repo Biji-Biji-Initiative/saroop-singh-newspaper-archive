@@ -6,6 +6,11 @@ import { getAllArticles } from "@/lib/articles";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const contributionIntakeEnabled = () =>
+  !["false", "0", "off"].includes(
+    process.env.CONTRIBUTIONS_ENABLED?.trim().toLowerCase() || "",
+  );
+
 export async function GET() {
   try {
     const [articles, objectStorageWritable] = await Promise.all([
@@ -27,6 +32,7 @@ export async function GET() {
           objectStorageWritable,
           adminAuthConfigured: archiveAuthConfigured(),
           restorationProviders: providers,
+          contributionIntakeEnabled: contributionIntakeEnabled(),
         },
       },
       {

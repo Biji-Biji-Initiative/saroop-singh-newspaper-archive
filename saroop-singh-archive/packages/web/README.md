@@ -58,6 +58,7 @@ Important runtime values:
 - `ARCHIVE_SOURCE_HASH_SECRET` — separate pepper for daily abuse-limit hashes
 - `ADMIN_API_TOKEN` — separate long bearer token for trusted automation
 - `CONTRIBUTION_DAILY_GLOBAL_LIMIT` — durable daily photograph intake cap
+- `CONTRIBUTIONS_ENABLED` — set `false`, `0`, or `off` to close public photo intake
 - `MEMORY_DAILY_GLOBAL_LIMIT` — durable daily memory intake cap
 - `OPENAI_API_KEY` — GPT Image restoration provider
 - `GEMINI_API_KEY` — Gemini restoration and private face-observation provider

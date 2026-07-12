@@ -111,6 +111,35 @@ test('public contribution intake rejects unsafe formats and never auto-publishes
   assert.doesNotMatch(route, /status: "published"/);
 });
 
+test('contribution receipts are aggregate-only private capabilities with conflict-safe intake', () => {
+  const schema = readFileSync(join(root, 'db/schema.ts'), 'utf8');
+  const intake = readFileSync(join(root, 'app/api/contribute/route.ts'), 'utf8');
+  const receipt = readFileSync(join(root, 'app/api/contributions/[token]/route.ts'), 'utf8');
+  const page = readFileSync(join(root, 'app/contribution-receipt/[token]/page.tsx'), 'utf8');
+  const health = readFileSync(join(root, 'app/api/health/route.ts'), 'utf8');
+  const robots = readFileSync(join(root, 'app/robots.ts'), 'utf8');
+  const worker = readFileSync(join(root, 'public/sw.js'), 'utf8');
+
+  assert.match(schema, /contribution_batches/);
+  assert.match(schema, /receipt_token_hash/);
+  assert.match(schema, /upload_token_hash/);
+  assert.match(schema, /contribution_batch_client_item_unique/);
+  assert.match(intake, /receiptToken === uploadToken/);
+  assert.match(intake, /CONTRIBUTIONS_ENABLED/);
+  assert.match(intake, /contributionBatchItems\.createdAt/);
+  assert.match(intake, /onConflictDoNothing\(\)/);
+  assert.match(intake, /deleteUnreferencedOriginal/);
+  assert.match(receipt, /cache-control": "private, no-store"/);
+  assert.match(receipt, /if \(!items\.length\) return receiptNotFound\(\)/);
+  assert.match(receipt, /select\(\{\s*disposition: contributionBatchItems\.disposition,\s*imageStatus: archiveImages\.status,/);
+  assert.doesNotMatch(receipt, /contributorName|contributorContact|originalKey|originalSha256/);
+  assert.match(page, /robots: \{ index: false, follow: false \}/);
+  assert.match(page, /dynamic = "force-dynamic"/);
+  assert.match(health, /contributionIntakeEnabled: contributionIntakeEnabled\(\)/);
+  assert.match(robots, /\/contribution-receipt\//);
+  assert.match(worker, /"\/contribution-receipt"/);
+});
+
 test('owner review is audited and exports preservation records', () => {
   const schema = readFileSync(join(root, 'db/schema.ts'), 'utf8');
   const review = readFileSync(join(root, 'app/api/studio/images/[id]/route.ts'), 'utf8');
