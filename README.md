@@ -24,9 +24,10 @@ The simplest path is the [family memory page](https://saroop.mereka.dev/contribu
 preserve up to 12 photographs and their stories privately, without sending them
 to an AI provider. Every item waits for family review before publication.
 
-The separate [restoration studio](https://saroop.mereka.dev/restore) is for a
-deliberate, conservative AI-assisted restoration study. It preserves the
-original and requires the same private review before anything becomes public.
+Conservative AI-assisted restoration studies are initiated by archive
+administrators only after private intake and explicit consent. The public
+contribution path always preserves the original without sending it to an AI
+provider.
 
 For article corrections, new clippings, or a local development workflow, start
 with [CONTRIBUTING.md](CONTRIBUTING.md). It contains the actual content path,
@@ -37,8 +38,8 @@ frontmatter shape, review standards, and validation commands.
 ```text
 saroop-singh-archive/
 ├── saroop-singh-archive/
-│   ├── content/articles/published/  # Source-controlled published clippings
-│   └── packages/web/                # Live Next.js archive
+│   └── packages/web/                # Live Next.js archive and canonical article corpus
+│       └── content/articles/published/
 ├── CONTRIBUTING.md                  # Family-friendly contribution workflow
 └── .github/workflows/               # Content and production web checks
 ```
@@ -47,7 +48,7 @@ saroop-singh-archive/
 
 ```bash
 cd saroop-singh-archive/packages/web
-npm ci --ignore-scripts --workspaces=false
+npm ci --workspaces=false
 npm run validate:content
 npm run dev
 ```

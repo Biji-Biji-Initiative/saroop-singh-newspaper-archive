@@ -15,10 +15,9 @@ but a clear story and original source make it useful for generations.
    your follow-up details remain private until an archive administrator reviews
    it.
 
-If your family specifically wants a conservative AI-assisted restoration study,
-use [the restoration studio](https://saroop.mereka.dev/restore). It accepts one
-JPG, PNG, or WEBP image up to 10 MB, preserves the original separately, and
-requires the same private review before publication.
+AI-assisted restoration studies are currently performed only by archive
+administrators after private intake and explicit consent. The public
+contribution path preserves the original without sending it to an AI provider.
 
 Please do not submit material that contains private personal information,
 copyrighted images you cannot share, or images of living people without their
@@ -27,15 +26,15 @@ permission.
 ## Add or correct a newspaper article
 
 Published articles live in
-`saroop-singh-archive/content/articles/published/`. Add a Markdown file whose
+`saroop-singh-archive/packages/web/content/articles/published/`. Add a Markdown file whose
 name is a safe slug, for example:
 
 ```text
 1954-11-07_straits-times_example-event.md
 ```
 
-Use this small frontmatter shape. Only `title` is mandatory; omit a date when
-it is unknown rather than inventing one.
+Use this small frontmatter shape. `title` and a site-relative `image` are
+required; omit a date when it is unknown rather than inventing one.
 
 ```yaml
 ---
@@ -48,7 +47,7 @@ people:
   - Saroop Singh
 tags:
   - clipping
-image: /images/example-event.jpg # optional site-relative path
+image: /images/example-event.jpg # required site-relative scan or explicit placeholder
 ---
 
 Write the transcription, a correction, or the relevant historical context here.
@@ -59,16 +58,18 @@ integration:
 
 ```bash
 cd saroop-singh-archive/packages/web
-npm ci --ignore-scripts --workspaces=false
+npm ci --workspaces=false
 npm run validate:content
 npm run lint
 npm run type-check
 npm run build
 ```
 
-The content validator checks frontmatter, dates, text fields, lists, safe file
-names, and empty articles. It gives file-specific errors so an accidental typo
-does not silently remove an article from the public archive.
+The content validator checks that this is the only published source tree,
+frontmatter, dates, text fields, lists, scans, safe file names, empty
+articles, and withdrawn-record links. It gives file-specific errors so an
+accidental typo or an edit in the wrong directory cannot silently disappear
+from the public archive.
 
 ## Review standards
 
