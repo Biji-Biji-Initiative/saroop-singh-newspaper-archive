@@ -11,6 +11,10 @@ const SESSION_ACCESS_TOKEN = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 const ADMIN_TOKEN = 'family-review-test-token'
 const RESTORATION_ID = `${SESSION_ID}-archival`
 const RESTORATION_FILE_NAME = 'archival-restoration.png'
+const ONE_PIXEL_PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9JzYQAAAAASUVORK5CYII=',
+  'base64'
+)
 
 function delay(milliseconds) {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
@@ -246,6 +250,132 @@ async function main() {
       `${baseUrl}/api/gallery/assets/gallery-${SESSION_ID}/restoration-1.png`
     )
     assert.equal(publicAsset.status, 200)
+
+    const contributionPage = await fetch(`${baseUrl}/contribute`)
+    assert.equal(contributionPage.status, 200)
+    assert.match(await contributionPage.text(), /Preserve first/)
+
+    const invalidContributionForm = new FormData()
+    invalidContributionForm.set(
+      'file',
+      new Blob(['not an image'], { type: 'image/png' }),
+      'not-an-image.png'
+    )
+    invalidContributionForm.set(
+      'contributorName',
+      'Private fixture contributor'
+    )
+    invalidContributionForm.set('consent', 'yes')
+    const invalidContribution = await fetch(`${baseUrl}/api/contribute`, {
+      method: 'POST',
+      body: invalidContributionForm,
+    })
+    assert.equal(invalidContribution.status, 415)
+
+    const contributionForm = new FormData()
+    contributionForm.set(
+      'file',
+      new Blob([ONE_PIXEL_PNG], { type: 'image/png' }),
+      'family-memory.png'
+    )
+    contributionForm.set('title', 'Private family contribution fixture')
+    contributionForm.set('dateText', 'c. 1952')
+    contributionForm.set('people', 'Saroop Singh')
+    contributionForm.set('story', 'A test-only private family memory.')
+    contributionForm.set('tags', 'family album, fixture')
+    contributionForm.set('contributorName', 'Private fixture contributor')
+    contributionForm.set('relationship', 'Test relative')
+    contributionForm.set('contact', 'fixture@example.test')
+    contributionForm.set('consent', 'yes')
+
+    const contributionResponse = await fetch(`${baseUrl}/api/contribute`, {
+      method: 'POST',
+      body: contributionForm,
+    })
+    const contributionPayload = await contributionResponse.json()
+    assert.equal(contributionResponse.status, 201)
+    assert.equal(contributionPayload.status, 'pending')
+    assert.ok(contributionPayload.galleryId)
+
+    const unguessableOriginal = await fetch(
+      `${baseUrl}/api/restorations/${contributionPayload.galleryId.slice('gallery-'.length)}/original.png`
+    )
+    assert.equal(unguessableOriginal.status, 404)
+
+    const privateQueue = await fetch(
+      `${baseUrl}/api/gallery/moderation?status=pending&limit=10`,
+      { headers: { Authorization: `Bearer ${ADMIN_TOKEN}` } }
+    )
+    const privateQueuePayload = await privateQueue.json()
+    const privateContribution = privateQueuePayload.items.find(
+      item => item.id === contributionPayload.galleryId
+    )
+    assert.equal(privateQueue.status, 200)
+    assert.ok(privateContribution)
+    assert.equal(privateContribution.metadata.dateText, 'c. 1952')
+    assert.equal(
+      privateContribution.privateContributor.name,
+      'Private fixture contributor'
+    )
+    assert.equal(
+      privateContribution.privateContributor.contact,
+      'fixture@example.test'
+    )
+
+    const publicGalleryAfterContribution = await fetch(
+      `${baseUrl}/api/gallery?limit=10`
+    )
+    const publicGalleryAfterContributionPayload =
+      await publicGalleryAfterContribution.json()
+    assert.equal(publicGalleryAfterContribution.status, 200)
+    assert.equal(
+      JSON.stringify(publicGalleryAfterContributionPayload).includes(
+        'Private fixture contributor'
+      ),
+      false
+    )
+    assert.equal(
+      JSON.stringify(publicGalleryAfterContributionPayload).includes(
+        'Private family contribution fixture'
+      ),
+      false
+    )
+
+    const publishContribution = await fetch(
+      `${baseUrl}/api/gallery?id=${encodeURIComponent(contributionPayload.galleryId)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'published' }),
+      }
+    )
+    assert.equal(publishContribution.status, 200)
+
+    const publishedContributionGallery = await fetch(
+      `${baseUrl}/api/gallery?limit=10`
+    )
+    const publishedContributionPayload =
+      await publishedContributionGallery.json()
+    const publishedContribution = publishedContributionPayload.items.find(
+      item => item.id === contributionPayload.galleryId
+    )
+    assert.equal(publishedContributionGallery.status, 200)
+    assert.ok(publishedContribution)
+    assert.equal(publishedContribution.date, 'c. 1952')
+    assert.equal(
+      JSON.stringify(publishedContribution).includes(
+        'Private fixture contributor'
+      ),
+      false
+    )
+
+    const publishedContributionAsset = await fetch(
+      `${baseUrl}/api/gallery/assets/${contributionPayload.galleryId}/restoration-1.png`
+    )
+    assert.equal(publishedContributionAsset.status, 200)
 
     console.log('Family contribution pipeline checks passed.')
   } finally {

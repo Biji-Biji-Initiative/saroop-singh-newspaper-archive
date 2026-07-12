@@ -1,6 +1,6 @@
 # Saroop Singh Archive
 
-[Visit the live archive](https://saroop.mereka.dev) · [Contribute a memory](https://saroop.mereka.dev/restore) · [Contribution guide](CONTRIBUTING.md)
+[Visit the live archive](https://saroop.mereka.dev) · [Share a family memory](https://saroop.mereka.dev/contribute) · [Contribution guide](CONTRIBUTING.md)
 
 This is a living family archive for Saroop Singh, a pioneering Sikh athlete in
 Malayan and Malaysian sports. It brings together carefully transcribed
@@ -20,9 +20,13 @@ AI-assisted restorations.
 
 ## For family contributors
 
-The simplest path is the [photo contribution page](https://saroop.mereka.dev/restore):
-upload a photo, review a conservative restoration, add its story, and submit it
-for private archive review.
+The simplest path is the [family memory page](https://saroop.mereka.dev/contribute):
+preserve up to 12 photographs and their stories privately, without sending them
+to an AI provider. Every item waits for family review before publication.
+
+The separate [restoration studio](https://saroop.mereka.dev/restore) is for a
+deliberate, conservative AI-assisted restoration study. It preserves the
+original and requires the same private review before anything becomes public.
 
 For article corrections, new clippings, or a local development workflow, start
 with [CONTRIBUTING.md](CONTRIBUTING.md). It contains the actual content path,

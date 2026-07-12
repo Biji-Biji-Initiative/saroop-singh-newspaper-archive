@@ -35,6 +35,7 @@ interface ReviewItem {
     title?: string
     description?: string
     date?: string
+    dateText?: string
     familyMember?: string
     tags?: string[]
   }
@@ -47,6 +48,11 @@ interface ReviewItem {
     photoSummary: string
     suggestedTags: string[]
     reviewRequired: true
+  }
+  privateContributor?: {
+    name?: string
+    relationship?: string
+    contact?: string
   }
 }
 
@@ -321,12 +327,14 @@ export function ArchiveReviewQueue() {
                           </p>
                         )}
                         <dl className="grid gap-2 text-sm text-slate-700">
-                          {item.metadata.date && (
+                          {(item.metadata.date || item.metadata.dateText) && (
                             <div>
                               <dt className="font-medium text-slate-900">
                                 Photo date
                               </dt>
-                              <dd>{item.metadata.date}</dd>
+                              <dd>
+                                {item.metadata.date || item.metadata.dateText}
+                              </dd>
                             </div>
                           )}
                           {item.metadata.familyMember && (
@@ -335,6 +343,27 @@ export function ArchiveReviewQueue() {
                                 Family connection
                               </dt>
                               <dd>{item.metadata.familyMember}</dd>
+                            </div>
+                          )}
+                          {item.privateContributor?.name && (
+                            <div>
+                              <dt className="font-medium text-slate-900">
+                                Contributor
+                              </dt>
+                              <dd>
+                                {item.privateContributor.name}
+                                {item.privateContributor.relationship
+                                  ? ` · ${item.privateContributor.relationship}`
+                                  : ''}
+                              </dd>
+                            </div>
+                          )}
+                          {item.privateContributor?.contact && (
+                            <div>
+                              <dt className="font-medium text-slate-900">
+                                Private follow-up
+                              </dt>
+                              <dd>{item.privateContributor.contact}</dd>
                             </div>
                           )}
                         </dl>

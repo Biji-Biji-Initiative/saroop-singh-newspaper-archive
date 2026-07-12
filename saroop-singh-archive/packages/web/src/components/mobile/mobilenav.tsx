@@ -10,6 +10,7 @@ import {
   Home,
   FileText,
   Clock,
+  Heart,
   Sparkles,
   Image,
   User,
@@ -25,7 +26,8 @@ const navigationItems = [
   { href: '/', label: 'Home', icon: Home },
   { href: '/articles', label: 'Articles', icon: FileText },
   { href: '/timeline', label: 'Timeline', icon: Clock },
-  { href: '/restore', label: 'Contribute', icon: Sparkles },
+  { href: '/contribute', label: 'Share a Memory', icon: Heart },
+  { href: '/restore', label: 'Restore a Photo', icon: Sparkles },
   { href: '/gallery', label: 'Gallery', icon: Image },
   { href: '/about', label: 'About', icon: User },
 ]
@@ -66,7 +68,7 @@ export function MobileNav({ className }: MobileNavProps) {
             <button
               type="button"
               aria-label="Close navigation menu"
-              className="fixed inset-0 z-[100] bg-neutral-950/65 backdrop-blur-sm sm:hidden"
+              className="fixed inset-0 z-[100] bg-neutral-950/65 backdrop-blur-sm lg:hidden"
               onClick={() => setIsOpen(false)}
             />
             <aside
@@ -74,7 +76,7 @@ export function MobileNav({ className }: MobileNavProps) {
               role="dialog"
               aria-modal="true"
               aria-label="Navigation"
-              className="fixed inset-y-0 right-0 z-[101] flex h-[100dvh] h-screen w-[min(22rem,88vw)] flex-col overflow-hidden border-l border-neutral-200/60 bg-white shadow-2xl sm:hidden"
+              className="fixed inset-y-0 right-0 z-[101] flex h-[100dvh] h-screen w-[min(22rem,88vw)] flex-col overflow-hidden border-l border-neutral-200/60 bg-white shadow-2xl lg:hidden"
             >
               <header className="shrink-0 border-b border-neutral-200/60 px-5 pt-[max(1rem,env(safe-area-inset-top))] pb-4">
                 <div className="flex items-center justify-between gap-4">
@@ -156,7 +158,7 @@ export function MobileNav({ className }: MobileNavProps) {
         type="button"
         onClick={() => setIsOpen(value => !value)}
         className={cn(
-          'relative flex h-12 w-12 items-center justify-center rounded-2xl border border-neutral-200/60 bg-white/95 shadow-md backdrop-blur transition active:scale-95 sm:hidden',
+          'relative flex h-12 w-12 items-center justify-center rounded-2xl border border-neutral-200/60 bg-white/95 shadow-md backdrop-blur transition active:scale-95 lg:hidden',
           className
         )}
         aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}

@@ -15,9 +15,15 @@ import {
 import { consumeRestorationQuota } from '@/lib/restoration-rate-limit'
 import { contributionsEnabled } from '@/lib/contributions'
 import {
+  isSafeImageDimensionCount,
+  isSupportedImage,
+  readSafeImageDimensions,
+} from '@/lib/image-validation'
+import {
   analyzePhotoWithGemini,
   type PhotoAnalysis,
 } from '@/lib/photo-analysis'
+import { hasTrustedArchiveOrigin } from '@/lib/request-origin'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -33,65 +39,6 @@ interface GeminiInteractionResponse {
   steps?: Array<{
     content?: GeminiInteractionPart[]
   }>
-}
-
-function publicOrigin(): string {
-  const configuredOrigin = process.env.ARCHIVE_PUBLIC_ORIGIN?.trim()
-
-  if (configuredOrigin) {
-    try {
-      return new URL(configuredOrigin).origin
-    } catch {
-      console.warn('Ignoring invalid ARCHIVE_PUBLIC_ORIGIN configuration')
-    }
-  }
-
-  // Coolify terminates TLS before forwarding to this Node server. In
-  // production, request.url can therefore be http:// even though the browser
-  // correctly sends the public https Origin header.
-  return process.env.NODE_ENV === 'production'
-    ? 'https://saroop.mereka.dev'
-    : ''
-}
-
-function hasTrustedOrigin(request: NextRequest): boolean {
-  const origin = request.headers.get('origin')
-  if (!origin) {
-    return true
-  }
-
-  const expectedOrigin = publicOrigin() || new URL(request.url).origin
-  return origin === expectedOrigin
-}
-
-function isSupportedImage(buffer: Buffer, mimeType: string): boolean {
-  if (mimeType === 'image/jpeg') {
-    return (
-      buffer.length >= 3 &&
-      buffer[0] === 0xff &&
-      buffer[1] === 0xd8 &&
-      buffer[2] === 0xff
-    )
-  }
-
-  if (mimeType === 'image/png') {
-    return (
-      buffer.length >= 8 &&
-      buffer
-        .subarray(0, 8)
-        .equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
-    )
-  }
-
-  if (mimeType === 'image/webp') {
-    return (
-      buffer.length >= 12 &&
-      buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
-      buffer.subarray(8, 12).toString('ascii') === 'WEBP'
-    )
-  }
-
-  return false
 }
 
 function restorationPrompt(): string {
@@ -146,7 +93,7 @@ function responseShape(response: GeminiInteractionResponse): {
 }
 
 export async function POST(request: NextRequest) {
-  if (!hasTrustedOrigin(request)) {
+  if (!hasTrustedArchiveOrigin(request)) {
     return NextResponse.json(
       { error: 'Untrusted request origin' },
       { status: 403 }
@@ -215,6 +162,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'The uploaded file does not match its image type.' },
         { status: 415 }
+      )
+    }
+
+    const dimensions = readSafeImageDimensions(inputBuffer, inputMimeType)
+    if (!dimensions || !isSafeImageDimensionCount(dimensions)) {
+      return NextResponse.json(
+        { error: 'The image dimensions are not safe for archive processing.' },
+        { status: 413 }
       )
     }
 

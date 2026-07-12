@@ -70,9 +70,9 @@ export default async function HomePage() {
                 <Link href="/timeline">View Timeline</Link>
               </Button>
               <Button asChild variant="premium" size="lg">
-                <Link href="/restore">
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Contribute a Photo
+                <Link href="/contribute">
+                  <Images className="mr-2 h-5 w-5" />
+                  Share a Memory
                 </Link>
               </Button>
             </div>
@@ -157,18 +157,18 @@ export default async function HomePage() {
                     <Sparkles className="h-7 w-7 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-neutral-900">
-                    Restore & Contribute
+                    Share a Family Memory
                   </h3>
                   <p className="leading-relaxed text-neutral-600">
-                    Share a family photo with its story, then create one
-                    conservative AI-assisted restoration for careful archive
-                    review.
+                    Preserve a family photograph and its story privately for
+                    review. Choose AI restoration separately, only when your
+                    family wants it.
                   </p>
                   <Link
-                    href="/restore"
+                    href="/contribute"
                     className="text-accent-600 hover:text-accent-700 group/link inline-flex items-center font-semibold transition-colors"
                   >
-                    Contribute a Photo
+                    Share a Memory
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/link:translate-x-1" />
                   </Link>
                 </div>

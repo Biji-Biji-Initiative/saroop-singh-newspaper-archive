@@ -34,12 +34,13 @@ const SESSION_ACCESS_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,128}$/
 const RESTORATION_SESSION_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const DEFAULT_RETENTION_HOURS = 7 * 24
+const DEFAULT_CONTRIBUTION_RETENTION_DAYS = 90
 const MAX_CLEANUP_SESSIONS_PER_RUN = 50
 
 export interface StoredRestoration {
   id: string
   name: string
-  style: 'archival'
+  style: 'archival' | 'preservation'
   description: string
   fileName: string
   mimeType: string
@@ -49,6 +50,7 @@ export interface RestorationSession {
   id: string
   createdAt: string
   accessToken: string
+  kind?: 'restoration' | 'contribution'
   originalFileName: string
   originalMimeType: string
   photoAnalysis?: PhotoAnalysis
@@ -114,6 +116,21 @@ function configuredRetentionHours(): number {
     : DEFAULT_RETENTION_HOURS
 }
 
+function contributionRetentionHours(): number {
+  const configured = Number(process.env.CONTRIBUTION_RETENTION_DAYS)
+  const days =
+    Number.isInteger(configured) && configured >= 7 && configured <= 730
+      ? configured
+      : DEFAULT_CONTRIBUTION_RETENTION_DAYS
+  return days * 24
+}
+
+function retentionHoursForSession(session: RestorationSession | null): number {
+  return session?.kind === 'contribution'
+    ? contributionRetentionHours()
+    : configuredRetentionHours()
+}
+
 function isPublishedGalleryRecord(value: unknown): boolean {
   return (
     typeof value === 'object' &&
@@ -126,12 +143,13 @@ function isPublishedGalleryRecord(value: unknown): boolean {
 
 /**
  * Remove expired private originals and restoration outputs. Published gallery
- * derivatives are copied into their own durable path and therefore survive;
- * unreviewed or rejected contribution records expire with their private
- * session so uploads do not accumulate indefinitely.
+ * derivatives are copied into their own durable path and therefore survive.
+ * Preserve-first family contributions use a longer review window than paid
+ * restoration previews; unreviewed and rejected records still expire so
+ * private uploads do not accumulate indefinitely.
  */
 export async function purgeExpiredRestorationSessions(): Promise<number> {
-  const cutoff = Date.now() - configuredRetentionHours() * 60 * 60 * 1_000
+  const now = Date.now()
   const sessionIds = (
     await listArchiveDirectory(archiveDataPath('restorations'))
   )
@@ -143,6 +161,7 @@ export async function purgeExpiredRestorationSessions(): Promise<number> {
   for (const sessionId of sessionIds) {
     const session = await readRestorationSession(sessionId)
     const createdAt = session ? Date.parse(session.createdAt) : Number.NaN
+    const cutoff = now - retentionHoursForSession(session) * 60 * 60 * 1_000
     if (Number.isFinite(createdAt) && createdAt > cutoff) {
       continue
     }

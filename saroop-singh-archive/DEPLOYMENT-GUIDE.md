@@ -47,6 +47,8 @@ commit them to the repository or configure them as build-time variables.
 | `RESTORATION_GLOBAL_LIMIT`       | Optional; defaults to `20` per hour                      |
 | `RESTORATION_DAILY_GLOBAL_LIMIT` | Optional; defaults to `12` per day                       |
 | `RESTORATION_RETENTION_HOURS`    | Optional; defaults to `168` (7 days)                     |
+| `CONTRIBUTION_DAILY_GLOBAL_LIMIT` | Optional; defaults to `100` private uploads per day     |
+| `CONTRIBUTION_RETENTION_DAYS`     | Optional; defaults to `90` days for unreviewed uploads  |
 | `CONTRIBUTIONS_ENABLED`          | Set to `false` for an immediate public-write kill switch |
 
 `ARCHIVE_CONTENT_DIR` normally does not need an override: the Docker image
@@ -64,8 +66,11 @@ After Coolify reports a successful rollout:
 4. Upload one small, non-sensitive test image through `/restore`. Confirm a
    Gemini result is returned and that the original plus output remain available
    after a container restart.
-5. Confirm a gallery submission stays pending until explicit archive review.
-6. Check the Coolify deployment logs for startup, storage-permission, and
+5. Submit one small, non-sensitive image through `/contribute`. Confirm the
+   original remains private, the contributor details appear only in the private
+   review queue, and no AI provider was used.
+6. Confirm both contribution types stay pending until explicit archive review.
+7. Check the Coolify deployment logs for startup, storage-permission, and
    Gemini errors before directing traffic to the new domain.
 
 ## Moderating a contribution

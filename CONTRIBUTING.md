@@ -6,13 +6,19 @@ but a clear story and original source make it useful for generations.
 
 ## The easiest way to share a family photo
 
-1. Open [the contribution page](https://saroop.mereka.dev/restore).
-2. Upload a JPG, PNG, or WEBP scan (up to 10 MB) and create a conservative
-   restoration.
-3. Select the version you want reviewed, then add its title, any known date,
-   the person or contributor, and the story behind it.
-4. Confirm that you have permission to share it. The submission remains private
-   until an archive administrator reviews it.
+1. Open [the family memory page](https://saroop.mereka.dev/contribute).
+2. Upload up to 12 JPG, PNG, or WEBP scans (up to 25 MB each). This preservation
+   path does not send files to an AI provider.
+3. Add only what your family knows: title, approximate date, people pictured,
+   tags, and story. “Unknown” is always useful information.
+4. Confirm that you have permission to share the material. Every photograph and
+   your follow-up details remain private until an archive administrator reviews
+   it.
+
+If your family specifically wants a conservative AI-assisted restoration study,
+use [the restoration studio](https://saroop.mereka.dev/restore). It accepts one
+JPG, PNG, or WEBP image up to 10 MB, preserves the original separately, and
+requires the same private review before publication.
 
 Please do not submit material that contains private personal information,
 copyrighted images you cannot share, or images of living people without their
@@ -76,6 +82,8 @@ does not silently remove an article from the public archive.
 
 ## How publication works
 
-Photo contributions are stored privately and become public only after an
-administrator approves them. GitHub contributions are reviewed through pull
-requests and must pass the archive content and web checks before merging.
+Family contributions are stored privately and become public only after an
+administrator approves them. Contributor contact details are visible only in
+the private review queue and are never included in the public gallery. GitHub
+contributions are reviewed through pull requests and must pass the archive
+content and web checks before merging.

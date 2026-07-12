@@ -29,10 +29,16 @@ interface StoredGalleryItem {
     title?: string
     description?: string
     date?: string
+    dateText?: string
     familyMember?: string
     tags?: string[]
   }
   photoAnalysis?: PhotoAnalysis
+  privateContributor?: {
+    name?: string
+    relationship?: string
+    contact?: string
+  }
 }
 
 function isStoredGalleryItem(value: unknown): value is StoredGalleryItem {
@@ -118,6 +124,7 @@ export async function GET(request: NextRequest) {
         submittedAt: item.submittedAt,
         metadata: item.metadata ?? {},
         photoAnalysis: item.photoAnalysis,
+        privateContributor: item.privateContributor,
         thumbnailUrl: item.thumbnailUrl ?? null,
         restorationCount: Array.isArray(item.restorations)
           ? item.restorations.length

@@ -169,7 +169,14 @@ are managed in Infisical and injected by Coolify:
 ```env
 GEMINI_API_KEY=development-only-key
 ARCHIVE_DATA_DIR=archive-data
+CONTRIBUTION_DAILY_GLOBAL_LIMIT=100
+CONTRIBUTION_RETENTION_DAYS=90
 ```
+
+`CONTRIBUTION_DAILY_GLOBAL_LIMIT` bounds durable private uploads across the
+whole service. `CONTRIBUTION_RETENTION_DAYS` controls how long an unreviewed or
+rejected preserve-first family contribution remains private (published copies
+are stored separately and are not purged with the private session).
 
 See the root [deployment guide](../../DEPLOYMENT-GUIDE.md) for production
 variables, volume requirements, and verification steps.

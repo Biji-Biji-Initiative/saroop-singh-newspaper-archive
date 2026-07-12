@@ -34,6 +34,7 @@ interface GalleryMetadata {
   title?: string
   description?: string
   date?: string
+  dateText?: string
   familyMember?: string
   tags?: string[]
   isPublic?: boolean
@@ -111,11 +112,14 @@ function descriptionFor(item: GalleryItem): string | undefined {
 
 function dateFor(item: GalleryItem): string | undefined {
   const metadataDate = metadataFor(item).date
-  return typeof metadataDate === 'string'
+  const metadataDateText = metadataFor(item).dateText
+  return typeof metadataDate === 'string' && metadataDate.length > 0
     ? metadataDate
-    : typeof item.date === 'string'
-      ? item.date
-      : undefined
+    : typeof metadataDateText === 'string' && metadataDateText.length > 0
+      ? metadataDateText
+      : typeof item.date === 'string'
+        ? item.date
+        : undefined
 }
 
 function familyMemberFor(item: GalleryItem): string | undefined {
