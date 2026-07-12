@@ -11,7 +11,10 @@ import {
   archiveLoginAllowed,
   recordArchiveLogin,
 } from "@/lib/login-rate-limit";
-import { hasTrustedArchiveOrigin } from "@/lib/request-origin";
+import {
+  hasTrustedArchiveOrigin,
+  publicArchiveUrl,
+} from "@/lib/request-origin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +24,7 @@ function loginRedirect(
   error: string,
   returnTo: string,
 ): NextResponse {
-  const url = new URL("/studio/login", request.url);
+  const url = publicArchiveUrl("/studio/login", request.url);
   url.searchParams.set("error", error);
   url.searchParams.set("return_to", returnTo);
   return NextResponse.redirect(url, 303);
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
   }
 
   recordArchiveLogin(request, true);
-  const response = NextResponse.redirect(new URL(returnTo, request.url), 303);
+  const response = NextResponse.redirect(publicArchiveUrl(returnTo, request.url), 303);
   response.cookies.set(
     ARCHIVE_SESSION_COOKIE,
     createArchiveSessionToken(user),
