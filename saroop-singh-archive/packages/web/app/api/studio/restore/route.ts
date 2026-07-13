@@ -6,6 +6,9 @@ import { hasTrustedArchiveOrigin } from "@/lib/request-origin";
 
 type Recipe = keyof typeof RESTORATION_RECIPES;
 
+const OPENAI_IMAGE_TIMEOUT_MS = 150_000;
+const GEMINI_IMAGE_TIMEOUT_MS = 110_000;
+
 export async function POST(request: Request) {
   if (!hasTrustedArchiveOrigin(request)) {
     return Response.json({ error: "Untrusted request origin." }, { status: 403 });
@@ -61,12 +64,12 @@ export async function POST(request: Request) {
       form.set("output_format", "png");
       form.set("n", "1");
       form.append("image[]", new File([sourceBytes], image.originalName, { type: image.originalType }));
-      const response = await fetch("https://api.openai.com/v1/images/edits", { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(110_000) });
+      const response = await fetch("https://api.openai.com/v1/images/edits", { method: "POST", headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(OPENAI_IMAGE_TIMEOUT_MS) });
       const result = await response.json() as { data?: Array<{ b64_json?: string }>; error?: { message?: string } };
       if (!response.ok || !result.data?.[0]?.b64_json) throw new Error(result.error?.message || "OpenAI did not return an image.");
       output = base64ToBytes(result.data[0].b64_json);
     } else {
-      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", { method: "POST", headers: { "x-goog-api-key": key, "content-type": "application/json" }, body: JSON.stringify({ model: modelConfig.apiModel, store: false, input: [{ type: "text", text: prompt }, { type: "image", data: bytesToBase64(sourceBytes), mime_type: image.originalType }], response_format: { type: "image", mime_type: "image/jpeg", image_size: "2K" } }), signal: AbortSignal.timeout(110_000) });
+      const response = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", { method: "POST", headers: { "x-goog-api-key": key, "content-type": "application/json" }, body: JSON.stringify({ model: modelConfig.apiModel, store: false, input: [{ type: "text", text: prompt }, { type: "image", data: bytesToBase64(sourceBytes), mime_type: image.originalType }], response_format: { type: "image", mime_type: "image/jpeg", image_size: "2K" } }), signal: AbortSignal.timeout(GEMINI_IMAGE_TIMEOUT_MS) });
       const result = await response.json() as { steps?: Array<{ content?: Array<{ type?: string; data?: string; mime_type?: string }> }>; error?: { message?: string } };
       const block = result.steps?.flatMap(step => step.content || []).find(item => item.type === "image" && item.data);
       if (!response.ok || !block?.data) throw new Error(result.error?.message || "Gemini did not return an image.");
