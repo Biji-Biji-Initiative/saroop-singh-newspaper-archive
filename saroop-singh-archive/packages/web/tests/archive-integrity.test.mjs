@@ -230,6 +230,27 @@ test('family memories are private claims with consent and receipt isolation', ()
   assert.doesNotMatch(receipt, /claimantName|claimantContact|story/);
 });
 
+test('public family identifications are explicit, reversible, and auditable', () => {
+  const schema = readFileSync(join(root, 'db/schema.ts'), 'utf8');
+  const publication = readFileSync(join(root, 'app/api/studio/memories/[id]/public-identity/route.ts'), 'utf8');
+  const review = readFileSync(join(root, 'app/studio/memories/review.tsx'), 'utf8');
+  const publicRecord = readFileSync(join(root, 'lib/public-gallery-record.ts'), 'utf8');
+  const publicTags = readFileSync(join(root, 'lib/public-identifications.ts'), 'utf8');
+  const archiveExport = readFileSync(join(root, 'app/api/studio/export/route.ts'), 'utf8');
+  assert.match(schema, /public_identity_tags/);
+  assert.match(schema, /public_identity_tag_events/);
+  assert.match(schema, /source_memory_id/);
+  assert.match(publication, /Corroborate this complete identification/);
+  assert.match(publication, /public:published/);
+  assert.match(publication, /public:removed/);
+  assert.match(review, /Make name public/);
+  assert.match(review, /Remove public name/);
+  assert.match(publicRecord, /identityTags/);
+  assert.match(publicTags, /eq\(publicIdentityTags\.status, "published"\)/);
+  assert.doesNotMatch(publicTags, /claimantName|claimantContact|story/);
+  assert.match(archiveExport, /publicIdentityTagEvents/);
+});
+
 test('guided story keeps evidence and uncertainty visible', () => {
   const story = readFileSync(join(root, 'app/story/page.tsx'), 'utf8');
   assert.match(story, /Show me the evidence/);

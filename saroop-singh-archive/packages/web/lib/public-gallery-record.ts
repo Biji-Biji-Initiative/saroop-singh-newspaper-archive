@@ -2,6 +2,11 @@ import { and, eq, isNotNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { archiveImages, restorationRuns } from "@/db/schema";
 import { getLegacyCollection } from "@/lib/legacy-gallery";
+import {
+  loadPublishedIdentityTags,
+  publicPeopleLabel,
+  type PublicIdentityTag,
+} from "@/lib/public-identifications";
 
 export type PublicGalleryStudy = {
   id: string;
@@ -25,12 +30,24 @@ export type PublicGalleryRecord = {
   };
   dateConfidence: string;
   studies: PublicGalleryStudy[];
+  identityTags: PublicIdentityTag[];
   isLegacy: boolean;
   hasIiifManifest: boolean;
 };
 
 function mediaUrl(key: string) {
   return `/api/media/${encodeURIComponent(key)}`;
+}
+
+async function publishedIdentityTagsFor(
+  subjectId: string,
+): Promise<PublicIdentityTag[]> {
+  try {
+    return await loadPublishedIdentityTags([subjectId]);
+  } catch {
+    // A legacy record stays readable when the optional local database is down.
+    return [];
+  }
 }
 
 /** Public labels describe historical intent without leaking provider internals. */
@@ -52,12 +69,16 @@ export function publicStudyLabel(recipe: string) {
 export async function getPublicGalleryRecord(id: string): Promise<PublicGalleryRecord | null> {
   const legacy = getLegacyCollection(id);
   if (legacy) {
+    const identityTags = await publishedIdentityTagsFor(legacy.id);
     const original = legacy.fixity?.original;
     return {
       id: legacy.id,
       title: legacy.metadata?.title || legacy.title,
       date: legacy.metadata?.date || legacy.date,
-      familyMember: legacy.metadata?.familyMember,
+      familyMember: publicPeopleLabel(
+        legacy.metadata?.familyMember,
+        identityTags,
+      ),
       description:
         legacy.metadata?.description ||
         "A surviving photograph from the Saroop Singh family collection.",
@@ -75,6 +96,7 @@ export async function getPublicGalleryRecord(id: string): Promise<PublicGalleryR
         type: study.type,
         url: study.url,
       })),
+      identityTags,
       isLegacy: true,
       hasIiifManifest: true,
     };
@@ -114,11 +136,15 @@ export async function getPublicGalleryRecord(id: string): Promise<PublicGalleryR
       }
     }
 
+    const identityTags = await publishedIdentityTagsFor(image.id);
     return {
       id: image.id,
       title: image.title,
       date: image.estimatedDate || undefined,
-      familyMember: image.people || "People not yet identified",
+      familyMember: publicPeopleLabel(
+        image.people || "People not yet identified",
+        identityTags,
+      ),
       description:
         image.description ||
         "A family photograph preserved privately, reviewed, and deliberately published by the archive.",
@@ -132,6 +158,7 @@ export async function getPublicGalleryRecord(id: string): Promise<PublicGalleryR
       },
       dateConfidence: image.estimatedDate ? "family estimate" : "unknown",
       studies,
+      identityTags,
       isLegacy: false,
       hasIiifManifest: false,
     };
