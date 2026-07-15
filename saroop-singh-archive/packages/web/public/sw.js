@@ -1,4 +1,4 @@
-const CACHE = "saroop-archive-premiere-v3";
+const CACHE = "saroop-archive-premiere-v4";
 const CORE = [
   "/",
   "/story",
@@ -6,9 +6,6 @@ const CORE = [
   "/mysteries",
   "/about",
   "/manifest.webmanifest",
-  "/gallery-images/gemini-saroop-singh-running1-original.jpg",
-  "/gallery-images/saroop-singh-running2.png",
-  "/gallery-images/gemini-extended-family-portrait-1970s-group-original.jpg",
 ];
 const PUBLIC_PAGES = new Set(CORE.filter((path) => !path.includes(".")));
 const PRIVATE_PREFIXES = [

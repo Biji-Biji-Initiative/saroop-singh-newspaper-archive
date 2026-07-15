@@ -65,16 +65,6 @@ test("reads bounded JPEG, PNG, and WebP dimensions", () => {
   assert.equal(readSafeRasterDimensions(truncatedWebp), null);
 });
 
-test("reads dimensions from representative preserved originals", () => {
-  for (const relativePath of [
-    "public/gallery-images/gemini-saroop-singh-running1-original.jpg",
-    "public/gallery-images/saroop-singh-running2.png",
-  ]) {
-    const parsed = readSafeRasterDimensions(new Uint8Array(readFileSync(join(root, relativePath))));
-    assert.ok(parsed && parsed.width > 0 && parsed.height > 0, `${relativePath} must have verifiable dimensions`);
-  }
-});
-
 test("rejects restoration outputs with material crop or aspect drift", () => {
   const accepted = validateRestorationAspectRatio(jpeg(1600, 1200), png(1024, 768));
   assert.equal(accepted.drift, 0);

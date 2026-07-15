@@ -122,48 +122,72 @@ function digest(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+function isStoredMetadata(value: unknown): value is StoredMetadata {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    return false;
+  }
+  const metadata = value as Record<string, unknown>;
+  return (
+    typeof metadata.contentType === "string" &&
+    metadata.contentType.length > 0 &&
+    typeof metadata.etag === "string" &&
+    /^[a-f0-9]{64}$/.test(metadata.etag) &&
+    typeof metadata.bytes === "number" &&
+    Number.isSafeInteger(metadata.bytes) &&
+    metadata.bytes >= 0 &&
+    typeof metadata.storedAt === "string" &&
+    Number.isFinite(Date.parse(metadata.storedAt)) &&
+    typeof metadata.customMetadata === "object" &&
+    metadata.customMetadata !== null &&
+    !Array.isArray(metadata.customMetadata) &&
+    Object.values(metadata.customMetadata).every(value => typeof value === "string")
+  );
+}
+
 export const archiveBucket = {
   async get(key: string): Promise<ArchiveObject | null> {
     const path = objectPath(key);
+    let contents: Buffer;
     try {
-      const [contents, metadataContents] = await Promise.all([
-        readFile(path),
-        readFile(metadataPath(path), "utf8").catch(error => {
-          if (isMissing(error)) return null;
-          throw error;
-        }),
-      ]);
-      const fallbackEtag = digest(contents);
-      const metadata = metadataContents
-        ? (JSON.parse(metadataContents) as StoredMetadata)
-        : {
-            contentType: "application/octet-stream",
-            customMetadata: {},
-            etag: fallbackEtag,
-            bytes: contents.byteLength,
-            storedAt: new Date(0).toISOString(),
-          };
-      const body = new Uint8Array(contents);
-
-      return {
-        body,
-        httpEtag: `"${metadata.etag || fallbackEtag}"`,
-        httpMetadata: { contentType: metadata.contentType || "application/octet-stream" },
-        customMetadata: metadata.customMetadata || {},
-        async arrayBuffer() {
-          return body.buffer.slice(
-            body.byteOffset,
-            body.byteOffset + body.byteLength,
-          ) as ArrayBuffer;
-        },
-        writeHttpMetadata(headers: Headers) {
-          headers.set("content-type", metadata.contentType || "application/octet-stream");
-        },
-      };
+      contents = await readFile(path);
     } catch (error) {
       if (isMissing(error)) return null;
       throw error;
     }
+    const metadataContents = await readFile(metadataPath(path), "utf8");
+    let parsedMetadata: unknown;
+    try {
+      parsedMetadata = JSON.parse(metadataContents);
+    } catch {
+      throw new Error(`Archive object metadata is not valid JSON for ${key}.`);
+    }
+    if (!isStoredMetadata(parsedMetadata)) {
+      throw new Error(`Archive object metadata is invalid for ${key}.`);
+    }
+    const metadata = parsedMetadata;
+    if (
+      metadata.bytes !== contents.byteLength ||
+      metadata.etag !== digest(contents)
+    ) {
+      throw new Error(`Archive object metadata is invalid for ${key}.`);
+    }
+    const body = new Uint8Array(contents);
+
+    return {
+      body,
+      httpEtag: `"${metadata.etag}"`,
+      httpMetadata: { contentType: metadata.contentType },
+      customMetadata: metadata.customMetadata,
+      async arrayBuffer() {
+        return body.buffer.slice(
+          body.byteOffset,
+          body.byteOffset + body.byteLength,
+        ) as ArrayBuffer;
+      },
+      writeHttpMetadata(headers: Headers) {
+        headers.set("content-type", metadata.contentType);
+      },
+    };
   },
 
   async put(

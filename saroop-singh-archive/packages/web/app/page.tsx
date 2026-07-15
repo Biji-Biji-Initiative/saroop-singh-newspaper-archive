@@ -9,6 +9,9 @@ import { MobileArticleCard } from '@/components/mobile/mobilearticlecard';
 import { Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BookOpen, Clock, FileText, ImagePlus, Images, ShieldCheck } from 'lucide-react';
+import { listPublicGalleryRecords } from '@/lib/public-gallery';
+
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: { absolute: 'Saroop Singh Archive | Runner in Pre-war Malaya' },
@@ -23,7 +26,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const featuredArticles = await getFeaturedArticles(6);
+  const [featuredArticles, gallery] = await Promise.all([
+    getFeaturedArticles(6),
+    listPublicGalleryRecords(),
+  ]);
+  const portrait = gallery.find(record => record.familyMember?.includes('Saroop Singh'));
 
   return (
     <main className="bg-white min-h-screen">
@@ -43,12 +50,12 @@ export default async function HomePage() {
                 <Link href="/remember" className="flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/25 px-6 font-semibold text-white hover:bg-white/10"><ImagePlus className="h-5 w-5" /> Add a memory</Link>
               </div>
             </div>
-            <figure className="order-1 lg:order-2">
+            {portrait && <figure className="order-1 lg:order-2">
               <div className="relative mx-auto aspect-[4/5] max-h-[72vh] overflow-hidden rounded-[2rem] border border-white/15 bg-black shadow-2xl shadow-black/30 sm:rounded-[2.5rem]">
-                <Image src="/gallery-images/saroop-singh-running2.png" alt="Newspaper portrait identifying Saroop Singh as the half-mile winner" fill priority unoptimized sizes="(max-width: 1024px) 92vw, 45vw" className="object-contain object-center grayscale contrast-110" />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-5 pt-20 sm:p-7 sm:pt-24"><p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-300">Newspaper source crop</p><figcaption className="mt-2 font-serif text-xl text-white sm:text-2xl">Saroop Singh, half-mile winner · published 19 July 1937</figcaption></div>
+                <Image src={portrait.originalImageUrl} alt={portrait.title} fill priority unoptimized sizes="(max-width: 1024px) 92vw, 45vw" className="object-contain object-center grayscale contrast-110" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-5 pt-20 sm:p-7 sm:pt-24"><p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-300">Published source image</p><figcaption className="mt-2 font-serif text-xl text-white sm:text-2xl">{portrait.title}{portrait.date ? ` · ${portrait.date}` : ""}</figcaption></div>
               </div>
-            </figure>
+            </figure>}
           </div>
         </ResponsiveContainer>
       </section>

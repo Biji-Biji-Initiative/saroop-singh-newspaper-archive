@@ -132,7 +132,7 @@ test("serves public discovery metadata from the production Next server", async (
   assert.equal(sitemap.status, 200);
   const sitemapText = await sitemap.text();
   assert.match(sitemapText, /\/articles\//);
-  assert.match(sitemapText, /\/gallery\//);
+  assert.match(sitemapText, /<loc>https:\/\/archive\.example\.test\/gallery<\/loc>/);
   assert.match(sitemapText, /\/people\/saroop-singh/);
 
   const manifest = await fetch(`${origin}/manifest.webmanifest`);
@@ -358,6 +358,40 @@ test("persists private family workflows behind signed Studio and AI consent gate
     authorization:
       "Bearer test-only-automation-token-with-more-than-16-characters",
   };
+
+  const sourceUpload = new FormData();
+  sourceUpload.set(
+    "file",
+    new Blob([tinyPng(19, 11)], { type: "image/png" }),
+    "canonical-test-source.png",
+  );
+  sourceUpload.set("title", "Canonical public test photograph");
+  sourceUpload.set("description", "A canonical-only test record.");
+  sourceUpload.set("rights", "Test archive permission");
+  const sourceUploadResponse = await fetch(`${origin}/api/studio/images`, {
+    method: "POST",
+    headers: { ...automationHeaders, origin: publicOrigin },
+    body: sourceUpload,
+  });
+  assert.equal(sourceUploadResponse.status, 201);
+  const { id: publishedSourceId } = await sourceUploadResponse.json();
+  assert.ok(publishedSourceId);
+
+  const publishSource = await fetch(`${origin}/api/studio/publish`, {
+    method: "POST",
+    headers: {
+      ...automationHeaders,
+      origin: publicOrigin,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({
+      imageId: publishedSourceId,
+      publish: true,
+      publicationConfirmed: true,
+    }),
+  });
+  assert.equal(publishSource.status, 200);
+
   const studioResponse = await fetch(`${origin}/api/studio/images`, {
     headers: automationHeaders,
   });
@@ -405,7 +439,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
 
   const memory = new FormData();
   memory.set("kind", "identify");
-  memory.set("subjectId", "gemini-saroop-singh-running1");
+  memory.set("subjectId", publishedSourceId);
   memory.set("anchorX", "0.5");
   memory.set("anchorY", "0.5");
   memory.set("claimantName", "Private Test Claimant");
@@ -481,11 +515,12 @@ test("persists private family workflows behind signed Studio and AI consent gate
   const galleryWithIdentification = await fetch(`${origin}/api/gallery?limit=50`);
   assert.equal(galleryWithIdentification.status, 200);
   const taggedPhoto = (await galleryWithIdentification.json()).items.find(
-    (item) => item.id === "gemini-saroop-singh-running1",
+    (item) => item.id === publishedSourceId,
   );
+  assert.ok(taggedPhoto);
   assert.match(taggedPhoto.familyMember, /Family Name Under Review/);
   const taggedDetailPage = await fetch(
-    `${origin}/gallery/gemini-saroop-singh-running1`,
+    `${origin}/gallery/${publishedSourceId}`,
   );
   assert.equal(taggedDetailPage.status, 200);
   assert.match(await taggedDetailPage.text(), /Family Name Under Review/);
@@ -540,11 +575,12 @@ test("persists private family workflows behind signed Studio and AI consent gate
 
   const galleryAfterRemoval = await fetch(`${origin}/api/gallery?limit=50`);
   const untaggedPhoto = (await galleryAfterRemoval.json()).items.find(
-    (item) => item.id === "gemini-saroop-singh-running1",
+    (item) => item.id === publishedSourceId,
   );
+  assert.ok(untaggedPhoto);
   assert.doesNotMatch(untaggedPhoto.familyMember, /Family Name Under Review/);
   const untaggedDetailPage = await fetch(
-    `${origin}/gallery/gemini-saroop-singh-running1`,
+    `${origin}/gallery/${publishedSourceId}`,
   );
   assert.equal(untaggedDetailPage.status, 200);
   assert.doesNotMatch(await untaggedDetailPage.text(), /Family Name Under Review/);

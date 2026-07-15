@@ -24,8 +24,7 @@ test('retains the recovered catalogue while excluding withdrawn errors from publ
   assert.equal(frontmatter('1957-07-15_straits-times_sikh-runners-state-record-half-mile.md').status, 'withdrawn');
 });
 
-test('uses one canonical validated article corpus with deterministic Markdown fixity', () => {
-  const manifest = JSON.parse(readFileSync(join(root, 'data/generated/preservation-manifest.json'), 'utf8'));
+test('uses one canonical validated article corpus', () => {
   const packageJson = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const validator = spawnSync(process.execPath, ['scripts/validate-content.mjs'], {
     cwd: root,
@@ -35,16 +34,6 @@ test('uses one canonical validated article corpus with deterministic Markdown fi
   assert.equal(existsSync(join(root, '..', '..', 'content', 'articles', 'published')), false);
   assert.equal(packageJson.scripts['validate:content'], 'node scripts/validate-content.mjs');
   assert.equal(validator.status, 0, validator.stderr || validator.stdout);
-  assert.equal(
-    manifest.articleCorpus.canonicalRepositoryPath,
-    'saroop-singh-archive/packages/web/content/articles/published',
-  );
-  assert.equal(manifest.articleCorpus.fileCount, articleFiles.length);
-  assert.match(manifest.articleCorpus.sha256, /^[a-f0-9]{64}$/);
-  for (const article of manifest.articleCorpus.files) {
-    assert.match(article.sha256, /^[a-f0-9]{64}$/);
-    assert.ok(article.bytes > 0);
-  }
 });
 
 test('every article has a title and a resolvable scan or explicit placeholder', () => {
@@ -56,12 +45,51 @@ test('every article has a title and a resolvable scan or explicit placeholder', 
   }
 });
 
-test('gallery catalogue contains seven real collections and resolvable thumbnails', () => {
-  const index = JSON.parse(readFileSync(join(root, 'data/gallery/index.json'), 'utf8'));
-  assert.equal(index.items.length, 7);
-  for (const item of index.items) {
-    assert.ok(item.id && item.title && item.thumbnailUrl);
-    assert.ok(existsSync(join(root, 'public', item.thumbnailUrl)), `${item.id} references missing thumbnail`);
+test('gallery serves only canonical database records and media objects', () => {
+  const loader = readFileSync(join(root, 'lib/public-gallery.ts'), 'utf8');
+  const api = readFileSync(join(root, 'app/api/gallery/route.ts'), 'utf8');
+  const manifest = readFileSync(join(root, 'app/api/archive/manifest/route.ts'), 'utf8');
+  assert.equal(existsSync(join(root, 'data/gallery')), false);
+  assert.equal(existsSync(join(root, 'public/gallery-images')), false);
+  assert.match(loader, /eq\(archiveImages\.status, "published"\)/);
+  assert.match(loader, /originalImageUrl: mediaUrl\(image\.originalKey\)/);
+  assert.match(loader, /eq\(restorationRuns\.reviewStatus, "approved"\)/);
+  assert.doesNotMatch(loader, /data\/gallery|gallery-images|catch\s*\(/);
+  assert.match(api, /listPublicGalleryRecords/);
+  assert.doesNotMatch(api, /degraded|data\/gallery|gallery-images/);
+  assert.match(manifest, /listPublicGalleryRecords/);
+});
+
+test('canonical gallery consumers render against the runtime archive volume', () => {
+  const runtimeConsumers = [
+    'app/page.tsx',
+    'app/about/page.tsx',
+    'app/story/page.tsx',
+    'app/people/page.tsx',
+    'app/people/[slug]/page.tsx',
+    'app/mysteries/page.tsx',
+    'app/gallery/[id]/page.tsx',
+    'app/sitemap.ts',
+    'app/api/archive/manifest/route.ts',
+    'app/api/iiif/[id]/manifest/route.ts',
+  ];
+  for (const file of runtimeConsumers) {
+    assert.match(readFileSync(join(root, file), 'utf8'), /dynamic\s*=\s*["']force-dynamic["']/);
+  }
+});
+
+test('featured archive surfaces select canonical records without retired fixture IDs', () => {
+  const featuredSurfaces = [
+    'app/page.tsx',
+    'app/about/page.tsx',
+    'app/story/page.tsx',
+    'app/people/page.tsx',
+    'app/people/[slug]/page.tsx',
+  ];
+  for (const file of featuredSurfaces) {
+    const source = readFileSync(join(root, file), 'utf8');
+    assert.match(source, /listPublicGalleryRecords/);
+    assert.doesNotMatch(source, /getPublicGalleryRecord/);
   }
 });
 
@@ -90,18 +118,12 @@ test('mobile navigation and filters use coordinated, non-duplicated overlays', (
   assert.equal((filters.match(/id="mobile-filter-drawer"/g) || []).length, 1);
 });
 
-test('preservation manifest verifies every source image, legacy study and article scan with SHA-256', () => {
-  const manifest = JSON.parse(readFileSync(join(root, 'data/generated/preservation-manifest.json'), 'utf8'));
-  assert.equal(manifest.counts.bestAvailableSources, 7);
-  assert.equal(manifest.counts.legacyAiExperiments, 36);
-  assert.equal(manifest.counts.articleScans, 36);
-  for (const collection of manifest.collections) {
-    assert.match(collection.original.sha256, /^[a-f0-9]{64}$/);
-    assert.ok(existsSync(join(root, 'public', collection.original.url)));
-    for (const study of collection.studies) assert.match(study.sha256, /^[a-f0-9]{64}$/);
-  }
-  for (const article of manifest.articleScans) assert.match(article.scan.sha256, /^[a-f0-9]{64}$/);
-  assert.equal(manifest.articleCorpus.fileCount, articleFiles.length);
+test('IIIF derives its image body and dimensions from a canonical record', () => {
+  const iiif = readFileSync(join(root, 'app/api/iiif/[id]/manifest/route.ts'), 'utf8');
+  assert.match(iiif, /getPublicGalleryRecord/);
+  assert.match(iiif, /record\.original\.width/);
+  assert.match(iiif, /record\.originalImageUrl/);
+  assert.doesNotMatch(iiif, /data\/gallery|gallery-images/);
 });
 
 test('public contribution intake rejects unsafe formats and never auto-publishes', () => {
@@ -148,7 +170,7 @@ test('owner review is audited and exports preservation records', () => {
   assert.match(review, /metadata:updated/);
   assert.match(review, /status:/);
   assert.match(archiveExport, /auditEvents/);
-  assert.match(archiveExport, /legacyCorpus/);
+  assert.doesNotMatch(archiveExport, /data\/gallery|gallery-images/);
 });
 
 test('modal surfaces trap focus and restore it when closed', () => {
@@ -165,7 +187,7 @@ test('living-history pages preserve evidence boundaries', () => {
   const chapters = readFileSync(join(root, 'data/knowledge/chapters.ts'), 'utf8');
   assert.match(people, /No family tree has been invented/);
   assert.match(profile, /Family relationships remain open research/);
-  assert.match(profile, /\/gallery-images\/saroop-singh-running2\.png/);
+  assert.match(profile, /listPublicGalleryRecords/);
   assert.doesNotMatch(timeline, /fetch\(['"]\/api\/articles/);
   assert.doesNotMatch(timeline, /article\.slug\.startsWith\("1957-"\)/);
   assert.match(timeline, /miscatalogued as 1957 has been withdrawn/);
@@ -174,7 +196,7 @@ test('living-history pages preserve evidence boundaries', () => {
   assert.doesNotMatch(chapters, /olympic-games/);
 });
 
-test('article dates fall back to the catalogue filename', () => {
+test('article dates derive from their canonical catalogue filename', () => {
   const loader = readFileSync(join(root, 'lib/articles.ts'), 'utf8');
   assert.match(loader, /fileName\.match\(\/\^\(\\d\{4\}\)-\(\\d\{2\}\)-\(\\d\{2\}\)\//);
   assert.match(loader, /fileDate \? `\$\{fileDate\[1\]\}-\$\{fileDate\[2\]\}-\$\{fileDate\[3\]\}`/);
@@ -190,7 +212,7 @@ test('public discovery and keyboard access are first-class', () => {
   assert.match(styles, /prefers-reduced-motion: reduce/);
   assert.match(robots, /\/studio/);
   assert.match(sitemap, /getAllArticles/);
-  assert.match(sitemap, /getLegacyCollections/);
+  assert.match(sitemap, /listPublicGalleryRecords/);
   assert.doesNotMatch(layout, /og-image\.jpg/);
 });
 
@@ -202,20 +224,18 @@ test('family upload selection is bounded before transmission', () => {
   assert.match(form, /role="alert"/);
 });
 
-test('legacy biography no longer outruns the reviewed evidence', () => {
+test('biography does not outrun the reviewed evidence', () => {
   const about = readFileSync(join(root, 'app/about/page.tsx'), 'utf8');
   assert.doesNotMatch(about, /Active 1936-1957|Transitions to sports administration|Mentors younger athletes|benchmark for future generations/);
   assert.match(about, /What remains unknown/);
   assert.match(about, /later hockey reports/i);
 });
 
-test('gallery curation leads with originals and marks unknowns', () => {
-  const curation = readFileSync(join(root, 'lib/gallery-curation.ts'), 'utf8');
-  assert.doesNotMatch(curation, /restoration-1\.png/);
-  assert.match(curation, /People not yet identified/);
-  assert.match(curation, /newspaper crop captioned as M\. Thomas and Saroop Singh/i);
-  assert.match(curation, /19 July 1937/);
-  assert.match(curation, /relationship to the formal group photograph.*under review/i);
+test('gallery labels source provenance and only approved public studies', () => {
+  const loader = readFileSync(join(root, 'lib/public-gallery.ts'), 'utf8');
+  assert.match(loader, /sourceProvenance: image\.sourceProvenance/);
+  assert.match(loader, /isNotNull\(restorationRuns\.publishedAt\)/);
+  assert.match(loader, /outputKey === image\.publishedKey/);
 });
 
 test('family memories are private claims with consent and receipt isolation', () => {
@@ -234,7 +254,7 @@ test('public family identifications are explicit, reversible, and auditable', ()
   const schema = readFileSync(join(root, 'db/schema.ts'), 'utf8');
   const publication = readFileSync(join(root, 'app/api/studio/memories/[id]/public-identity/route.ts'), 'utf8');
   const review = readFileSync(join(root, 'app/studio/memories/review.tsx'), 'utf8');
-  const publicRecord = readFileSync(join(root, 'lib/public-gallery-record.ts'), 'utf8');
+  const publicRecord = readFileSync(join(root, 'lib/public-gallery.ts'), 'utf8');
   const publicTags = readFileSync(join(root, 'lib/public-identifications.ts'), 'utf8');
   const archiveExport = readFileSync(join(root, 'app/api/studio/export/route.ts'), 'utf8');
   assert.match(schema, /public_identity_tags/);
@@ -255,7 +275,8 @@ test('guided story keeps evidence and uncertainty visible', () => {
   const story = readFileSync(join(root, 'app/story/page.tsx'), 'utf8');
   assert.match(story, /Show me the evidence/);
   assert.match(story, /Two direct reports give 2:06 4\/5/);
-  assert.match(story, /Source crop · 19 July 1937/);
+  assert.match(story, /Published source/);
+  assert.match(story, /runningTwo\.date/);
   assert.match(story, /Memory Room/);
 });
 
@@ -263,7 +284,7 @@ test('museum interoperability and offline premiere protect public-only content',
   const iiif = readFileSync(join(root, 'app/api/iiif/[id]/manifest/route.ts'), 'utf8');
   const worker = readFileSync(join(root, 'public/sw.js'), 'utf8');
   assert.match(iiif, /iiif\.io\/api\/presentation\/3\/context\.json/);
-  assert.match(iiif, /Preservation manifest and checksums/);
+  assert.match(iiif, /Archive manifest and checksums/);
   assert.match(worker, /\/story/);
   assert.match(worker, /"\/api\/"/);
   assert.match(worker, /"\/memory-receipt"/);
@@ -283,7 +304,7 @@ test('family launch surfaces share safely without exposing private memory conten
   assert.match(storyControls, /story-mode/);
 });
 
-test('one comparison instrument covers legacy, modal, and fresh restoration studies', () => {
+test('one comparison instrument covers modal and Studio restoration studies', () => {
   const compare = readFileSync(join(root, 'components/restoration-compare.tsx'), 'utf8');
   const modal = readFileSync(join(root, 'app/gallery/page.tsx'), 'utf8');
   const studio = readFileSync(join(root, 'app/studio/studio.tsx'), 'utf8');

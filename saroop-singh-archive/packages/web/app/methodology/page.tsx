@@ -16,7 +16,7 @@ const principles = [
   {
     icon: ShieldCheck,
     title: 'AI outputs never become evidence',
-    body: 'New studies require optional consent and human review. Recovered legacy outputs that alter likeness or scenery are labelled speculative experiments, never conservation or proof.',
+    body: 'New studies require optional consent and human review. The archive does not publish an output that could alter likeness or scenery without a curator’s recorded comparison review.',
   },
   {
     icon: CheckCircle2,

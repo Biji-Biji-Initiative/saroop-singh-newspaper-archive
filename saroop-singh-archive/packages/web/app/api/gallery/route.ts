@@ -1,134 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server';
-import preservationManifest from '@/data/generated/preservation-manifest.json';
-import { getLegacyCollections } from '@/lib/legacy-gallery';
-import {
-  loadPublishedIdentityTags,
-  publicPeopleLabel,
-  type PublicIdentityTag,
-} from '@/lib/public-identifications';
+import { NextRequest, NextResponse } from "next/server";
+import { listPublicGalleryRecords } from "@/lib/public-gallery";
 
-interface GalleryItem {
-  id: string;
-  title?: string;
-  date?: string;
-  submittedAt: string;
-  isPublic: boolean;
-  thumbnailUrl?: string;
-  originalImageUrl?: string;
-  restorations?: Array<{ id: string; type?: string; url: string; createdAt?: string }>;
-  metadata?: {
-    title?: string;
-    date?: string;
-    familyMember?: string;
-    tags?: string[];
-    isPublic?: boolean;
-  };
-}
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const parsedLimit = parseInt(searchParams.get('limit') || '12', 10);
-  const limit = Math.min(50, Math.max(1, Number.isFinite(parsedLimit) ? parsedLimit : 12));
-  const familyMember = searchParams.get('family');
-  const tag = searchParams.get('tag');
-  const sortBy = searchParams.get('sort') || 'newest';
+  const page = Math.max(1, Number.parseInt(searchParams.get("page") || "1", 10) || 1);
+  const requestedLimit = Number.parseInt(searchParams.get("limit") || "12", 10);
+  const limit = Math.min(50, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : 12));
+  const familyMember = searchParams.get("family")?.trim().toLocaleLowerCase();
+  const tag = searchParams.get("tag")?.trim();
+  const sortBy = searchParams.get("sort") || "newest";
 
-  let items = getLegacyCollections() as GalleryItem[];
-  items = items.filter(item => {
-    if (!(item.metadata?.isPublic ?? item.isPublic)) return false;
-    if (tag && !item.metadata?.tags?.includes(tag)) return false;
+  const records = await listPublicGalleryRecords();
+  const matching = records.filter(record => {
+    if (tag && !record.tags.includes(tag)) return false;
+    if (familyMember && !record.familyMember?.toLocaleLowerCase().includes(familyMember)) return false;
     return true;
   });
-
-  items.sort((a, b) => {
-    if (sortBy === 'oldest') return Date.parse(a.submittedAt) - Date.parse(b.submittedAt);
-    if (sortBy === 'title') return (a.metadata?.title || a.title || '').localeCompare(b.metadata?.title || b.title || '');
-    return Date.parse(b.submittedAt) - Date.parse(a.submittedAt);
+  matching.sort((left, right) => {
+    if (sortBy === "oldest") return Date.parse(left.submittedAt) - Date.parse(right.submittedAt);
+    if (sortBy === "title") return left.title.localeCompare(right.title);
+    return Date.parse(right.submittedAt) - Date.parse(left.submittedAt);
   });
 
-  let studioItems: Array<{ id: string; title: string; date?: string; familyMember?: string; tags: string[]; isPublic: boolean; submittedAt: string; thumbnailUrl: string; originalUrl: string; restorations: Array<{ id: string; type: string; url: string }>; restorationCount: number }> = [];
-  let identitiesBySubject = new Map<string, PublicIdentityTag[]>();
-  let degraded = false;
-  try {
-    const [{ desc, eq }, { getDb }, { archiveImages, restorationRuns }] = await Promise.all([
-      import('drizzle-orm'),
-      import('@/db'),
-      import('@/db/schema'),
-    ]);
-    const published = await getDb().select().from(archiveImages).where(eq(archiveImages.status, 'published')).orderBy(desc(archiveImages.publishedAt));
-    const runs = await getDb().select().from(restorationRuns);
-    const identityTags = await loadPublishedIdentityTags([
-      ...published.map(image => image.id),
-      ...items.map(item => item.id),
-    ]);
-    identitiesBySubject = new Map();
-    for (const identity of identityTags) {
-      const matches = identitiesBySubject.get(identity.subjectId) || [];
-      matches.push(identity);
-      identitiesBySubject.set(identity.subjectId, matches);
-    }
-    studioItems = published.map(image => ({
-      id: image.id,
-      title: image.title,
-      date: image.estimatedDate || undefined,
-      familyMember: publicPeopleLabel(
-        image.people || 'Saroop Singh family collection',
-        identitiesBySubject.get(image.id) || [],
-      ),
-      tags: JSON.parse(image.tags),
-      isPublic: true,
-      submittedAt: image.publishedAt || image.createdAt,
-      thumbnailUrl: `/api/media/${encodeURIComponent(image.originalKey)}`,
-      originalUrl: `/api/media/${encodeURIComponent(image.originalKey)}`,
-      restorations: runs.filter(run => run.imageId === image.id && run.status === 'ready' && run.reviewStatus === 'approved' && run.outputKey === image.publishedKey).map(run => ({ id: run.id, type: run.recipe, url: `/api/media/${encodeURIComponent(run.outputKey!)}` })),
-      restorationCount: runs.filter(run => run.imageId === image.id && run.status === 'ready' && run.reviewStatus === 'approved' && run.outputKey === image.publishedKey).length,
-    }));
-  } catch {
-    degraded = true;
-    // The built-in collection remains visible, but callers are told that
-    // database-backed family publications may be missing.
-  }
-
-  const staticItems = items.map(item => ({
-    id: item.id,
-    title: item.metadata?.title || item.title || 'Untitled',
-    date: item.metadata?.date || item.date,
-    familyMember: publicPeopleLabel(
-      item.metadata?.familyMember,
-      identitiesBySubject.get(item.id) || [],
-    ),
-    tags: item.metadata?.tags || [],
-    isPublic: item.metadata?.isPublic ?? item.isPublic,
-    submittedAt: item.submittedAt,
-    thumbnailUrl: item.thumbnailUrl || '',
-    originalUrl: item.originalImageUrl || item.thumbnailUrl || '',
-    source: preservationManifest.collections.find(collection => collection.id === item.id)?.original,
-    restorations: (item.restorations || []).map(restoration => ({ ...restoration, type: `Legacy AI experiment — ${restoration.type || 'unclassified'}; identity and detail are unverified` })),
-    restorationCount: item.restorations?.length || 0,
+  const total = matching.length;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const items = matching.slice((page - 1) * limit, page * limit).map(record => ({
+    id: record.id,
+    title: record.title,
+    date: record.date,
+    familyMember: record.familyMember,
+    tags: record.tags,
+    submittedAt: record.submittedAt,
+    originalUrl: record.originalImageUrl,
+    original: record.original,
+    sourceProvenance: record.sourceProvenance,
+    restorations: record.studies,
+    restorationCount: record.studies.length,
   }));
-  const combined = [...studioItems, ...staticItems].filter(
-    (item) =>
-      !familyMember ||
-      item.familyMember?.toLocaleLowerCase().includes(familyMember.toLocaleLowerCase()),
-  );
-  const total = combined.length;
-  const totalPages = Math.ceil(total / limit);
-  const paginatedItems = combined.slice((page - 1) * limit, page * limit);
 
   return NextResponse.json({
     success: true,
-    items: paginatedItems,
+    items,
     total,
     page,
     limit,
     totalPages,
     hasNextPage: page < totalPages,
     hasPreviousPage: page > 1,
-    degraded,
   });
 }
 
 export async function DELETE() {
-  return NextResponse.json({ error: 'The published archive is read-only.' }, { status: 405 });
+  return NextResponse.json({ error: "The published archive is read-only." }, { status: 405 });
 }

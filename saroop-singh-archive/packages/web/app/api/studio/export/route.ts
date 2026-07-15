@@ -9,7 +9,6 @@ import {
   publicIdentityTags,
   restorationRuns,
 } from "@/db/schema";
-import preservationManifest from "@/data/generated/preservation-manifest.json";
 
 export async function GET() {
   const user = await requireArchiveAdmin("/studio");
@@ -26,7 +25,6 @@ export async function GET() {
     exportedAt: new Date().toISOString(),
     exportedBy: user.email,
     warning: "Metadata and fixity export. Private media bytes remain in object storage and should be backed up separately.",
-    legacyCorpus: preservationManifest,
     studio: {
       images: images.map(image => ({ ...image, tags: JSON.parse(image.tags), privateMediaPath: `/api/media/${image.originalKey}` })),
       restorationRuns: runs,

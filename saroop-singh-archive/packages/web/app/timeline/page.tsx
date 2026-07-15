@@ -7,10 +7,10 @@ import { getAllArticles } from "@/lib/articles";
 
 export const metadata: Metadata = { title: "Timeline", description: "An evidence-led chronology of Saroop Singh and the records preserved in this archive." };
 
-function displayDate(date?: string, fallback?: string) {
-  if (!date) return fallback || "Date unknown";
+function displayDate(date?: string, recordedDateText?: string) {
+  if (!date) return recordedDateText || "Date unknown";
   const parsed = new Date(`${date}T00:00:00`);
-  return Number.isNaN(parsed.getTime()) ? fallback || "Date unknown" : parsed.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+  return Number.isNaN(parsed.getTime()) ? recordedDateText || "Date unknown" : parsed.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 }
 
 export default async function TimelinePage() {

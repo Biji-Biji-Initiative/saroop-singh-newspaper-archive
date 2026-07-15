@@ -3,7 +3,6 @@ import { getDb } from "@/db";
 import { archiveEvents, archiveImages, restorationRuns } from "@/db/schema";
 import { bucket, detectSafeRaster, readSafeRasterDimensions, sha256Hex } from "@/lib/archive-server";
 import { requireArchiveAdmin } from "@/lib/archive-auth";
-import preservationManifest from "@/data/generated/preservation-manifest.json";
 import { hasTrustedArchiveOrigin } from "@/lib/request-origin";
 
 export const runtime = "nodejs";
@@ -24,7 +23,6 @@ export async function GET() {
   const stored = images.map(image => ({
     ...image,
     photoAnalysis: parsedPhotoAnalysis(image.photoAnalysis),
-    readOnlyLegacy: false,
     tags: JSON.parse(image.tags),
     originalUrl: `/api/media/${encodeURIComponent(image.originalKey)}`,
     publishedUrl: image.publishedKey
@@ -39,8 +37,7 @@ export async function GET() {
           : null,
       })),
   }));
-  const legacy = preservationManifest.collections.map(collection => ({ id: `legacy:${collection.id}`, title: collection.title, description: "Recovered legacy collection. Exact AI model and prompt provenance for its historical studies is unavailable.", people: "", estimatedDate: collection.assertedDate, tags: ["Recovered legacy collection"], status: "published", originalName: collection.original.filename, originalType: collection.original.mimeType, originalBytes: collection.original.bytes, originalSha256: collection.original.sha256, originalUrl: collection.original.url, publishedUrl: collection.original.url, readOnlyLegacy: true, createdAt: null, runs: collection.studies.map(study => ({ id: study.id, model: "Legacy AI — exact model unknown", recipe: study.type, prompt: "Exact legacy prompt unavailable.", status: "legacy", outputUrl: study.url })) }));
-  return Response.json({ images: [...stored, ...legacy] });
+  return Response.json({ images: stored });
 }
 
 export async function POST(request: Request) {

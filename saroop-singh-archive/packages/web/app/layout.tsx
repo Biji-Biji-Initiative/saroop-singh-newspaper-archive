@@ -34,22 +34,11 @@ export const metadata: Metadata = {
   keywords: ['Saroop Singh', 'Malayan athletics', 'historical archive', 'newspaper clippings', 'sports history'],
   authors: [{ name: 'Saroop Singh Archive' }],
   manifest: '/manifest.webmanifest',
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    siteName: 'Saroop Singh Archive',
-    images: [
-      {
-        url: '/gallery-images/saroop-singh-running2.png',
-        alt: 'Saroop Singh Archive',
-      },
-    ],
-  },
+  openGraph: { type: 'website', locale: 'en_US', siteName: 'Saroop Singh Archive' },
   twitter: {
     card: 'summary_large_image',
     title: 'Saroop Singh Archive',
     description: 'A family-led archive of a runner documented in pre-war Malaya',
-    images: ['/gallery-images/saroop-singh-running2.png'],
   },
   robots: {
     index: true,

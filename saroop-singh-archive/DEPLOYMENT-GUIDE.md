@@ -149,7 +149,3 @@ docker run --rm -v saroop-restore-proof:/data -v /var/backups/saroop:/backup:ro 
   alpine sh -c 'tar -C /data -xzf /backup/saroop-data-YYYYMMDD.tgz && find /data -type f | sort'
 docker volume rm saroop-restore-proof
 ```
-
-The retired Vercel/Python prototype is documented in
-[packages/restorations/python-restoration/ARCHIVED.md](packages/restorations/python-restoration/ARCHIVED.md)
-for historical reference only.
