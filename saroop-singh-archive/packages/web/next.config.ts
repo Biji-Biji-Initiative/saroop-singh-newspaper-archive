@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["better-sqlite3"],
   outputFileTracingIncludes: {
-    "/*": ["./content/**/*", "./drizzle/**/*"],
+    "/*": ["./content/**/*", "./data/gallery/**/*", "./drizzle/**/*"],
   },
   async headers() {
     return [
