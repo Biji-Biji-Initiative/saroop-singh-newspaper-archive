@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import preservationManifest from '@/data/generated/preservation-manifest.json';
 import { getLegacyCollections } from '@/lib/legacy-gallery';
+import {
+  loadPublishedIdentityTags,
+  publicPeopleLabel,
+  type PublicIdentityTag,
+} from '@/lib/public-identifications';
 
 interface GalleryItem {
   id: string;
@@ -32,7 +37,6 @@ export async function GET(request: NextRequest) {
   let items = getLegacyCollections() as GalleryItem[];
   items = items.filter(item => {
     if (!(item.metadata?.isPublic ?? item.isPublic)) return false;
-    if (familyMember && item.metadata?.familyMember !== familyMember) return false;
     if (tag && !item.metadata?.tags?.includes(tag)) return false;
     return true;
   });
@@ -44,6 +48,7 @@ export async function GET(request: NextRequest) {
   });
 
   let studioItems: Array<{ id: string; title: string; date?: string; familyMember?: string; tags: string[]; isPublic: boolean; submittedAt: string; thumbnailUrl: string; originalUrl: string; restorations: Array<{ id: string; type: string; url: string }>; restorationCount: number }> = [];
+  let identitiesBySubject = new Map<string, PublicIdentityTag[]>();
   let degraded = false;
   try {
     const [{ desc, eq }, { getDb }, { archiveImages, restorationRuns }] = await Promise.all([
@@ -53,11 +58,24 @@ export async function GET(request: NextRequest) {
     ]);
     const published = await getDb().select().from(archiveImages).where(eq(archiveImages.status, 'published')).orderBy(desc(archiveImages.publishedAt));
     const runs = await getDb().select().from(restorationRuns);
+    const identityTags = await loadPublishedIdentityTags([
+      ...published.map(image => image.id),
+      ...items.map(item => item.id),
+    ]);
+    identitiesBySubject = new Map();
+    for (const identity of identityTags) {
+      const matches = identitiesBySubject.get(identity.subjectId) || [];
+      matches.push(identity);
+      identitiesBySubject.set(identity.subjectId, matches);
+    }
     studioItems = published.map(image => ({
       id: image.id,
       title: image.title,
       date: image.estimatedDate || undefined,
-      familyMember: image.people || 'Saroop Singh family collection',
+      familyMember: publicPeopleLabel(
+        image.people || 'Saroop Singh family collection',
+        identitiesBySubject.get(image.id) || [],
+      ),
       tags: JSON.parse(image.tags),
       isPublic: true,
       submittedAt: image.publishedAt || image.createdAt,
@@ -76,7 +94,10 @@ export async function GET(request: NextRequest) {
     id: item.id,
     title: item.metadata?.title || item.title || 'Untitled',
     date: item.metadata?.date || item.date,
-    familyMember: item.metadata?.familyMember,
+    familyMember: publicPeopleLabel(
+      item.metadata?.familyMember,
+      identitiesBySubject.get(item.id) || [],
+    ),
     tags: item.metadata?.tags || [],
     isPublic: item.metadata?.isPublic ?? item.isPublic,
     submittedAt: item.submittedAt,
@@ -86,7 +107,11 @@ export async function GET(request: NextRequest) {
     restorations: (item.restorations || []).map(restoration => ({ ...restoration, type: `Legacy AI experiment — ${restoration.type || 'unclassified'}; identity and detail are unverified` })),
     restorationCount: item.restorations?.length || 0,
   }));
-  const combined = [...studioItems, ...staticItems];
+  const combined = [...studioItems, ...staticItems].filter(
+    (item) =>
+      !familyMember ||
+      item.familyMember?.toLocaleLowerCase().includes(familyMember.toLocaleLowerCase()),
+  );
   const total = combined.length;
   const totalPages = Math.ceil(total / limit);
   const paginatedItems = combined.slice((page - 1) * limit, page * limit);

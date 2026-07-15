@@ -428,6 +428,137 @@ test("persists private family workflows behind signed Studio and AI consent gate
   const memoryReceiptText = await memoryReceiptResponse.text();
   assert.doesNotMatch(memoryReceiptText, /Private Test Claimant|Family Name Under Review/);
   assert.match(memoryReceiptText, /submitted/);
+
+  const prematurePublication = await fetch(
+    `${origin}/api/studio/memories/${memoryResult.id}/public-identity`,
+    { method: "POST", headers: { ...automationHeaders, origin: publicOrigin } },
+  );
+  assert.equal(prematurePublication.status, 409);
+
+  const corroborateMemory = await fetch(`${origin}/api/studio/memories`, {
+    method: "PATCH",
+    headers: {
+      ...automationHeaders,
+      origin: publicOrigin,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ id: memoryResult.id, status: "corroborated" }),
+  });
+  assert.equal(corroborateMemory.status, 200);
+
+  const publishIdentity = await fetch(
+    `${origin}/api/studio/memories/${memoryResult.id}/public-identity`,
+    { method: "POST", headers: { ...automationHeaders, origin: publicOrigin } },
+  );
+  assert.equal(publishIdentity.status, 200);
+  const publishedIdentity = await publishIdentity.json();
+  assert.equal(publishedIdentity.applied, true);
+  assert.equal(publishedIdentity.publicIdentity.name, "Family Name Under Review");
+
+  const repeatedPublication = await fetch(
+    `${origin}/api/studio/memories/${memoryResult.id}/public-identity`,
+    { method: "POST", headers: { ...automationHeaders, origin: publicOrigin } },
+  );
+  assert.equal(repeatedPublication.status, 200);
+  assert.equal((await repeatedPublication.json()).applied, false);
+
+  const reviewedMemories = await fetch(`${origin}/api/studio/memories`, {
+    headers: automationHeaders,
+  });
+  assert.equal(reviewedMemories.status, 200);
+  const reviewedMemory = (await reviewedMemories.json()).memories.find(
+    (item) => item.id === memoryResult.id,
+  );
+  assert.equal(reviewedMemory.status, "approved");
+  assert.deepEqual(reviewedMemory.publicIdentity, {
+    id: publishedIdentity.publicIdentity.id,
+    name: "Family Name Under Review",
+    status: "published",
+    publishedAt: reviewedMemory.publicIdentity.publishedAt,
+    removedAt: null,
+  });
+
+  const galleryWithIdentification = await fetch(`${origin}/api/gallery?limit=50`);
+  assert.equal(galleryWithIdentification.status, 200);
+  const taggedPhoto = (await galleryWithIdentification.json()).items.find(
+    (item) => item.id === "gemini-saroop-singh-running1",
+  );
+  assert.match(taggedPhoto.familyMember, /Family Name Under Review/);
+  const taggedDetailPage = await fetch(
+    `${origin}/gallery/gemini-saroop-singh-running1`,
+  );
+  assert.equal(taggedDetailPage.status, 200);
+  assert.match(await taggedDetailPage.text(), /Family Name Under Review/);
+
+  const preservationExport = await fetch(`${origin}/api/studio/export`, {
+    headers: automationHeaders,
+  });
+  assert.equal(preservationExport.status, 200);
+  const preservationSnapshot = await preservationExport.json();
+  assert.equal(preservationSnapshot.schemaVersion, 3);
+  assert.equal(
+    preservationSnapshot.studio.publicIdentityTags.find(
+      (identity) => identity.sourceMemoryId === memoryResult.id,
+    ).status,
+    "published",
+  );
+  assert.equal(
+    preservationSnapshot.studio.publicIdentityTagEvents.find(
+      (event) =>
+        event.detail.sourceMemoryId === memoryResult.id &&
+        event.eventType === "public:published",
+    ).actor,
+    "archive-test@example.com",
+  );
+
+  const protectedReviewState = await fetch(`${origin}/api/studio/memories`, {
+    method: "PATCH",
+    headers: {
+      ...automationHeaders,
+      origin: publicOrigin,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ id: memoryResult.id, status: "private" }),
+  });
+  assert.equal(protectedReviewState.status, 409);
+
+  const privateReceiptAfterPublication = await fetch(
+    `${origin}/api/memories/${memoryReceiptToken}`,
+  );
+  assert.equal(privateReceiptAfterPublication.status, 200);
+  assert.doesNotMatch(
+    await privateReceiptAfterPublication.text(),
+    /Private Test Claimant|Family Name Under Review/,
+  );
+
+  const removeIdentity = await fetch(
+    `${origin}/api/studio/memories/${memoryResult.id}/public-identity`,
+    { method: "DELETE", headers: { ...automationHeaders, origin: publicOrigin } },
+  );
+  assert.equal(removeIdentity.status, 200);
+  assert.deepEqual(await removeIdentity.json(), { removed: true });
+
+  const galleryAfterRemoval = await fetch(`${origin}/api/gallery?limit=50`);
+  const untaggedPhoto = (await galleryAfterRemoval.json()).items.find(
+    (item) => item.id === "gemini-saroop-singh-running1",
+  );
+  assert.doesNotMatch(untaggedPhoto.familyMember, /Family Name Under Review/);
+  const untaggedDetailPage = await fetch(
+    `${origin}/gallery/gemini-saroop-singh-running1`,
+  );
+  assert.equal(untaggedDetailPage.status, 200);
+  assert.doesNotMatch(await untaggedDetailPage.text(), /Family Name Under Review/);
+  const removalExport = await fetch(`${origin}/api/studio/export`, {
+    headers: automationHeaders,
+  });
+  assert.equal(removalExport.status, 200);
+  assert.ok(
+    (await removalExport.json()).studio.publicIdentityTagEvents.some(
+      (event) =>
+        event.detail.sourceMemoryId === memoryResult.id &&
+        event.eventType === "public:removed",
+    ),
+  );
 });
 
 test("serializes concurrent contribution receipts without losing a photograph", async () => {

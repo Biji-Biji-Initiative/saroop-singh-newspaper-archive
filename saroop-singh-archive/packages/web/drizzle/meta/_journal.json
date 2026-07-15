@@ -64,6 +64,13 @@
       "when": 1783897705497,
       "tag": "0008_gifted_the_hood",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1784100115357,
+      "tag": "0009_public_identity_tags",
+      "breakpoints": true
     }
   ]
 }

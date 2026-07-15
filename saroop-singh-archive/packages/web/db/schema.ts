@@ -115,3 +115,34 @@ export const memorySubmissions = sqliteTable("memory_submissions", {
   reviewedAt: text("reviewed_at"),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 }, table => [uniqueIndex("memory_receipt_unique").on(table.receiptTokenHash), index("memory_status_idx").on(table.status), index("memory_subject_idx").on(table.subjectId)]);
+
+export const publicIdentityTags = sqliteTable("public_identity_tags", {
+  id: text("id").primaryKey(),
+  subjectId: text("subject_id").notNull(),
+  sourceMemoryId: text("source_memory_id").notNull().references(() => memorySubmissions.id),
+  name: text("name").notNull(),
+  anchorX: integer("anchor_x"),
+  anchorY: integer("anchor_y"),
+  status: text("status").notNull().default("published"),
+  publishedBy: text("published_by").notNull(),
+  publishedAt: text("published_at").notNull(),
+  removedBy: text("removed_by"),
+  removedAt: text("removed_at"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, table => [
+  uniqueIndex("public_identity_source_unique").on(table.sourceMemoryId),
+  index("public_identity_subject_status_idx").on(table.subjectId, table.status),
+]);
+
+export const publicIdentityTagEvents = sqliteTable("public_identity_tag_events", {
+  id: text("id").primaryKey(),
+  identityTagId: text("identity_tag_id").notNull().references(() => publicIdentityTags.id),
+  subjectId: text("subject_id").notNull(),
+  eventType: text("event_type").notNull(),
+  actor: text("actor").notNull(),
+  detail: text("detail").notNull().default("{}"),
+  createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+}, table => [
+  index("public_identity_event_tag_idx").on(table.identityTagId),
+  index("public_identity_event_subject_idx").on(table.subjectId),
+]);
