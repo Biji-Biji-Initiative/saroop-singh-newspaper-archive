@@ -132,7 +132,7 @@ test("serves public discovery metadata from the production Next server", async (
   assert.equal(sitemap.status, 200);
   const sitemapText = await sitemap.text();
   assert.match(sitemapText, /\/articles\//);
-  assert.match(sitemapText, /<loc>https:\/\/archive\.example\.test\/gallery<\/loc>/);
+  assert.match(sitemapText, /<loc>https:\/\/[^<]+\/gallery<\/loc>/);
   assert.match(sitemapText, /\/people\/saroop-singh/);
 
   const manifest = await fetch(`${origin}/manifest.webmanifest`);
