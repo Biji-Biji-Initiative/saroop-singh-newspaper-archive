@@ -79,10 +79,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${archiveSerif.variable} antialiased bg-white text-gray-900 overflow-x-hidden`}
-      >
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable} ${archiveSerif.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="antialiased bg-white text-gray-900 overflow-x-hidden">
         <a href="#main-content" className="skip-link">Skip to archive content</a>
         <OfflineRegister />
         <Providers>
