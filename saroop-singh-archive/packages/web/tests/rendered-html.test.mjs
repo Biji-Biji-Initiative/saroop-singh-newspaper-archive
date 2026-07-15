@@ -3,6 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
+import Database from "better-sqlite3";
 import net from "node:net";
 import test, { after, before } from "node:test";
 
@@ -374,7 +375,38 @@ test("persists private family workflows behind signed Studio and AI consent gate
     body: sourceUpload,
   });
   assert.equal(sourceUploadResponse.status, 201);
-  const { id: publishedSourceId } = await sourceUploadResponse.json();
+  const { id: uploadedSourceId } = await sourceUploadResponse.json();
+  const preNormalizationId = "imported-canonical-source";
+  const sqlite = new Database(join(archiveDataDir, "archive.sqlite"));
+  sqlite.pragma("foreign_keys = ON");
+  sqlite.transaction(() => {
+    sqlite.pragma("defer_foreign_keys = ON");
+    sqlite
+      .prepare("UPDATE archive_images SET id = ? WHERE id = ?")
+      .run(preNormalizationId, uploadedSourceId);
+    sqlite
+      .prepare("UPDATE archive_events SET image_id = ? WHERE image_id = ?")
+      .run(preNormalizationId, uploadedSourceId);
+  })();
+  sqlite.close();
+
+  const normalizeSource = await fetch(
+    `${origin}/api/studio/migrations/normalize-image-ids`,
+    { method: "POST", headers: { ...automationHeaders, origin: publicOrigin } },
+  );
+  assert.equal(normalizeSource.status, 200);
+  assert.deepEqual(await normalizeSource.json(), { normalized: 1 });
+  const normalizedStudio = await fetch(`${origin}/api/studio/images`, {
+    headers: automationHeaders,
+  });
+  assert.equal(normalizedStudio.status, 200);
+  const normalizedSource = (await normalizedStudio.json()).images.find(
+    (item) => item.title === "Canonical public test photograph",
+  );
+  assert.ok(normalizedSource);
+  const publishedSourceId = normalizedSource.id;
+  assert.match(publishedSourceId, /^[0-9a-f-]{36}$/i);
+  assert.notEqual(publishedSourceId, preNormalizationId);
   assert.ok(publishedSourceId);
 
   const publishSource = await fetch(`${origin}/api/studio/publish`, {
