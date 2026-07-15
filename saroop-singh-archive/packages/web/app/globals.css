@@ -169,8 +169,8 @@
   body.story-mode > div > header,
   body.story-mode > div > footer { display: none; }
 
-  /* Hide the global chrome as soon as Story markup exists; the body class is
-     retained as a fallback for browsers without :has(). */
+  /* Hide the global chrome as soon as Story markup exists; the body class also
+     supports browsers without :has(). */
   body:has([data-story]) header,
   body:has([data-story]) footer { display: none; }
 

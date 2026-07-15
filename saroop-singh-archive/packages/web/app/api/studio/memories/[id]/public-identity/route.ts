@@ -7,15 +7,11 @@ import {
   publicIdentityTags,
 } from "@/db/schema";
 import { requireArchiveAdmin } from "@/lib/archive-auth";
-import { getLegacyCollection } from "@/lib/legacy-gallery";
 import { hasTrustedArchiveOrigin } from "@/lib/request-origin";
 
 const eligibleReviewStates = new Set(["corroborated", "approved"]);
 
 async function isPublishedArchiveSubject(subjectId: string): Promise<boolean> {
-  const legacy = getLegacyCollection(subjectId);
-  if (legacy) return legacy.metadata?.isPublic ?? legacy.isPublic;
-
   const image = await getDb()
     .select({ id: archiveImages.id })
     .from(archiveImages)

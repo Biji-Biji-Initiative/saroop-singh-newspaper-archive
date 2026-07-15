@@ -14,8 +14,8 @@ contributions, and a source-first restoration review studio.
 - Public contributions require no account and never publish automatically.
 - AI processing is optional, default-off, recorded separately from preservation
   consent, and blocked server-side when permission is absent.
-- Recovered legacy AI outputs are speculative experiments with unknown prompts
-  and unreliable likeness—not conservation restorations.
+- Only approved, explicitly published restoration studies are public. Unreviewed
+  derivatives remain private and never stand in for a source image.
 
 The recovered image set contains JPG/PNG source files only. Some are scans,
 some are newspaper crops or screenshots, and one is a known crop of another
@@ -92,9 +92,8 @@ checksum. Gemini calls use stateless storage settings. Outputs with material
 aspect-ratio drift are rejected before storage, and publication requires an
 explicit human comparison checklist.
 
-The slider is a review instrument, not proof of geometric registration. Legacy
-pairs have different canvases and are disclosed as illustrative comparisons.
-Fresh output still requires human landmark/alignment inspection.
+The slider is a review instrument, not proof of geometric registration. Every
+published comparison still requires human landmark and alignment inspection.
 
 ## Face observations and family identification
 
@@ -132,8 +131,7 @@ Before every production promotion:
 
 ## Preservation exports
 
-`/api/archive/manifest` publishes checksums for recovered gallery sources,
-legacy experiments and active article scans. The owner Studio metadata export
-includes image records, restoration runs, audit events and private memory
-metadata. Media bytes still require a separate versioned object-storage backup
-and tested restore process.
+`/api/archive/manifest` is generated from published canonical image records and
+their approved studies. The owner Studio metadata export includes image records,
+restoration runs, audit events and private memory metadata. Media bytes still
+require a separate versioned object-storage backup and tested restore process.

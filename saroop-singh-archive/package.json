@@ -1,7 +1,7 @@
 {
   "name": "@saroop-singh-archive/tooling",
   "version": "1.0.0",
-  "description": "Convenience commands for the supported Saroop Singh Archive web application",
+  "description": "Commands for the supported Saroop Singh Archive web application",
   "private": true,
   "scripts": {
     "start": "npm --prefix packages/web run start",
@@ -24,6 +24,6 @@
     "historical-archive",
     "newspaper-digitization",
     "malayan-athletics",
-    "monorepo"
+    "family-history"
   ]
 }

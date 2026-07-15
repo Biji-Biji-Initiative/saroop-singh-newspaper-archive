@@ -1,9 +1,0 @@
-# Core dependencies
-google-generativeai>=0.8.0
-pyairtable>=2.0.0
-Pillow>=10.0.0
-redis>=4.5.0
-requests>=2.31.0
-python-dotenv>=1.0.0
-numpy>=1.26.0
-aiohttp>=3.9.0

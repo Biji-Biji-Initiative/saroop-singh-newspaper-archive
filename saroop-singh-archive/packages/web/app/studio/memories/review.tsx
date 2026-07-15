@@ -36,7 +36,7 @@ type Memory = {
   } | null;
 };
 
-type GalleryItem = { id: string; title: string; originalUrl: string; thumbnailUrl: string };
+type GalleryItem = { id: string; title: string; originalUrl: string };
 
 async function fetchAllMemories() {
   const all: Memory[] = [];
@@ -63,7 +63,7 @@ function SubjectEvidence({ item, source }: { item: Memory; source?: GalleryItem 
     );
   }, [dimensions, item.anchorX, item.anchorY]);
   if (!source) return item.subjectId ? <p className="rounded-xl bg-stone-100 p-3 text-xs">Linked record: {item.subjectId}</p> : null;
-  return <div><p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Linked source · {source.title}</p><div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-950"><Image src={source.originalUrl || source.thumbnailUrl} alt={source.title} fill unoptimized sizes="(max-width:1024px) 100vw,40vw" className="object-contain" onLoad={(event) => setDimensions({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })} />{marker && <span aria-label="Submitted identification position" className="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-amber-400/75 shadow-xl" style={{ left: `${marker.x}%`, top: `${marker.y}%` }} />}</div></div>;
+  return <div><p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Linked source · {source.title}</p><div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-950"><Image src={source.originalUrl} alt={source.title} fill unoptimized sizes="(max-width:1024px) 100vw,40vw" className="object-contain" onLoad={(event) => setDimensions({ width: event.currentTarget.naturalWidth, height: event.currentTarget.naturalHeight })} />{marker && <span aria-label="Submitted identification position" className="absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-4 border-white bg-amber-400/75 shadow-xl" style={{ left: `${marker.x}%`, top: `${marker.y}%` }} />}</div></div>;
 }
 
 export function MemoryReview() {

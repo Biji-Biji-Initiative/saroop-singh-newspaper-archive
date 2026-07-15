@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   serverExternalPackages: ["better-sqlite3"],
   outputFileTracingIncludes: {
-    "/*": ["./content/**/*", "./data/gallery/**/*", "./drizzle/**/*"],
+    "/*": ["./content/**/*", "./drizzle/**/*"],
   },
   async headers() {
     return [
@@ -33,13 +33,6 @@ const nextConfig: NextConfig = {
           { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
-        ],
-      },
-      {
-        source: "/gallery-images/:path*",
-        headers: [
-          { key: "X-Robots-Tag", value: "noindex, noimageindex" },
-          { key: "Access-Control-Allow-Origin", value: "*" },
         ],
       },
     ];

@@ -31,7 +31,7 @@ export function dailyRequestSourceHash(
 
 export function configuredDailyLimit(
   environmentName: string,
-  fallback: number,
+  defaultLimit: number,
   maximum: number,
 ): number {
   const configured = Number(process.env[environmentName]);
@@ -39,5 +39,5 @@ export function configuredDailyLimit(
     configured > 0 &&
     configured <= maximum
     ? configured
-    : fallback;
+    : defaultLimit;
 }

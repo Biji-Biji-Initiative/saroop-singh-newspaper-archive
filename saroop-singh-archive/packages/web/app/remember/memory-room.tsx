@@ -23,7 +23,6 @@ type Kind =
 type GalleryItem = {
   id: string;
   title: string;
-  thumbnailUrl: string;
   originalUrl: string;
 };
 const actions: Array<{
@@ -93,7 +92,6 @@ export function MemoryRoom({
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [galleryLoading, setGalleryLoading] = useState(true);
   const [galleryError, setGalleryError] = useState(false);
-  const [galleryDegraded, setGalleryDegraded] = useState(false);
   const [subject, setSubject] = useState<GalleryItem>();
   const [anchor, setAnchor] = useState<{ x: number; y: number }>();
   const [positionDescription, setPositionDescription] = useState("");
@@ -140,10 +138,9 @@ export function MemoryRoom({
     if (recorder.current?.state === "recording") recorder.current.stop();
     recordingStream.current?.getTracks().forEach(track => track.stop());
   }, []);
-  const acceptGallery = useCallback((result: { items: GalleryItem[]; degraded: boolean }) => {
+  const acceptGallery = useCallback((result: { items: GalleryItem[] }) => {
     const loaded = result.items;
     setItems(loaded);
-    setGalleryDegraded(result.degraded);
     setSubject((current) => {
       const requestedId = initialSubject || current?.id;
       return requestedId
@@ -327,7 +324,6 @@ export function MemoryRoom({
               </p>
               {galleryLoading && <p className="mt-4 rounded-xl bg-stone-100 p-4 text-sm text-neutral-600">Loading the complete public collection…</p>}
               {galleryError && <div role="alert" className="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-900"><p>The photographs could not be loaded.</p><button type="button" onClick={loadGallery} className="mt-3 min-h-11 rounded-full bg-red-900 px-5 font-semibold text-white">Try again</button></div>}
-              {galleryDegraded && !galleryError && <p className="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">Recently published family photographs are temporarily unavailable; the recovered collection is still shown.</p>}
               {!galleryLoading && !galleryError && items.length === 0 && <p className="mt-4 rounded-xl bg-stone-100 p-4 text-sm text-neutral-600">No public photographs are available yet.</p>}
               <div className="mt-4 flex min-w-0 gap-3 overflow-x-auto pb-3">
                 {items.map((item) => (
@@ -345,7 +341,7 @@ export function MemoryRoom({
                   >
                     <span className="relative block aspect-square bg-stone-100">
                       <Image
-                        src={item.originalUrl || item.thumbnailUrl}
+                        src={item.originalUrl}
                         alt=""
                         fill
                         unoptimized
@@ -385,7 +381,7 @@ export function MemoryRoom({
                   >
                     <Image
                       ref={subjectImageRef}
-                      src={subject.originalUrl || subject.thumbnailUrl}
+                      src={subject.originalUrl}
                       alt={subject.title}
                       fill
                       unoptimized

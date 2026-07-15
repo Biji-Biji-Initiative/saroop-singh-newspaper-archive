@@ -7,7 +7,7 @@ import YAML from "yaml";
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const articleDirectory = join(root, "content", "articles", "published");
 const publicDirectory = join(root, "public");
-const legacyArticleDirectory = resolve(
+const duplicateArticleDirectory = resolve(
   root,
   "..",
   "..",
@@ -49,9 +49,9 @@ function validateStringArray(value, field, filename) {
   }
 }
 
-if (existsSync(legacyArticleDirectory)) {
+if (existsSync(duplicateArticleDirectory)) {
   fail(
-    `Duplicate legacy article corpus found at ${legacyArticleDirectory}. Use ${articleDirectory} as the only published source.`,
+    `Duplicate article corpus found at ${duplicateArticleDirectory}. Use ${articleDirectory} as the only published source.`,
   );
 }
 

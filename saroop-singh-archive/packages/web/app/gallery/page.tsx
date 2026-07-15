@@ -14,10 +14,10 @@ interface GalleryItem {
   date?: string;
   familyMember?: string;
   tags: string[];
-  thumbnailUrl: string;
   originalUrl: string;
   restorations: Array<{ id: string; type?: string; url: string }>;
-  source?: { filename: string; mimeType: string; bytes: number; sha256: string; provenanceStatus: string };
+  original: { filename: string; mimeType: string; bytes: number; sha256?: string | null };
+  sourceProvenance: string;
   restorationCount: number;
 }
 
@@ -28,7 +28,6 @@ export default function GalleryPage() {
   const [selectedAsset, setSelectedAsset] = useState<{ label: string; url: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [degraded, setDegraded] = useState(false);
   const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); }, []);
   const viewerRef = useModalFocus<HTMLDivElement>(Boolean(selected), closeViewer);
 
@@ -37,7 +36,7 @@ export default function GalleryPage() {
     setLoading(true);
     setError(false);
     requestGallery()
-      .then((result) => { setItems(result.items); setDegraded(result.degraded); })
+      .then((result) => { setItems(result.items); })
       .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, [requestGallery]);
@@ -45,7 +44,7 @@ export default function GalleryPage() {
   useEffect(() => {
     let active = true;
     requestGallery()
-      .then((result) => { if (active) { setItems(result.items); setDegraded(result.degraded); } })
+      .then((result) => { if (active) { setItems(result.items); } })
       .catch(() => { if (active) setError(true); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -97,7 +96,6 @@ export default function GalleryPage() {
 
         {loading && <p className="py-20 text-center text-neutral-500">Loading the collection…</p>}
         {error && <div role="alert" className="my-12 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800"><p>The photographic catalogue could not be loaded.</p><button type="button" onClick={loadGallery} className="mt-3 min-h-11 rounded-full bg-red-900 px-5 font-semibold text-white">Try again</button></div>}
-        {degraded && !error && <div role="status" className="my-6 rounded-xl border border-amber-300 bg-amber-50 p-5 text-amber-950"><strong>Part of the family catalogue is temporarily unavailable.</strong><p className="mt-1 text-sm">The recovered built-in collection remains visible; recently published family photographs will return when the archive database reconnects.</p></div>}
         {!loading && !error && filtered.length === 0 && <p className="py-20 text-center text-neutral-500">No photographs match that search.</p>}
 
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -105,18 +103,18 @@ export default function GalleryPage() {
             <button
               key={item.id}
               type="button"
-              onClick={() => { setSelected(item); setSelectedAsset({ label: 'Source', url: item.originalUrl || item.thumbnailUrl }); }}
+              onClick={() => { setSelected(item); setSelectedAsset({ label: 'Source', url: item.originalUrl }); }}
               className="group overflow-hidden rounded-2xl border border-amber-900/10 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-700"
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-stone-200">
-                <Image src={item.thumbnailUrl} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-[1.03]" />
+                <Image src={item.originalUrl} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-[1.03]" />
               </div>
               <div className="p-5">
-                <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><ShieldCheck className="h-4 w-4" /> Preserved source{item.restorationCount > 0 ? ` + ${item.restorationCount} ${item.source ? 'legacy AI experiments' : item.restorationCount === 1 ? 'approved study' : 'approved studies'}` : ''}</p>
+                <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><ShieldCheck className="h-4 w-4" /> Preserved source{item.restorationCount > 0 ? ` + ${item.restorationCount} ${item.restorationCount === 1 ? 'approved study' : 'approved studies'}` : ''}</p>
                 <p className="font-serif text-xl leading-snug">{item.title}</p>
                 <div className="mt-3 flex items-center justify-between gap-3 text-sm text-neutral-500">
                   <span>{item.familyMember || 'Family collection'}</span>
-                  <span>{item.restorationCount ? `${item.restorationCount} ${item.source ? 'experiments' : 'studies'}` : 'Source only'}</span>
+                  <span>{item.restorationCount ? `${item.restorationCount} ${item.restorationCount === 1 ? 'study' : 'studies'}` : 'Source only'}</span>
                 </div>
               </div>
             </button>
@@ -131,23 +129,23 @@ export default function GalleryPage() {
               <X className="h-5 w-5" />
             </button>
             <div className={`relative min-h-0 overflow-hidden bg-neutral-950 ${selectedAsset?.label !== 'Source' ? 'flex items-center overflow-y-auto p-3 sm:p-5' : ''}`}>
-              {selectedAsset?.label !== 'Source' && selectedAsset?.url ? <RestorationCompare originalUrl={selected.originalUrl} studyUrl={selectedAsset.url} title={selected.title} studyLabel={selectedAsset.label} className="mx-auto w-full max-w-4xl text-white" /> : <><Image src={selected.originalUrl || selected.thumbnailUrl} alt={`${selected.title} — best available source`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain p-2 sm:p-4" /><span className="absolute bottom-3 left-3 rounded-full bg-emerald-950/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-white">Fit to screen · complete source</span></>}
+              {selectedAsset?.label !== 'Source' && selectedAsset?.url ? <RestorationCompare originalUrl={selected.originalUrl} studyUrl={selectedAsset.url} title={selected.title} studyLabel={selectedAsset.label} className="mx-auto w-full max-w-4xl text-white" /> : <><Image src={selected.originalUrl} alt={`${selected.title} — best available source`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain p-2 sm:p-4" /><span className="absolute bottom-3 left-3 rounded-full bg-emerald-950/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-white">Fit to screen · complete source</span></>}
             </div>
             <div className="min-h-0 overflow-y-auto overscroll-contain p-5 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-10">
               <Images className="h-7 w-7 text-amber-800" />
               <h2 className="mt-5 font-serif text-3xl leading-tight">{selected.title}</h2>
               <p className="mt-4 leading-7 text-neutral-600">{selected.familyMember || 'Saroop Singh family collection'}</p>
-              <p className="mt-2 text-sm text-neutral-500">{selected.source ? `${selected.restorationCount} speculative legacy AI experiments are retained for audit; their likeness and scene details are unreliable.` : selected.restorationCount ? `${selected.restorationCount} human-approved restoration study is available for comparison.` : 'No restoration study is public for this source.'}</p>
+              <p className="mt-2 text-sm text-neutral-500">{selected.restorationCount ? `${selected.restorationCount} human-approved restoration study is available for comparison.` : 'No restoration study is public for this source.'}</p>
               <div className="mt-5 grid grid-cols-2 gap-2">
                 <a href={selected.originalUrl} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-900/20 bg-white px-3 text-sm font-semibold"><ExternalLink className="h-4 w-4" /> Open source</a>
-                <a href={selected.originalUrl} download={selected.source?.filename || true} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1f2a24] px-3 text-sm font-semibold text-white"><Download className="h-4 w-4" /> Download source</a>
+                <a href={selected.originalUrl} download={selected.original.filename} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1f2a24] px-3 text-sm font-semibold text-white"><Download className="h-4 w-4" /> Download source</a>
               </div>
               <Link href={`/gallery/${selected.id}`} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-xl bg-amber-300 px-4 text-sm font-bold text-[#17241d]">Open full collection story</Link>
-              {selected.source && <div className="mt-3 rounded-xl border border-emerald-900/10 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><p className="font-semibold">File fixity recorded with SHA-256</p><p className="mt-1 break-all font-mono text-[10px] text-emerald-900/75">{selected.source.sha256}</p><p className="mt-1">{selected.source.filename} · {(selected.source.bytes / 1024).toFixed(0)} KB</p></div>}
+              <div className="mt-3 rounded-xl border border-emerald-900/10 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><p className="font-semibold">File fixity recorded with SHA-256</p>{selected.original.sha256 && <p className="mt-1 break-all font-mono text-[10px] text-emerald-900/75">{selected.original.sha256}</p>}<p className="mt-1">{selected.original.filename} · {(selected.original.bytes / 1024).toFixed(0)} KB</p></div>
               <div className="mt-6">
                 <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-900">View source and studies</p>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" aria-pressed={selectedAsset?.label === 'Source'} onClick={() => setSelectedAsset({ label: 'Source', url: selected.originalUrl || selected.thumbnailUrl })} className={`min-h-11 rounded-full px-4 py-2 text-sm font-semibold ${selectedAsset?.label === 'Source' ? 'bg-[#1f2a24] text-white' : 'border border-amber-900/20 bg-white'}`}>Source</button>
+                  <button type="button" aria-pressed={selectedAsset?.label === 'Source'} onClick={() => setSelectedAsset({ label: 'Source', url: selected.originalUrl })} className={`min-h-11 rounded-full px-4 py-2 text-sm font-semibold ${selectedAsset?.label === 'Source' ? 'bg-[#1f2a24] text-white' : 'border border-amber-900/20 bg-white'}`}>Source</button>
                   {selected.restorations.map((restoration, index) => {
                     const label = restoration.type ? restoration.type.replace(/([A-Z])/g, ' $1').replace(/^./, value => value.toUpperCase()) : `Study ${index + 1}`;
                     return <button key={restoration.id} type="button" aria-pressed={selectedAsset?.url === restoration.url} onClick={() => setSelectedAsset({ label, url: restoration.url })} className={`min-h-11 rounded-full px-4 py-2 text-sm font-semibold ${selectedAsset?.url === restoration.url ? 'bg-amber-800 text-white' : 'border border-amber-900/20 bg-white'}`}>{label}</button>;
@@ -158,7 +156,7 @@ export default function GalleryPage() {
               <div className="mt-7 flex flex-wrap gap-2">
                 {selected.tags.map(tag => <span key={tag} className="rounded-full bg-amber-900/8 px-3 py-1.5 text-xs font-medium text-amber-950">{tag}</span>)}
               </div>
-              <p className="mt-8 border-t border-amber-900/15 pt-6 text-sm leading-6 text-neutral-500">This viewer begins with the preserved source image. Legacy AI experiments may change identity, clothing, text, or background and are not approved restorations; use them only to inspect what the earlier system produced.</p>
+              <p className="mt-8 border-t border-amber-900/15 pt-6 text-sm leading-6 text-neutral-500">This viewer begins with the preserved source image. Only a curator-approved derivative can appear beside it, and no derivative replaces the source.</p>
             </div>
           </div>
         </div>

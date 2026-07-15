@@ -54,7 +54,6 @@ type Item = {
   originalSha256?: string;
   originalUrl: string;
   publishedUrl?: string | null;
-  readOnlyLegacy?: boolean;
   runs: Run[];
   photoAnalysis?: {
     faceCount: number;
@@ -241,7 +240,7 @@ export function Studio({ displayName }: { displayName: string }) {
   }
 
   async function analyzeFaces() {
-    if (!selected || selected.readOnlyLegacy) return;
+    if (!selected) return;
     setBusy(true);
     setMessage("Detecting visible faces for private curator review…");
     try {
@@ -301,7 +300,7 @@ export function Studio({ displayName }: { displayName: string }) {
   }
 
   async function saveRecord(formElement: HTMLFormElement, status?: string) {
-    if (!selected || selected.readOnlyLegacy) return;
+    if (!selected) return;
     setBusy(true);
     setMessage(
       status === "rejected" ? "Recording rejection…" : "Saving archive record…",
@@ -547,9 +546,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   <span
                     className={`rounded-full px-3 py-1.5 text-xs font-semibold ${selected.status === "published" ? "bg-emerald-100 text-emerald-900" : "bg-stone-100"}`}
                   >
-                    {selected.readOnlyLegacy
-                      ? "recovered legacy"
-                      : selected.status}
+                    {selected.status}
                   </span>
                 </div>
                 <Image
@@ -587,8 +584,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   </a>
                 </div>
               </div>
-              {!selected.readOnlyLegacy && (
-                <form
+              <form
                   key={selected.id}
                   onChange={() => setMetadataDirty(true)}
                   onSubmit={(event) => {
@@ -706,7 +702,6 @@ export function Studio({ displayName }: { displayName: string }) {
                     )}
                   </div>
                 </form>
-              )}
               {familyAiBlocked && (
                 <div className="rounded-3xl border border-emerald-900/15 bg-emerald-50 p-5 text-emerald-950 shadow-sm sm:p-7">
                   <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em]"><LockKeyhole className="h-4 w-4" /> Preserve-only contribution</p>
@@ -714,7 +709,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   <p className="mt-3 max-w-2xl text-sm leading-6">The original remains safely preserved and can still be catalogued or published after rights review. Do not send it to OpenAI, Google, or another model unless the contributor gives new, recorded permission.</p>
                 </div>
               )}
-              {isFamilyContribution && !selected.readOnlyLegacy && (
+              {isFamilyContribution && (
                 <div className="rounded-3xl border border-amber-950/10 bg-white p-5 shadow-sm sm:p-7">
                   <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-800">Contributor AI permission</p>
                   <h2 className="mt-3 font-serif text-3xl">{familyAiBlocked ? "Record new permission only when the contributor gives it." : "Permission is active and can be withdrawn."}</h2>
@@ -723,8 +718,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   <button type="button" onClick={() => recordAiConsent(familyAiBlocked ? "granted" : "revoked")} disabled={busy || aiConsentEvidence.trim().length < 5} className={`mt-3 min-h-11 w-full rounded-xl px-5 font-semibold text-white disabled:opacity-40 ${familyAiBlocked ? "bg-emerald-800" : "bg-red-800"}`}>{familyAiBlocked ? "Record new AI permission" : "Withdraw AI permission"}</button>
                 </div>
               )}
-              {!selected.readOnlyLegacy &&
-                !familyReviewPending &&
+              {!familyReviewPending &&
                 !familyAiBlocked && (
                   <div className="rounded-3xl border border-sky-900/15 bg-sky-50 p-5 text-sky-950 shadow-sm sm:p-7">
                     <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em]">
@@ -807,13 +801,13 @@ export function Studio({ displayName }: { displayName: string }) {
                   <p className="mt-3 max-w-2xl text-sm leading-6">Source preservation is complete. Public release and AI processing remain locked until the archive owner makes a deliberate private-review decision.</p>
                 </div>
               )}
-              {!selected.readOnlyLegacy && !familyReviewPending && (!sourceIsPublic || hasReadyStudy) && (
+              {!familyReviewPending && (!sourceIsPublic || hasReadyStudy) && (
                 <label className="flex items-start gap-3 rounded-2xl border border-amber-900/15 bg-white p-4 text-sm leading-6 shadow-sm">
                   <input type="checkbox" disabled={metadataDirty} checked={Boolean(publicationConfirmations[selected.id])} onChange={(event) => setPublicationConfirmations(current => ({ ...current, [selected.id]: event.target.checked }))} className="mt-1 h-4 w-4 shrink-0" />
                   <span><strong className="block">Permission and public-record check completed</strong>{metadataDirty ? "Save the edited title, rights and notes before confirming publication." : "I confirmed the archive may publish this source and metadata, and that the public record contains no private contact details or unreviewed family claims."}</span>
                 </label>
               )}
-              {!selected.readOnlyLegacy && !familyReviewPending && !sourceIsPublic && (
+              {!familyReviewPending && !sourceIsPublic && (
                 <button
                   type="button"
                   onClick={() => publish()}
@@ -826,10 +820,10 @@ export function Studio({ displayName }: { displayName: string }) {
               {sourceIsPublic && (
                 <p className="rounded-2xl bg-emerald-100 p-4 text-sm font-semibold text-emerald-950">The preserved source is the current public version.</p>
               )}
-              {!selected.readOnlyLegacy && selected.status === "published" && (
+              {selected.status === "published" && (
                 <button type="button" onClick={() => publish(undefined, false)} disabled={busy} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-5 font-semibold text-red-800"><RotateCcw className="h-4 w-4" /> Withdraw photograph from public gallery</button>
               )}
-              {!selected.readOnlyLegacy && !familyAiBlocked && !familyReviewPending && (
+              {!familyAiBlocked && !familyReviewPending && (
                 <div className="rounded-3xl border border-amber-950/10 bg-white p-5 shadow-sm sm:p-7">
                   <div className="flex flex-wrap items-end justify-between gap-3">
                     <div><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-amber-800"><Sparkles className="h-4 w-4" /> Restoration laboratory</p><h2 className="mt-2 font-serif text-3xl">What would you like to do?</h2></div><span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">Original stays untouched</span>
@@ -874,16 +868,12 @@ export function Studio({ displayName }: { displayName: string }) {
                   <div className="border-b p-4 sm:p-6"><div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold uppercase tracking-[.16em]">{recipes.find(option => option.id === run.recipe)?.name || run.recipe} · {run.model}</p><span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">{run.status}</span></div>{run.outputUrl ? <RestorationCompare originalUrl={selected.originalUrl} studyUrl={run.outputUrl} title={selected.title} studyLabel={recipes.find(option => option.id === run.recipe)?.name || "Restoration study"} /> : <div className="flex aspect-[4/3] items-center justify-center rounded-2xl bg-stone-100 p-6 text-center text-sm text-neutral-500">{run.error || "Processing…"}</div>}</div>
                   <div className="p-5">
                     <details>
-                      <summary className="cursor-pointer text-sm font-semibold">
-                        {selected.readOnlyLegacy
-                          ? "Legacy provenance note"
-                          : "View exact preservation prompt"}
-                      </summary>
+                      <summary className="cursor-pointer text-sm font-semibold">View exact preservation prompt</summary>
                       <p className="mt-3 rounded-xl bg-stone-100 p-4 text-sm leading-6 text-neutral-700">
                         {run.prompt}
                       </p>
                     </details>
-                    {run.outputUrl && !selected.readOnlyLegacy && (
+                    {run.outputUrl && (
                       <div className="mt-5"><label className="mb-3 flex items-start gap-3 rounded-2xl bg-amber-50 p-4 text-sm leading-6 text-amber-950"><input type="checkbox" checked={Boolean(reviewedRuns[run.id])} onChange={(event) => setReviewedRuns(value => ({ ...value, [run.id]: event.target.checked }))} className="mt-1 h-4 w-4 shrink-0" /><span><strong className="block">Human comparison completed</strong>I checked faces, hands, text, clothing, borders, crop and alignment against the source and accept every visible change as a labelled study.</span></label><div className="flex flex-col gap-2 sm:flex-row">
                         <button
                           onClick={() => publish(run.id)}
