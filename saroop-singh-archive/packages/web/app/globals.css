@@ -6,7 +6,9 @@
 }
 
 @theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-archive-serif), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   /* Modern Sophisticated Color System */
 
   /* Neutral Palette - Rich, warm grays */

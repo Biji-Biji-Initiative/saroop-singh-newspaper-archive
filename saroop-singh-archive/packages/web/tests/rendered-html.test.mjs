@@ -84,6 +84,41 @@ test("renders the archive homepage from the production Next server", async () =>
   assert.match(html, /<title>[^<]*Saroop Singh Archive/i);
   assert.match(html, /Family-led digital archive/i);
   assert.doesNotMatch(html, /Restore Photos|AI Photo Restoration/i);
+
+  const stylesheetUrls = [...html.matchAll(/<link\b[^>]*>/gi)]
+    .map(match => match[0])
+    .filter(tag => /\brel="stylesheet"/i.test(tag))
+    .map(tag => tag.match(/\bhref="([^"]+)"/i)?.[1])
+    .filter(href => typeof href === "string")
+    .map(href => new URL(href, origin));
+  assert.ok(stylesheetUrls.length > 0, "homepage must link its generated stylesheets");
+
+  const stylesheetResponses = await Promise.all(stylesheetUrls.map(url => fetch(url)));
+  for (const stylesheetResponse of stylesheetResponses) {
+    assert.equal(stylesheetResponse.status, 200);
+    assert.match(stylesheetResponse.headers.get("content-type") ?? "", /^text\/css\b/i);
+  }
+  const css = (await Promise.all(stylesheetResponses.map(item => item.text()))).join("\n");
+  const htmlOpeningTag = html.match(/<html\b[^>]*>/i)?.[0] ?? "";
+  const bodyOpeningTag = html.match(/<body\b[^>]*>/i)?.[0] ?? "";
+
+  for (const variable of ["font-geist-sans", "font-geist-mono", "font-archive-serif"]) {
+    const variableClass = css.match(
+      new RegExp(`\\.([A-Za-z0-9_-]+)\\s*\\{\\s*--${variable}:`),
+    )?.[1];
+    assert.ok(variableClass, `built CSS must expose --${variable}`);
+    assert.ok(
+      htmlOpeningTag.includes(variableClass),
+      `--${variable} must be scoped on html so :root theme variables can resolve`,
+    );
+    assert.ok(
+      !bodyOpeningTag.includes(variableClass),
+      `--${variable} must not be scoped below the :root Tailwind theme`,
+    );
+  }
+  assert.match(css, /--font-sans:\s*var\(--font-geist-sans\)/);
+  assert.match(css, /--font-serif:\s*var\(--font-archive-serif\)/);
+  assert.match(css, /--font-mono:\s*var\(--font-geist-mono\)/);
 });
 
 test("serves public discovery metadata from the production Next server", async () => {
