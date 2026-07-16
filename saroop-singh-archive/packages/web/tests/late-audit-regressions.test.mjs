@@ -32,6 +32,9 @@ test("gallery viewer gives details a stable rail and opens a selected variation 
   const gallery = read("app/gallery/page.tsx");
 
   assert.match(gallery, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(22rem,26rem\)\]/);
+  assert.match(gallery, /function defaultViewerAsset\(item: GalleryItem\)/);
+  assert.match(gallery, /const initialAsset = defaultViewerAsset\(item\)/);
+  assert.match(gallery, /setShowComparison\(initialAsset\.kind === 'generation'\)/);
   assert.match(gallery, /setShowComparison\(asset\.kind === 'generation'\)/);
   assert.match(gallery, /aria-label="Compare source and selected variation"/);
   assert.match(gallery, /aria-label="Show selected variation only"/);

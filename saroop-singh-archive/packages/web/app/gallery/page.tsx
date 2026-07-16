@@ -64,6 +64,11 @@ function generationAsset(restoration: GalleryRestoration, index: number): Galler
   };
 }
 
+function defaultViewerAsset(item: GalleryItem): GalleryAsset {
+  const featuredVariation = item.restorations[0];
+  return featuredVariation ? generationAsset(featuredVariation, 0) : sourceAsset(item);
+}
+
 function commissionHref(item: GalleryItem) {
   return `/studio?image=${encodeURIComponent(item.id)}&commission=1#new-render`;
 }
@@ -151,7 +156,12 @@ export default function GalleryPage() {
             <button
               key={item.id}
               type="button"
-              onClick={() => { setSelected(item); setSelectedAsset(sourceAsset(item)); setShowComparison(false); }}
+              onClick={() => {
+                const initialAsset = defaultViewerAsset(item);
+                setSelected(item);
+                setSelectedAsset(initialAsset);
+                setShowComparison(initialAsset.kind === 'generation');
+              }}
               className="group overflow-hidden rounded-2xl border border-amber-900/10 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-700"
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-[#e9e1d4]">
@@ -221,7 +231,7 @@ export default function GalleryPage() {
               <div className="mt-7 flex flex-wrap gap-2">
                 {selected.tags.map(tag => <span key={tag} className="rounded-full bg-amber-900/8 px-3 py-1.5 text-xs font-medium text-amber-950">{tag}</span>)}
               </div>
-              <p className="mt-8 border-t border-amber-900/15 pt-6 text-sm leading-6 text-neutral-500">This viewer begins with the preserved source image. Only a curator-approved derivative can appear beside it, and no derivative replaces the source.</p>
+              <p className="mt-8 border-t border-amber-900/15 pt-6 text-sm leading-6 text-neutral-500">When a curator-approved variation is available, this viewer opens in split comparison with the preserved source. No derivative replaces the source.</p>
             </div>
           </div>
         </div>
