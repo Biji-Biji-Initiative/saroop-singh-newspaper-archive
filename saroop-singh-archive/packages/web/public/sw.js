@@ -1,4 +1,4 @@
-const CACHE = "saroop-archive-premiere-v4";
+const CACHE = "saroop-archive-premiere-v5";
 const CORE = [
   "/",
   "/story",
@@ -19,7 +19,7 @@ const PRIVATE_PREFIXES = [
   "/signout-with-chatgpt",
   "/callback",
 ];
-const STATIC_ASSET = /\.(?:avif|css|gif|ico|jpe?g|js|png|svg|webp|woff2?)$/i;
+const STATIC_ASSET = /\.(?:avif|gif|ico|jpe?g|png|svg|webp|woff2?)$/i;
 const MAX_ENTRIES = 180;
 
 self.addEventListener("install", (event) =>
@@ -69,7 +69,7 @@ self.addEventListener("fetch", (event) => {
   const cacheablePage =
     event.request.mode === "navigate" && PUBLIC_PAGES.has(url.pathname);
   const cacheableAsset =
-    (url.pathname.startsWith("/_next/") || url.pathname.startsWith("/assets/") || STATIC_ASSET.test(url.pathname)) &&
+    (url.pathname.startsWith("/assets/") || STATIC_ASSET.test(url.pathname)) &&
     !url.search;
   if (!cacheablePage && !cacheableAsset) return;
 
