@@ -39,6 +39,15 @@ test("gallery viewer gives details a stable rail and opens a selected variation 
   assert.doesNotMatch(gallery, /Back to featured variation|Open split slider/);
 });
 
+test("gallery keeps a source-locked commission action beside the compared variation", () => {
+  const gallery = read("app/gallery/page.tsx");
+
+  assert.match(gallery, /aria-label="Commission a fresh AI study"/);
+  assert.match(gallery, /The current variation above is never used as the input/);
+  assert.match(gallery, /GPT Image 2, Nano Banana 2, or Nano Banana Pro/);
+  assert.match(gallery, /commissionHref\(selected\)/);
+});
+
 test("family curation persists a rating, gallery rank, and visibility without exposing hidden variants", () => {
   const schema = read("db/schema.ts");
   const curation = read("app/api/studio/runs/[id]/curation/route.ts");

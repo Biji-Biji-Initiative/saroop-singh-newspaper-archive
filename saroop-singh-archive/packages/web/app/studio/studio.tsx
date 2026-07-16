@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Archive,
   Check,
@@ -25,6 +25,12 @@ import {
   XCircle,
 } from "lucide-react";
 import { RestorationCompare } from "@/components/restoration-compare";
+import {
+  buildRestorationPrompt,
+  RESTORATION_MODEL_OPTIONS,
+  type RestorationModel,
+  type RestorationRecipe,
+} from "@/lib/restoration-contract";
 import Image from "next/image";
 
 type Run = {
@@ -101,23 +107,7 @@ type GenerationAsset = {
   outputSha256?: string | null;
 };
 
-const models = [
-  {
-    id: "gpt-image-2",
-    name: "GPT Image 2",
-    note: "High-fidelity conservation · recommended",
-  },
-  {
-    id: "gemini-3.1-flash-image",
-    name: "Nano Banana 2",
-    note: "Fast 2K preservation study",
-  },
-  {
-    id: "gemini-3-pro-image",
-    name: "Nano Banana Pro",
-    note: "Complex professional restoration",
-  },
-];
+const models = RESTORATION_MODEL_OPTIONS;
 const recipes = [
   {
     id: "conservative",
@@ -140,16 +130,24 @@ const recipes = [
     badge: "Interpretive",
     icon: Palette,
   },
-];
+] as const;
 
-export function Studio({ displayName }: { displayName: string }) {
+export function Studio({
+  displayName,
+  initialImageId,
+  commissioning = false,
+}: {
+  displayName: string;
+  initialImageId?: string;
+  commissioning?: boolean;
+}) {
   const [items, setItems] = useState<Item[]>([]);
   const [selectedId, setSelectedId] = useState<string>();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [loadError, setLoadError] = useState("");
-  const [model, setModel] = useState(models[0].id);
-  const [recipe, setRecipe] = useState(recipes[0].id);
+  const [model, setModel] = useState<RestorationModel>(models[0].id);
+  const [recipe, setRecipe] = useState<RestorationRecipe>(recipes[0].id);
   const [notes, setNotes] = useState("");
   const [reviewedRuns, setReviewedRuns] = useState<Record<string, boolean>>({});
   const [publicationConfirmations, setPublicationConfirmations] = useState<Record<string, boolean>>({});
@@ -158,9 +156,19 @@ export function Studio({ displayName }: { displayName: string }) {
   const [uploadPreview, setUploadPreview] = useState<{ url: string; name: string; size: number }>();
   const [featuredAssetId, setFeaturedAssetId] = useState<string>();
   const [showFeaturedComparison, setShowFeaturedComparison] = useState(false);
+  const initialImageSelectionApplied = useRef(false);
+  const commissionScrollApplied = useRef(false);
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) || items[0],
     [items, selectedId],
+  );
+  const selectedModel = useMemo(
+    () => models.find(option => option.id === model) || models[0],
+    [model],
+  );
+  const promptPreview = useMemo(
+    () => buildRestorationPrompt(recipe, notes, selectedModel.apiModel),
+    [notes, recipe, selectedModel.apiModel],
   );
   const isFamilyContribution = selected?.createdBy === "public-family-contribution";
   const familyReviewPending = Boolean(
@@ -223,6 +231,30 @@ export function Studio({ displayName }: { displayName: string }) {
   useEffect(() => {
     refresh();
   }, [refresh]);
+  useEffect(() => {
+    if (initialImageSelectionApplied.current || items.length === 0) return;
+    initialImageSelectionApplied.current = true;
+    if (initialImageId && items.some(item => item.id === initialImageId)) {
+      setSelectedId(initialImageId);
+    } else if (initialImageId && commissioning) {
+      setMessage("That source is no longer available in the private archive. Choose another preserved original before commissioning a study.");
+    }
+  }, [commissioning, initialImageId, items]);
+  useEffect(() => {
+    if (
+      !commissioning ||
+      commissionScrollApplied.current ||
+      !initialImageId ||
+      selected?.id !== initialImageId
+    ) return;
+    commissionScrollApplied.current = true;
+    requestAnimationFrame(() => {
+      document.getElementById("new-render")?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }, [commissioning, initialImageId, selected?.id]);
   useEffect(() => () => { if (uploadPreview) URL.revokeObjectURL(uploadPreview.url); }, [uploadPreview]);
   useEffect(() => { if (selected?.restorationPreference === "repair-damage") setRecipe("structural"); else if (selected?.restorationPreference === "explore-colour") setRecipe("colourResearch"); else setRecipe("conservative"); }, [selected?.id, selected?.restorationPreference]);
   useEffect(() => {
@@ -281,13 +313,23 @@ export function Studio({ displayName }: { displayName: string }) {
         body: JSON.stringify({ imageId: selected.id, model, recipe, notes }),
       });
       const data = await response.json();
-      setMessage(
-        response.ok
-          ? "Study ready. Compare it carefully before publishing."
-          : data.error || "Restoration failed.",
-      );
-      if (response.ok) setMetadataDirty(false);
+      if (response.ok) {
+        setMetadataDirty(false);
+        setFeaturedAssetId(data.id);
+        setShowFeaturedComparison(true);
+        setMessage(`Fresh ${selectedModel.label} study ready. It is open in split comparison above; review it before you publish or rank it.`);
+      } else {
+        setMessage(data.error || "Restoration failed.");
+      }
       await refresh();
+      if (response.ok) {
+        requestAnimationFrame(() => {
+          document.getElementById("featured-image")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        });
+      }
     } catch {
       setMessage("Connection failed. No result was published; refresh before trying another study.");
     } finally {
@@ -634,7 +676,7 @@ export function Studio({ displayName }: { displayName: string }) {
             </div>
           ) : (
             <>
-              <div className="overflow-hidden rounded-3xl border border-amber-950/10 bg-white shadow-sm">
+              <div id="featured-image" className="overflow-hidden rounded-3xl border border-amber-950/10 bg-white shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-4 p-5 sm:p-7">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-800">
@@ -956,41 +998,56 @@ export function Studio({ displayName }: { displayName: string }) {
                 <button type="button" onClick={() => publish(undefined, false)} disabled={busy} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-5 font-semibold text-red-800"><RotateCcw className="h-4 w-4" /> Withdraw photograph from public gallery</button>
               )}
               {!familyAiBlocked && !familyReviewPending && (
-                <div className="rounded-3xl border border-amber-950/10 bg-white p-5 shadow-sm sm:p-7">
-                  <div className="flex flex-wrap items-end justify-between gap-3">
-                    <div><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-amber-800"><Sparkles className="h-4 w-4" /> Restoration laboratory</p><h2 className="mt-2 font-serif text-3xl">What would you like to do?</h2></div><span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">Original stays untouched</span>
+                <section id="new-render" aria-labelledby="commission-heading" className="scroll-mt-6 rounded-3xl border border-amber-900/20 bg-white p-5 shadow-sm sm:p-7">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.18em] text-amber-800"><Sparkles className="h-4 w-4" /> {commissioning && selected.id === initialImageId ? "Source selected from gallery" : "Fresh restoration commission"}</p>
+                      <h2 id="commission-heading" className="mt-2 font-serif text-3xl">Commission a new AI study.</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-neutral-600">Choose the outcome, choose the current model, then inspect the exact source-safe prompt before creating a new derivative.</p>
+                    </div>
+                    <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-semibold text-emerald-900">Original stays untouched</span>
                   </div>
-                  <div className="mt-5 grid gap-3 lg:grid-cols-3">
-                    {recipes.map((option) => { const Icon = option.icon; return (
-                      <label key={option.id} className={`relative cursor-pointer rounded-2xl border-2 p-5 transition focus-within:ring-4 focus-within:ring-amber-300 ${recipe === option.id ? "border-amber-700 bg-amber-50 shadow-md" : "border-neutral-200 hover:border-amber-700/40"}`}>
-                        <input className="sr-only" type="radio" name="recipe" value={option.id} checked={recipe === option.id} onChange={() => setRecipe(option.id)} />
-                        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${recipe === option.id ? "bg-amber-800 text-white" : "bg-stone-100 text-neutral-600"}`}><Icon className="h-5 w-5" /></span>
-                        <strong className="mt-4 block text-lg">{option.name}</strong><span className="mt-2 block text-sm leading-6 text-neutral-500">{option.note}</span><span className="mt-4 inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-neutral-600">{option.badge}</span>
-                      </label>
-                    ); })}
+
+                  <div className="mt-5 flex items-center gap-3 rounded-2xl border border-emerald-900/10 bg-emerald-50 p-3 text-sm text-emerald-950">
+                    <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-emerald-950"><Image src={selected.originalUrl} alt="" fill unoptimized sizes="64px" className="object-cover" /></span>
+                    <div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-[.14em] text-emerald-800">Source locked</p><p className="mt-1 truncate font-semibold">{selected.title}</p><p className="mt-1 text-xs leading-5 text-emerald-950/75">Every new study starts from this preserved original—not from the selected AI variation.</p></div>
                   </div>
-                  <div className="mt-6">
-                    <label className="text-sm font-semibold">Anything the model must know?<textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="field mt-2 resize-y font-normal" rows={3} placeholder="Optional: preserve handwriting, known uniform colour, damaged corner, location, or other verified context…" /></label>
-                    <div className="mt-3 flex flex-wrap gap-2">{["Preserve all handwriting", "Do not alter faces", "Keep the full border", "Leave uncertain areas unchanged"].map(suggestion => <button type="button" key={suggestion} onClick={() => setNotes(value => value ? `${value}; ${suggestion}` : suggestion)} className="min-h-10 rounded-full border border-amber-950/15 px-3 text-xs font-semibold">+ {suggestion}</button>)}</div>
-                    <details className="mt-5 rounded-2xl bg-stone-100 p-4"><summary className="cursor-pointer text-sm font-semibold">Advanced engine choice · {models.find(option => option.id === model)?.name}</summary><p className="mt-2 text-xs leading-5 text-neutral-500">The preset controls historical intent. Engine choice is technical and every exact model is recorded.</p><div className="mt-3 grid gap-2 sm:grid-cols-3">{models.map(option => <label key={option.id} className={`cursor-pointer rounded-xl border p-3 text-sm ${model === option.id ? "border-amber-700 bg-white" : "border-transparent"}`}><input className="mr-2" type="radio" name="model" value={option.id} checked={model === option.id} onChange={() => setModel(option.id)} /><strong>{option.name}</strong><span className="mt-1 block text-xs text-neutral-500">{option.note}</span></label>)}</div></details>
+
+                  <fieldset className="mt-7">
+                    <legend className="text-sm font-semibold">1. Choose the restoration intent</legend>
+                    <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                      {recipes.map((option) => { const Icon = option.icon; return (
+                        <label key={option.id} className={`relative cursor-pointer rounded-2xl border-2 p-5 transition focus-within:ring-4 focus-within:ring-amber-300 ${recipe === option.id ? "border-amber-700 bg-amber-50 shadow-md" : "border-neutral-200 hover:border-amber-700/40"}`}>
+                          <input className="sr-only" type="radio" name="recipe" value={option.id} checked={recipe === option.id} onChange={() => setRecipe(option.id)} />
+                          <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${recipe === option.id ? "bg-amber-800 text-white" : "bg-stone-100 text-neutral-600"}`}><Icon className="h-5 w-5" /></span>
+                          <strong className="mt-4 block text-lg">{option.name}</strong><span className="mt-2 block text-sm leading-6 text-neutral-500">{option.note}</span><span className="mt-4 inline-block rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-neutral-600">{option.badge}</span>
+                        </label>
+                      ); })}
+                    </div>
+                  </fieldset>
+
+                  <fieldset className="mt-7">
+                    <legend className="text-sm font-semibold">2. Choose the current image model</legend>
+                    <p className="mt-1 text-xs leading-5 text-neutral-500">The dated production model ID is saved with the derivative so the family can compare results honestly later.</p>
+                    <div className="mt-3 grid gap-3 lg:grid-cols-3">
+                      {models.map(option => <label key={option.id} className={`cursor-pointer rounded-2xl border-2 p-4 transition focus-within:ring-4 focus-within:ring-amber-300 ${model === option.id ? "border-emerald-800 bg-emerald-50 shadow-sm" : "border-neutral-200 hover:border-emerald-800/40"}`}><input className="sr-only" type="radio" name="model" value={option.id} checked={model === option.id} onChange={() => setModel(option.id)} /><span className="flex items-start justify-between gap-2"><strong>{option.label}</strong><span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[.1em] ${model === option.id ? "bg-emerald-800 text-white" : "bg-stone-100 text-neutral-600"}`}>{option.commissioningBadge}</span></span><span className="mt-2 block text-sm leading-6 text-neutral-600">{option.commissioningNote}</span><span className="mt-3 block break-all font-mono text-[10px] text-neutral-500">{option.apiModel}</span></label>)}
+                    </div>
+                  </fieldset>
+
+                  <div className="mt-7">
+                    <label className="text-sm font-semibold">3. Add verified context <span className="font-normal text-neutral-500">(optional)</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} className="field mt-2 resize-y font-normal" rows={3} placeholder="Preserve handwriting, leave the damaged corner unresolved, retain the full border, or add another verified fact…" /></label>
+                    <div className="mt-3 flex flex-wrap gap-2">{["Preserve all handwriting", "Do not alter faces", "Keep the full border", "Leave uncertain areas unchanged"].map(suggestion => <button type="button" key={suggestion} onClick={() => setNotes(value => value ? `${value}; ${suggestion}` : suggestion)} className="min-h-10 rounded-full border border-amber-950/15 px-3 text-xs font-semibold transition hover:bg-amber-50">+ {suggestion}</button>)}</div>
+                    <details className="mt-5 rounded-2xl border border-stone-200 bg-stone-50 p-4"><summary className="cursor-pointer text-sm font-semibold">Review the exact prompt before commissioning</summary><p className="mt-2 text-xs leading-5 text-neutral-500">This preview is the source-safe prompt that will be recorded with the run and sent to {selectedModel.label}.</p><pre className="mt-3 max-h-80 overflow-auto whitespace-pre-wrap rounded-xl bg-[#17241d] p-4 text-xs leading-5 text-stone-200">{promptPreview}</pre></details>
                     <button
                       onClick={restore}
                       disabled={busy}
-                      className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-800 px-5 font-semibold text-white hover:bg-amber-900 disabled:opacity-50"
+                      className="mt-5 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-amber-800 px-5 text-base font-semibold text-white shadow-sm transition hover:bg-amber-900 disabled:opacity-50"
                     >
-                      {busy ? (
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                      ) : (
-                        <Sparkles className="h-5 w-5" />
-                      )}{" "}
-                      Create {recipes.find(option => option.id === recipe)?.name.toLowerCase()} study
+                      {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />} {busy ? "Creating your source-locked study…" : `Commission ${selectedModel.label} ${recipes.find(option => option.id === recipe)?.name.toLowerCase()} study`}
                     </button>
-                    <p className="mt-3 text-xs leading-5 text-neutral-500">
-                      Every run records the exact prompt, provider, dated model,
-                      preset, reviewer and output checksum. Nothing publishes automatically.
-                    </p>
+                    <p className="mt-3 text-xs leading-5 text-neutral-500">The exact prompt, provider, dated model, preset, reviewer, output checksum, and every later family curation decision are preserved. Nothing publishes automatically.</p>
                   </div>
-                </div>
+                </section>
               )}
               {selected.runs.map((run) => {
                 const readyRunCount = selected.runs.filter(candidate => candidate.status === "ready" && candidate.outputUrl).length;

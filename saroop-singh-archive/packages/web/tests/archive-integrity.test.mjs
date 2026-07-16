@@ -338,13 +338,17 @@ test('one comparison instrument is visible in both public and private featured-i
   assert.doesNotMatch(studio, /GenerationReviewDialog/);
 });
 
-test('restoration presents three family intents and keeps engine choice advanced', () => {
+test('restoration makes source-safe current-model commissioning explicit', () => {
   const studio = readFileSync(join(root, 'app/studio/studio.tsx'), 'utf8');
   const contribute = readFileSync(join(root, 'app/contribute/contribution-form.tsx'), 'utf8');
   assert.match(studio, /Clean & preserve/);
   assert.match(studio, /Repair damage/);
   assert.match(studio, /Explore colour/);
-  assert.match(studio, /Advanced engine choice/);
+  assert.match(studio, /Commission a new AI study/);
+  assert.match(studio, /Choose the current image model/);
+  assert.match(studio, /Source locked/);
+  assert.match(studio, /Review the exact prompt before commissioning/);
+  assert.doesNotMatch(studio, /Advanced engine choice/);
   assert.match(contribute, /name="restorationPreference"/);
   assert.match(contribute, /name="aiProcessingConsent"/);
   assert.match(contribute, /May the archive create a private AI restoration study/);
@@ -353,12 +357,16 @@ test('restoration presents three family intents and keeps engine choice advanced
 
 test('current image-model contract is versioned and preservation constrained', () => {
   const server = readFileSync(join(root, 'lib/archive-server.ts'), 'utf8');
+  const contract = readFileSync(join(root, 'lib/restoration-contract.ts'), 'utf8');
   const route = readFileSync(join(root, 'app/api/studio/restore/route.ts'), 'utf8');
-  assert.match(server, /gpt-image-2-2026-04-21/);
-  assert.match(server, /preservation-v5-2026-07/);
-  assert.match(server, /50 \* 1024 \* 1024/);
-  assert.match(server, /LOCKED INVARIANTS/);
-  assert.match(server, /A visibly unresolved area is better than a convincing invention/);
+  assert.match(server, /MODEL_REGISTRY = RESTORATION_MODELS/);
+  assert.match(contract, /gpt-image-2-2026-04-21/);
+  assert.match(contract, /gemini-3\.1-flash-image/);
+  assert.match(contract, /gemini-3-pro-image/);
+  assert.match(contract, /preservation-v5-2026-07/);
+  assert.match(contract, /50 \* 1024 \* 1024/);
+  assert.match(contract, /LOCKED INVARIANTS/);
+  assert.match(contract, /A visibly unresolved area is better than a convincing invention/);
   assert.doesNotMatch(route, /form\.set\("input_fidelity"/);
   assert.match(route, /form\.set\("quality", "high"\)/);
   assert.match(route, /form\.set\("size", "auto"\)/);
