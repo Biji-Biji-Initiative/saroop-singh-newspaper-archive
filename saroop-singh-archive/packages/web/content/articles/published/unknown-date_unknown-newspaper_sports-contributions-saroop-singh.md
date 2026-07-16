@@ -15,12 +15,8 @@ tags:
   - community support
   - Malayan Railway
 image: /placeholder-image.svg
+status: source-unavailable
+source_unavailable_reason: No source capture accompanies this OCR-derived text. It is withheld from the public evidence layer until an inspectable newspaper source is recovered and reviewed.
 ---
 
-# Generous Contributions to Sports Events
-
-**Unknown Newspaper, Unknown Date**
-
-The following generous contributions have been received from various sources which make the Sports Events keenly contested:—
-
-**Khalsa Diwan, Malaya, Ipoh** (Premier, Sikh Religious Body) A Challenge Cup and $50; **Sikh Temple Sentul**, a Challenge Cup and $50; **Gurdwara Manduab, Kuala Lumpur** $40; **Sikh Missionary Society, Singapore** $5; **Sikh Temple, Telok Anson Town** $10; **Madam Pritam Kaur, Tanjong Malim** $15; **Mr. Saroop Singh, Malayan Railway, Kuala Lumpur**, A Cup; Istri Sat-
+This record is withheld from the public catalogue because no inspectable scan or original source file is currently attached. The former OCR-derived text is not published as historical evidence.

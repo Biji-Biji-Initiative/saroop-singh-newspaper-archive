@@ -16,12 +16,16 @@ function frontmatter(file) {
   return YAML.parse(match[1]);
 }
 
-test('retains the recovered catalogue while excluding withdrawn errors from publication', () => {
+test('retains audited catalogue records while publishing only inspectable, non-duplicate evidence', () => {
   assert.equal(articleFiles.length, 38);
   assert.equal(new Set(articleFiles).size, articleFiles.length);
-  const active = articleFiles.filter(file => frontmatter(file).status !== 'withdrawn');
-  assert.equal(active.length, 36);
+  const active = articleFiles.filter(file => !['withdrawn', 'source-unavailable'].includes(frontmatter(file).status));
+  assert.equal(active.length, 32);
   assert.equal(frontmatter('1957-07-15_straits-times_sikh-runners-state-record-half-mile.md').status, 'withdrawn');
+  assert.equal(frontmatter('unknown-date_unknown-newspaper_fmsr-sports-saroop-singh.md').canonical_of, '1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion');
+  assert.equal(frontmatter('1940-02-05_unknown-newspaper_cross-country-entries-saroop-singh.md').canonical_of, '1940-02-05_pinang-gazette-straits-chronicle_only-three-teams-entered-for-race');
+  assert.equal(frontmatter('unknown-date_unknown-newspaper_athletic-championships-entries.md').status, 'source-unavailable');
+  assert.equal(frontmatter('unknown-date_unknown-newspaper_sports-contributions-saroop-singh.md').status, 'source-unavailable');
 });
 
 test('uses one canonical validated article corpus', () => {
@@ -326,10 +330,10 @@ test('one comparison instrument is visible in both public and private featured-i
   assert.match(compare, /requestFullscreen/);
   assert.match(modal, /<RestorationCompare/);
   assert.match(modal, /All images and variations/);
-  assert.match(modal, /Open split slider/);
+  assert.match(modal, /aria-label="Compare source and selected variation"/);
   assert.match(studio, /<RestorationCompare/);
   assert.match(studio, /Featured image and all AI variations/);
-  assert.match(studio, /Open split slider/);
+  assert.match(studio, /aria-label="Compare source and selected variation"/);
   assert.match(studio, /aria-label="Source and AI generations"/);
   assert.doesNotMatch(studio, /GenerationReviewDialog/);
 });

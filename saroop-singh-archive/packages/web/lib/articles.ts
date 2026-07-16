@@ -48,7 +48,7 @@ function readArticlesFromFileSystem(): Article[] {
   try {
     const articles = Object.entries(articleFiles)
       .filter(([filePath]) => !filePath.endsWith('/README.md'))
-      .filter(([, fileContents]) => parseArticleFile(fileContents).data.status !== 'withdrawn')
+      .filter(([, fileContents]) => !['withdrawn', 'source-unavailable'].includes(parseArticleFile(fileContents).data.status))
       .map(([filePath, fileContents]) => {
       const { data, content } = parseArticleFile(fileContents);
       const fileName = filePath.split('/').pop() || filePath;

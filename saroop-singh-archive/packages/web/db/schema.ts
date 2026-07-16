@@ -53,11 +53,16 @@ export const restorationRuns = sqliteTable("restoration_runs", {
   reviewedBy: text("reviewed_by"),
   reviewedAt: text("reviewed_at"),
   publishedAt: text("published_at"),
+  familyRating: integer("family_rating"),
+  galleryRank: integer("gallery_rank"),
+  galleryVisibility: text("gallery_visibility").notNull().default("visible"),
+  galleryCuratedBy: text("gallery_curated_by"),
+  galleryCuratedAt: text("gallery_curated_at"),
   status: text("status").notNull().default("processing"),
   error: text("error"),
   createdBy: text("created_by").notNull(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-}, table => [index("restoration_runs_image_idx").on(table.imageId), index("restoration_runs_review_idx").on(table.reviewStatus)]);
+}, table => [index("restoration_runs_image_idx").on(table.imageId), index("restoration_runs_review_idx").on(table.reviewStatus), index("restoration_runs_gallery_visibility_idx").on(table.imageId, table.galleryVisibility)]);
 
 export const archiveEvents = sqliteTable("archive_events", {
   id: text("id").primaryKey(),

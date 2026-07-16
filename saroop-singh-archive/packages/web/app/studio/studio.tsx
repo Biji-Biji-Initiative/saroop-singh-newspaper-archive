@@ -6,7 +6,10 @@ import {
   Check,
   ChevronRight,
   CloudUpload,
+  Columns2,
   Download,
+  Eye,
+  EyeOff,
   ImageIcon,
   Images,
   Loader2,
@@ -14,6 +17,7 @@ import {
   RotateCcw,
   Save,
   Sparkles,
+  Star,
   ShieldCheck,
   Hammer,
   Palette,
@@ -34,6 +38,10 @@ type Run = {
   reviewStatus?: string;
   createdAt?: string;
   outputSha256?: string | null;
+  familyRating?: number | null;
+  galleryRank?: number | null;
+  galleryVisibility?: "visible" | "hidden";
+  galleryCuratedAt?: string | null;
   status: string;
   error?: string | null;
   outputUrl?: string | null;
@@ -234,8 +242,9 @@ export function Studio({ displayName }: { displayName: string }) {
 
   function featureGeneration(assetId?: string) {
     if (!sourceAsset) return;
-    setFeaturedAssetId(assetId || sourceAsset.id);
-    setShowFeaturedComparison(false);
+    const nextAssetId = assetId || sourceAsset.id;
+    setFeaturedAssetId(nextAssetId);
+    setShowFeaturedComparison(nextAssetId !== sourceAsset.id);
   }
 
   async function upload(event: React.FormEvent<HTMLFormElement>) {
@@ -362,6 +371,34 @@ export function Studio({ displayName }: { displayName: string }) {
       await refresh();
     } catch {
       setMessage("Connection failed. Nothing was published; please retry.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function curateVariation(
+    runId: string,
+    changes: { rating?: number | null; rank?: number; visibility?: "visible" | "hidden" },
+  ) {
+    setBusy(true);
+    setMessage("Saving family curation…");
+    try {
+      const response = await fetch(`/api/studio/runs/${runId}/curation`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(changes),
+      });
+      const data = await response.json();
+      setMessage(
+        response.ok
+          ? data.run.galleryVisibility === "hidden"
+            ? "Variation hidden from the public gallery; its preservation record remains intact."
+            : "Family rating and gallery order saved."
+          : data.error || "Family curation could not be saved.",
+      );
+      if (response.ok) await refresh();
+    } catch {
+      setMessage("Connection failed. The family curation was not changed.");
     } finally {
       setBusy(false);
     }
@@ -617,7 +654,7 @@ export function Studio({ displayName }: { displayName: string }) {
                     {selected.status}
                   </span>
                 </div>
-                <div className={`relative flex min-h-[22rem] items-center justify-center overflow-hidden bg-neutral-950 p-2 sm:min-h-[34rem] sm:p-4 ${showFeaturedComparison ? "overflow-y-auto" : ""}`}>
+                <div className="relative flex min-h-[22rem] items-center justify-center overflow-hidden bg-neutral-950 p-2 sm:min-h-[34rem] sm:p-4">
                   {showFeaturedComparison && featuredAsset?.kind === "generation" ? (
                     <>
                       <RestorationCompare
@@ -627,22 +664,22 @@ export function Studio({ displayName }: { displayName: string }) {
                         studyLabel={featuredAsset.label}
                         className="w-full max-w-5xl text-white"
                       />
-                      <button type="button" onClick={() => setShowFeaturedComparison(false)} className="absolute bottom-4 right-4 min-h-11 rounded-full bg-white px-4 text-sm font-semibold text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300">Back to featured variation</button>
+                      <button type="button" onClick={() => setShowFeaturedComparison(false)} aria-label="Show selected variation only" title="Show selected variation only" className="absolute bottom-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300"><Columns2 className="h-5 w-5" /></button>
                     </>
                   ) : (
                     <>
                       <Image src={featuredAsset?.url || selected.originalUrl} alt={`${selected.title} — ${featuredAsset?.label || "preserved source"}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain" />
                       <span className={`absolute bottom-4 left-4 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] ${featuredAsset?.kind === "generation" ? "bg-amber-300 text-[#17241d]" : "bg-emerald-950/90 text-white"}`}>{featuredAsset?.label || "Preserved source"}</span>
-                      {featuredAsset?.kind === "generation" && <button type="button" onClick={() => setShowFeaturedComparison(true)} className="absolute bottom-4 right-4 flex min-h-11 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300">Open split slider</button>}
+                      {featuredAsset?.kind === "generation" && <button type="button" onClick={() => setShowFeaturedComparison(true)} aria-label="Compare source and selected variation" title="Compare source and selected variation" className="absolute bottom-4 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300"><Columns2 className="h-5 w-5" /></button>}
                     </>
                   )}
                 </div>
                 <div className="border-t bg-neutral-950 px-5 py-4 sm:px-7">
                   <p className="text-xs font-semibold uppercase tracking-[.16em] text-stone-300">Featured image and all AI variations</p>
-                  <div role="list" aria-label="Source and AI generations" className="mt-3 flex snap-x gap-3 overflow-x-auto pb-2">
+                  <div role="list" aria-label="Source and AI generations" className="mt-3 flex snap-x gap-2.5 overflow-x-auto pb-2">
                     {featuredAssets.map(asset => {
                       const active = featuredAsset?.id === asset.id;
-                      return <div key={asset.id} role="listitem" className="w-32 shrink-0 snap-start"><button type="button" aria-pressed={active} onClick={() => featureGeneration(asset.id)} className={`w-full overflow-hidden rounded-2xl border-2 text-left transition focus:outline-none focus:ring-4 focus:ring-amber-300 ${active ? "border-amber-300 bg-white" : "border-white/15 bg-white/10 text-white hover:border-white/60"}`}><span className="relative block aspect-[4/3] bg-black"><Image src={asset.url} alt="" fill unoptimized sizes="128px" className="object-cover" /></span><span className="block p-2"><span className={`block truncate text-xs font-bold ${active ? "text-[#17241d]" : "text-white"}`}>{asset.label}</span><span className={`mt-1 block truncate text-[10px] ${active ? "text-neutral-500" : "text-stone-300"}`}>{asset.kind === "source" ? "Original authority" : asset.model || "AI study"}</span></span></button></div>;
+                      return <div key={asset.id} role="listitem" className="w-28 shrink-0 snap-start"><button type="button" aria-pressed={active} onClick={() => featureGeneration(asset.id)} className={`w-full overflow-hidden rounded-2xl border-2 text-left transition focus:outline-none focus:ring-4 focus:ring-amber-300 ${active ? "border-amber-300 bg-white" : "border-white/15 bg-white/10 text-white hover:border-white/60"}`}><span className="relative block aspect-[4/3] bg-black"><Image src={asset.url} alt="" fill unoptimized sizes="112px" className="object-cover" /></span><span className="block p-2"><span className={`block truncate text-xs font-bold ${active ? "text-[#17241d]" : "text-white"}`}>{asset.label}</span><span className={`mt-1 block truncate text-[10px] ${active ? "text-neutral-500" : "text-stone-300"}`}>{asset.kind === "source" ? "Original authority" : asset.model || "AI study"}</span></span></button></div>;
                     })}
                   </div>
                 </div>
@@ -955,13 +992,36 @@ export function Studio({ displayName }: { displayName: string }) {
                   </div>
                 </div>
               )}
-              {selected.runs.map((run) => (
-                <article
+              {selected.runs.map((run) => {
+                const readyRunCount = selected.runs.filter(candidate => candidate.status === "ready" && candidate.outputUrl).length;
+                const isHiddenFromGallery = run.galleryVisibility === "hidden";
+                return <article
                   key={run.id}
                   className="overflow-hidden rounded-3xl border border-amber-950/10 bg-white shadow-sm"
                 >
                   <div className="border-b p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold uppercase tracking-[.16em]">{recipes.find(option => option.id === run.recipe)?.name || run.recipe}</p><p className="mt-1 text-sm text-neutral-500">{run.model} · {run.provider} · {run.promptVersion || "prompt version recorded"}</p></div><span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">{run.status}</span></div>{run.outputUrl ? <button type="button" onClick={() => featureGeneration(run.id)} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-950 px-5 font-semibold text-white"><Images className="h-5 w-5" /> Feature this variation above</button> : <div className="mt-4 flex min-h-28 items-center justify-center rounded-2xl bg-stone-100 p-6 text-center text-sm text-neutral-500">{run.error || "Processing…"}</div>}</div>
                   <div className="p-5">
+                    {run.outputUrl && (
+                      <section className="rounded-2xl border border-amber-900/15 bg-amber-50/70 p-4" aria-label="Private family curation">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-[.16em] text-amber-800">Private family curation</p>
+                            <p className="mt-1 text-xs leading-5 text-amber-950/75">Rate privately, set the order shown in the public image rail, or hide a lower-quality study without deleting its record.</p>
+                          </div>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isHiddenFromGallery ? "bg-stone-200 text-stone-700" : "bg-emerald-100 text-emerald-900"}`}>{isHiddenFromGallery ? "Hidden from gallery" : run.galleryRank ? `Gallery #${run.galleryRank}` : "Visible · unranked"}</span>
+                        </div>
+                        <div className="mt-4 grid gap-4 sm:grid-cols-[1fr_auto] sm:items-end">
+                          <div>
+                            <p className="text-sm font-semibold">Family rating</p>
+                            <div role="group" aria-label={`Rate ${recipes.find(option => option.id === run.recipe)?.name || run.recipe}`} className="mt-2 flex gap-1">
+                              {[1, 2, 3, 4, 5].map(value => <button key={value} type="button" disabled={busy} onClick={() => curateVariation(run.id, { rating: run.familyRating === value ? null : value })} aria-label={`${value} out of 5`} aria-pressed={run.familyRating === value} className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-900/15 bg-white text-amber-800 transition hover:bg-amber-100 disabled:opacity-50"><Star className={`h-5 w-5 ${Number(run.familyRating || 0) >= value ? "fill-current" : ""}`} /></button>)}
+                            </div>
+                          </div>
+                          <label className="text-sm font-semibold">Public order<select value={isHiddenFromGallery ? "" : String(run.galleryRank || "")} onChange={event => { const rank = Number(event.target.value); if (rank) curateVariation(run.id, { visibility: "visible", rank }); }} disabled={busy || !readyRunCount} className="field mt-2 min-w-44 font-normal"><option value="">Choose a rank</option>{Array.from({ length: readyRunCount }, (_, index) => <option key={index + 1} value={index + 1}>{index + 1} · {index === 0 ? "top choice" : "gallery position"}</option>)}</select></label>
+                        </div>
+                        <button type="button" disabled={busy} onClick={() => curateVariation(run.id, { visibility: isHiddenFromGallery ? "visible" : "hidden" })} className={`mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold disabled:opacity-50 ${isHiddenFromGallery ? "border-emerald-900/20 bg-white text-emerald-900" : "border-stone-300 bg-white text-stone-700"}`}>{isHiddenFromGallery ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}{isHiddenFromGallery ? "Show in public gallery" : "Hide from public gallery"}</button>
+                      </section>
+                    )}
                     <details>
                       <summary className="cursor-pointer text-sm font-semibold">View exact preservation prompt</summary>
                       <p className="mt-3 rounded-xl bg-stone-100 p-4 text-sm leading-6 text-neutral-700">
@@ -980,8 +1040,8 @@ export function Studio({ displayName }: { displayName: string }) {
                       </div></div>
                     )}
                   </div>
-                </article>
-              ))}
+                </article>;
+              })}
             </>
           )}
         </section>

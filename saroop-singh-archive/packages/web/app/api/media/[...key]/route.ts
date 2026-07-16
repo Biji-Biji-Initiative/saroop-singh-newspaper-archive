@@ -29,6 +29,7 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
         eq(restorationRuns.outputKey, objectKey),
         eq(restorationRuns.status, "ready"),
         inArray(restorationRuns.reviewStatus, ["approved", "recovered-historical"]),
+        eq(restorationRuns.galleryVisibility, "visible"),
         isNotNull(restorationRuns.publishedAt),
         eq(archiveImages.status, "published"),
         isNotNull(archiveImages.publishedAt),
@@ -38,7 +39,7 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
   const isPublished = Boolean(
     publishedStudy ||
       (image?.status === "published" &&
-        (image.publishedKey === objectKey || image.originalKey === objectKey)),
+        image.originalKey === objectKey),
   );
   if (!isPublished) {
     const user = await getArchiveUser();

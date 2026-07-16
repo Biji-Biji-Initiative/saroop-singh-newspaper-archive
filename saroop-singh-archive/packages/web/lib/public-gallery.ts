@@ -106,6 +106,7 @@ export async function listPublicGalleryRecords(): Promise<PublicGalleryRecord[]>
           inArray(restorationRuns.imageId, imageIds),
           eq(restorationRuns.status, "ready"),
           inArray(restorationRuns.reviewStatus, ["approved", "recovered-historical"]),
+          eq(restorationRuns.galleryVisibility, "visible"),
           isNotNull(restorationRuns.outputKey),
           isNotNull(restorationRuns.publishedAt),
         ),
@@ -130,6 +131,11 @@ export async function listPublicGalleryRecords(): Promise<PublicGalleryRecord[]>
   return images.map(image => {
     const identityTagsForImage = identitiesBySubject.get(image.id) || [];
     const studies = (runsByImage.get(image.id) || [])
+      .sort((left, right) => {
+        const leftRank = left.galleryRank ?? Number.MAX_SAFE_INTEGER;
+        const rightRank = right.galleryRank ?? Number.MAX_SAFE_INTEGER;
+        return leftRank - rightRank || left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id);
+      })
       .map(run => {
         const provenance: PublicGalleryStudy["provenance"] = run.reviewStatus === "recovered-historical"
           ? "recovered-historical"
