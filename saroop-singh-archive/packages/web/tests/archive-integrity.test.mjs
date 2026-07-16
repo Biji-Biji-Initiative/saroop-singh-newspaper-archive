@@ -283,12 +283,16 @@ test('guided story keeps evidence and uncertainty visible', () => {
 test('museum interoperability and offline premiere protect public-only content', () => {
   const iiif = readFileSync(join(root, 'app/api/iiif/[id]/manifest/route.ts'), 'utf8');
   const worker = readFileSync(join(root, 'public/sw.js'), 'utf8');
+  const offlineRegister = readFileSync(join(root, 'components/offline-register.tsx'), 'utf8');
   assert.match(iiif, /iiif\.io\/api\/presentation\/3\/context\.json/);
   assert.match(iiif, /Archive manifest and checksums/);
   assert.match(worker, /\/story/);
   assert.match(worker, /"\/api\/"/);
   assert.match(worker, /"\/memory-receipt"/);
   assert.match(worker, /private\|no-store/);
+  assert.doesNotMatch(worker, /url\.pathname\.startsWith\("\/_next\/"\)/);
+  assert.match(offlineRegister, /updateViaCache: "none"/);
+  assert.match(offlineRegister, /registration\.update\(\)/);
 });
 
 test('family launch surfaces share safely without exposing private memory content', () => {
