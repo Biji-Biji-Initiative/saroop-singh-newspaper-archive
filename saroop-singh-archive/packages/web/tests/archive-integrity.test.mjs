@@ -53,7 +53,7 @@ test('gallery serves only canonical database records and media objects', () => {
   assert.equal(existsSync(join(root, 'public/gallery-images')), false);
   assert.match(loader, /eq\(archiveImages\.status, "published"\)/);
   assert.match(loader, /originalImageUrl: mediaUrl\(image\.originalKey\)/);
-  assert.match(loader, /eq\(restorationRuns\.reviewStatus, "approved"\)/);
+  assert.match(loader, /\["approved", "recovered-historical"\]/);
   assert.doesNotMatch(loader, /data\/gallery|gallery-images|catch\s*\(/);
   assert.match(api, /listPublicGalleryRecords/);
   assert.doesNotMatch(api, /degraded|data\/gallery|gallery-images/);
@@ -231,11 +231,18 @@ test('biography does not outrun the reviewed evidence', () => {
   assert.match(about, /later hockey reports/i);
 });
 
-test('gallery labels source provenance and only approved public studies', () => {
+test('gallery keeps every public variation in canonical storage with explicit provenance', () => {
   const loader = readFileSync(join(root, 'lib/public-gallery.ts'), 'utf8');
+  const media = readFileSync(join(root, 'app/api/media/[...key]/route.ts'), 'utf8');
+  const migration = readFileSync(join(root, 'drizzle/0011_recovered_historical_variations.sql'), 'utf8');
   assert.match(loader, /sourceProvenance: image\.sourceProvenance/);
   assert.match(loader, /isNotNull\(restorationRuns\.publishedAt\)/);
-  assert.match(loader, /outputKey === image\.publishedKey/);
+  assert.match(loader, /\["approved", "recovered-historical"\]/);
+  assert.doesNotMatch(loader, /outputKey === image\.publishedKey/);
+  assert.match(loader, /provenance: "recorded" \| "recovered-historical"/);
+  assert.match(media, /\["approved", "recovered-historical"\]/);
+  assert.match(migration, /restoration:recovered-historical-published/);
+  assert.match(migration, /exact provider, model and prompt were not retained/);
 });
 
 test('family memories are private claims with consent and receipt isolation', () => {
@@ -308,19 +315,23 @@ test('family launch surfaces share safely without exposing private memory conten
   assert.match(storyControls, /story-mode/);
 });
 
-test('one comparison instrument covers modal and Studio restoration studies', () => {
+test('one comparison instrument is visible in both public and private featured-image galleries', () => {
   const compare = readFileSync(join(root, 'components/restoration-compare.tsx'), 'utf8');
   const modal = readFileSync(join(root, 'app/gallery/page.tsx'), 'utf8');
   const studio = readFileSync(join(root, 'app/studio/studio.tsx'), 'utf8');
-  const reviewDialog = readFileSync(join(root, 'components/generation-review-dialog.tsx'), 'utf8');
   assert.match(compare, /type="range"/);
   assert.match(compare, /sourceLabel = "Source"/);
   assert.match(compare, />Split<|>Split\s*</);
   assert.match(compare, />Study<|>Study\s*</);
   assert.match(compare, /requestFullscreen/);
   assert.match(modal, /<RestorationCompare/);
-  assert.match(studio, /<GenerationReviewDialog/);
-  assert.match(reviewDialog, /<RestorationCompare/);
+  assert.match(modal, /All images and variations/);
+  assert.match(modal, /Open split slider/);
+  assert.match(studio, /<RestorationCompare/);
+  assert.match(studio, /Featured image and all AI variations/);
+  assert.match(studio, /Open split slider/);
+  assert.match(studio, /aria-label="Source and AI generations"/);
+  assert.doesNotMatch(studio, /GenerationReviewDialog/);
 });
 
 test('restoration presents three family intents and keeps engine choice advanced', () => {

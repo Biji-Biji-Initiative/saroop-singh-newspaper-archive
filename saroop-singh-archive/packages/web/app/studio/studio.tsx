@@ -20,10 +20,7 @@ import {
   UserRoundCheck,
   XCircle,
 } from "lucide-react";
-import {
-  GenerationReviewDialog,
-  type GenerationAsset,
-} from "@/components/generation-review-dialog";
+import { RestorationCompare } from "@/components/restoration-compare";
 import Image from "next/image";
 
 type Run = {
@@ -78,6 +75,22 @@ type Item = {
   photoAnalysisModel?: string | null;
   photoAnalysisStatus?: string;
   photoAnalyzedAt?: string | null;
+};
+
+type GenerationAsset = {
+  id: string;
+  label: string;
+  url: string;
+  kind: "source" | "generation";
+  provider?: string;
+  model?: string;
+  recipe?: string;
+  interventionClass?: string;
+  promptVersion?: string;
+  prompt?: string;
+  createdAt?: string;
+  reviewStatus?: string;
+  outputSha256?: string | null;
 };
 
 const models = [
@@ -135,8 +148,8 @@ export function Studio({ displayName }: { displayName: string }) {
   const [aiConsentEvidence, setAiConsentEvidence] = useState("");
   const [metadataDirty, setMetadataDirty] = useState(false);
   const [uploadPreview, setUploadPreview] = useState<{ url: string; name: string; size: number }>();
-  const [generationViewerOpen, setGenerationViewerOpen] = useState(false);
-  const [generationViewerAssetId, setGenerationViewerAssetId] = useState<string>();
+  const [featuredAssetId, setFeaturedAssetId] = useState<string>();
+  const [showFeaturedComparison, setShowFeaturedComparison] = useState(false);
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) || items[0],
     [items, selectedId],
@@ -180,6 +193,14 @@ export function Studio({ displayName }: { displayName: string }) {
       reviewStatus: run.reviewStatus,
       outputSha256: run.outputSha256,
     })) || [], [selected]);
+  const featuredAssets = useMemo(
+    () => sourceAsset ? [sourceAsset, ...generationAssets] : [],
+    [sourceAsset, generationAssets],
+  );
+  const featuredAsset = useMemo(
+    () => featuredAssets.find(asset => asset.id === featuredAssetId) || sourceAsset,
+    [featuredAssets, featuredAssetId, sourceAsset],
+  );
   const refresh = useCallback(async () => {
     try {
       const response = await fetch("/api/studio/images");
@@ -196,19 +217,25 @@ export function Studio({ displayName }: { displayName: string }) {
   }, [refresh]);
   useEffect(() => () => { if (uploadPreview) URL.revokeObjectURL(uploadPreview.url); }, [uploadPreview]);
   useEffect(() => { if (selected?.restorationPreference === "repair-damage") setRecipe("structural"); else if (selected?.restorationPreference === "explore-colour") setRecipe("colourResearch"); else setRecipe("conservative"); }, [selected?.id, selected?.restorationPreference]);
+  useEffect(() => {
+    setFeaturedAssetId(undefined);
+    setShowFeaturedComparison(false);
+  }, [selected?.id]);
 
   function selectItem(id: string) {
     setSelectedId(id);
     setNotes("");
     setAiConsentEvidence("");
     setMetadataDirty(false);
+    setFeaturedAssetId(undefined);
+    setShowFeaturedComparison(false);
     setMessage("");
   }
 
-  function openGenerationViewer(assetId?: string) {
+  function featureGeneration(assetId?: string) {
     if (!sourceAsset) return;
-    setGenerationViewerAssetId(assetId || sourceAsset.id);
-    setGenerationViewerOpen(true);
+    setFeaturedAssetId(assetId || sourceAsset.id);
+    setShowFeaturedComparison(false);
   }
 
   async function upload(event: React.FormEvent<HTMLFormElement>) {
@@ -590,16 +617,43 @@ export function Studio({ displayName }: { displayName: string }) {
                     {selected.status}
                   </span>
                 </div>
-                <Image
-                  src={selected.originalUrl}
-                  alt={selected.title}
-                  width={1600}
-                  height={1200}
-                  unoptimized
-                  sizes="(max-width: 1024px) 100vw, 70vw"
-                  className="max-h-[65vh] w-full bg-neutral-950 object-contain"
-                />
-                <div className="grid gap-3 border-t p-5 text-xs text-neutral-600 sm:grid-cols-[1fr_auto_auto]">
+                <div className={`relative flex min-h-[22rem] items-center justify-center overflow-hidden bg-neutral-950 p-2 sm:min-h-[34rem] sm:p-4 ${showFeaturedComparison ? "overflow-y-auto" : ""}`}>
+                  {showFeaturedComparison && featuredAsset?.kind === "generation" ? (
+                    <>
+                      <RestorationCompare
+                        originalUrl={selected.originalUrl}
+                        studyUrl={featuredAsset.url}
+                        title={selected.title}
+                        studyLabel={featuredAsset.label}
+                        className="w-full max-w-5xl text-white"
+                      />
+                      <button type="button" onClick={() => setShowFeaturedComparison(false)} className="absolute bottom-4 right-4 min-h-11 rounded-full bg-white px-4 text-sm font-semibold text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300">Back to featured variation</button>
+                    </>
+                  ) : (
+                    <>
+                      <Image src={featuredAsset?.url || selected.originalUrl} alt={`${selected.title} — ${featuredAsset?.label || "preserved source"}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain" />
+                      <span className={`absolute bottom-4 left-4 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] ${featuredAsset?.kind === "generation" ? "bg-amber-300 text-[#17241d]" : "bg-emerald-950/90 text-white"}`}>{featuredAsset?.label || "Preserved source"}</span>
+                      {featuredAsset?.kind === "generation" && <button type="button" onClick={() => setShowFeaturedComparison(true)} className="absolute bottom-4 right-4 flex min-h-11 items-center rounded-full bg-white px-4 text-sm font-semibold text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300">Open split slider</button>}
+                    </>
+                  )}
+                </div>
+                <div className="border-t bg-neutral-950 px-5 py-4 sm:px-7">
+                  <p className="text-xs font-semibold uppercase tracking-[.16em] text-stone-300">Featured image and all AI variations</p>
+                  <div role="list" aria-label="Source and AI generations" className="mt-3 flex snap-x gap-3 overflow-x-auto pb-2">
+                    {featuredAssets.map(asset => {
+                      const active = featuredAsset?.id === asset.id;
+                      return <div key={asset.id} role="listitem" className="w-32 shrink-0 snap-start"><button type="button" aria-pressed={active} onClick={() => featureGeneration(asset.id)} className={`w-full overflow-hidden rounded-2xl border-2 text-left transition focus:outline-none focus:ring-4 focus:ring-amber-300 ${active ? "border-amber-300 bg-white" : "border-white/15 bg-white/10 text-white hover:border-white/60"}`}><span className="relative block aspect-[4/3] bg-black"><Image src={asset.url} alt="" fill unoptimized sizes="128px" className="object-cover" /></span><span className="block p-2"><span className={`block truncate text-xs font-bold ${active ? "text-[#17241d]" : "text-white"}`}>{asset.label}</span><span className={`mt-1 block truncate text-[10px] ${active ? "text-neutral-500" : "text-stone-300"}`}>{asset.kind === "source" ? "Original authority" : asset.model || "AI study"}</span></span></button></div>;
+                    })}
+                  </div>
+                </div>
+                {featuredAsset?.kind === "generation" && (
+                  <div className="border-t bg-amber-50 px-5 py-4 text-sm text-amber-950 sm:px-7">
+                    <p className="font-semibold">{featuredAsset.model} · {featuredAsset.provider}</p>
+                    <p className="mt-1 text-xs leading-5">{featuredAsset.recipe || "Preservation study"} · {featuredAsset.promptVersion || "prompt version recorded"} · {featuredAsset.interventionClass || "conservation"}</p>
+                    <details className="mt-3"><summary className="cursor-pointer text-xs font-semibold">View exact recorded prompt</summary><p className="mt-2 rounded-xl bg-white/80 p-3 text-xs leading-5 text-neutral-700">{featuredAsset.prompt}</p></details>
+                  </div>
+                )}
+                <div className="grid gap-3 border-t p-5 text-xs text-neutral-600 sm:grid-cols-[1fr_auto]">
                   <div>
                     <p className="font-semibold text-neutral-900">
                       {selected.originalName}
@@ -623,27 +677,8 @@ export function Studio({ displayName }: { displayName: string }) {
                   >
                     Download original
                   </a>
-                  <button
-                    type="button"
-                    onClick={() => openGenerationViewer()}
-                    className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 font-semibold text-[#17241d]"
-                  >
-                    <Images className="h-4 w-4" /> View source & studies
-                  </button>
                 </div>
               </div>
-              {sourceAsset && (
-                <GenerationReviewDialog
-                  key={`${generationViewerOpen}-${generationViewerAssetId || sourceAsset.id}`}
-                  open={generationViewerOpen}
-                  onOpenChange={setGenerationViewerOpen}
-                  title={selected.title}
-                  source={sourceAsset}
-                  generations={generationAssets}
-                  initialAssetId={generationViewerAssetId}
-                  privateProvenance
-                />
-              )}
               <form
                   key={selected.id}
                   onChange={() => setMetadataDirty(true)}
@@ -925,7 +960,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   key={run.id}
                   className="overflow-hidden rounded-3xl border border-amber-950/10 bg-white shadow-sm"
                 >
-                  <div className="border-b p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold uppercase tracking-[.16em]">{recipes.find(option => option.id === run.recipe)?.name || run.recipe}</p><p className="mt-1 text-sm text-neutral-500">{run.model} · {run.provider} · {run.promptVersion || "prompt version recorded"}</p></div><span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">{run.status}</span></div>{run.outputUrl ? <button type="button" onClick={() => openGenerationViewer(run.id)} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-950 px-5 font-semibold text-white"><Images className="h-5 w-5" /> Open this study in the visual review workspace</button> : <div className="mt-4 flex min-h-28 items-center justify-center rounded-2xl bg-stone-100 p-6 text-center text-sm text-neutral-500">{run.error || "Processing…"}</div>}</div>
+                  <div className="border-b p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold uppercase tracking-[.16em]">{recipes.find(option => option.id === run.recipe)?.name || run.recipe}</p><p className="mt-1 text-sm text-neutral-500">{run.model} · {run.provider} · {run.promptVersion || "prompt version recorded"}</p></div><span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">{run.status}</span></div>{run.outputUrl ? <button type="button" onClick={() => featureGeneration(run.id)} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-950 px-5 font-semibold text-white"><Images className="h-5 w-5" /> Feature this variation above</button> : <div className="mt-4 flex min-h-28 items-center justify-center rounded-2xl bg-stone-100 p-6 text-center text-sm text-neutral-500">{run.error || "Processing…"}</div>}</div>
                   <div className="p-5">
                     <details>
                       <summary className="cursor-pointer text-sm font-semibold">View exact preservation prompt</summary>
