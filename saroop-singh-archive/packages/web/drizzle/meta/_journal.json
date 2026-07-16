@@ -85,6 +85,13 @@
       "when": 1784193409000,
       "tag": "0011_recovered_historical_variations",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1784198811864,
+      "tag": "0012_friendly_gambit",
+      "breakpoints": true
     }
   ]
 }

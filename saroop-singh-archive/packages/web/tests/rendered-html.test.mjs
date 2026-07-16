@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import net from "node:net";
 import test, { after, before } from "node:test";
+import Database from "better-sqlite3";
 
 let archiveDataDir;
 let productionServer;
@@ -402,6 +403,61 @@ test("persists private family workflows behind signed Studio and AI consent gate
   assert.equal(image.aiProcessingConsent, "declined");
   assert.equal(image.photoAnalysisStatus, "not-requested");
   assert.equal(image.contributorContact, "private@example.com");
+
+  const curationRunId = "00000000-0000-4000-8000-000000000010";
+  const curationDatabase = new Database(join(archiveDataDir, "archive.sqlite"));
+  curationDatabase.pragma("busy_timeout = 5000");
+  curationDatabase.prepare(`
+    INSERT INTO restoration_runs
+      (id, image_id, provider, model, recipe, prompt, output_key, output_type, status, review_status, created_by, created_at, published_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    curationRunId,
+    publishedSourceId,
+    "openai",
+    "gpt-image-2-2026-04-21",
+    "conservative",
+    "Private test preservation prompt.",
+    "restorations/test-curation-output.png",
+    "image/png",
+    "ready",
+    "approved",
+    "archive-test@example.com",
+    "2026-07-16T00:00:00.000Z",
+    "2026-07-16T00:00:00.000Z",
+  );
+  curationDatabase.close();
+
+  const rateAndRank = await fetch(`${origin}/api/studio/runs/${curationRunId}/curation`, {
+    method: "PATCH",
+    headers: { ...automationHeaders, origin: publicOrigin, "content-type": "application/json" },
+    body: JSON.stringify({ rating: 5, rank: 1 }),
+  });
+  assert.equal(rateAndRank.status, 200);
+  assert.deepEqual((await rateAndRank.json()).run, {
+    id: curationRunId,
+    familyRating: 5,
+    galleryRank: 1,
+    galleryVisibility: "visible",
+  });
+  const galleryWithCuratedStudy = await fetch(`${origin}/api/gallery?limit=50`);
+  const curatedGalleryRecord = (await galleryWithCuratedStudy.json()).items.find(
+    item => item.id === publishedSourceId,
+  );
+  assert.deepEqual(curatedGalleryRecord.restorations.map(run => run.id), [curationRunId]);
+
+  const hideStudy = await fetch(`${origin}/api/studio/runs/${curationRunId}/curation`, {
+    method: "PATCH",
+    headers: { ...automationHeaders, origin: publicOrigin, "content-type": "application/json" },
+    body: JSON.stringify({ visibility: "hidden" }),
+  });
+  assert.equal(hideStudy.status, 200);
+  assert.equal((await hideStudy.json()).run.galleryVisibility, "hidden");
+  const galleryWithHiddenStudy = await fetch(`${origin}/api/gallery?limit=50`);
+  const hiddenGalleryRecord = (await galleryWithHiddenStudy.json()).items.find(
+    item => item.id === publishedSourceId,
+  );
+  assert.equal(hiddenGalleryRecord.restorations.length, 0);
 
   const publicOriginal = await fetch(`${origin}${image.originalUrl}`);
   assert.equal(publicOriginal.status, 404);

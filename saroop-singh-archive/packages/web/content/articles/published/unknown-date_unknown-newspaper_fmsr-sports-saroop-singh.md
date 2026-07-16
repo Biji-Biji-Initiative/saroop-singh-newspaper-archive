@@ -18,19 +18,9 @@ tags:
   - mile race
   - quarter mile
 image: /images/1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion.jpg
+status: withdrawn
+canonical_of: 1937-08-03_straits-times_fmsr-sports-wong-swee-chew-individual-champion
+withdrawn_reason: This entry reused the dated 3 August 1937 Straits Times scan and duplicated that report. Its former Unknown Newspaper attribution and OCR-derived wording were not independently supported.
 ---
 
-# FMSR Sports - Saroop Singh Performance
-
-**Unknown Newspaper, Unknown Date**
-
-*(From Our Own Correspondent)*
-**Kuala Lumpur, Aug. 2.**
-
-By winning the long jump shot putt and hurdles Wong Swee Chew became champion athlete at the Federated Malay States Railway sports this evening on the Railway ground.
-
-There was a large crowd present and at the conclusion of the sports Mrs. H. Fraser, wife of the Federal Secretary, distributed the prizes.
-
-**Saroop Singh, the Selangor half-mile champion, ran beautifully to annex the mile and quarter mile events.**
-
-The champion unit was Central Workshops.
+This withdrawn catalogue entry is retained only as an audit record. It reused the source capture assigned to the dated 3 August 1937 Straits Times report and did not establish a separate newspaper issue. The public route redirects to the canonical record; the former OCR-derived wording is not retained as evidence.

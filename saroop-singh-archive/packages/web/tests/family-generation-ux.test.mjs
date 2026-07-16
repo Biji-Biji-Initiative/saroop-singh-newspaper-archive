@@ -24,7 +24,7 @@ test("generation review features one image with a labelled source-and-study caro
 
   assert.match(studio, /Featured image and all AI variations/);
   assert.match(studio, /aria-label="Source and AI generations"/);
-  assert.match(studio, /Open split slider/);
+  assert.match(studio, /aria-label="Compare source and selected variation"/);
   assert.match(studio, /View exact recorded prompt/);
   assert.match(studio, /Feature this variation above/);
   assert.doesNotMatch(studio, /visual review workspace/);
@@ -39,7 +39,7 @@ test("public provenance identifies AI studies without exposing private prompts",
   assert.match(loader, /promptVersion: run\.promptVersion/);
   assert.doesNotMatch(loader, /prompt:\s*run\.prompt/);
   assert.match(gallery, /aria-label="Source and published image variations"/);
-  assert.match(gallery, /Open split slider/);
+  assert.match(gallery, /aria-label="Compare source and selected variation"/);
   assert.match(gallery, /AI study provenance/);
   assert.match(gallery, /Recovered variation record/);
   assert.match(gallery, /Exact prompts remain in the private preservation record/);

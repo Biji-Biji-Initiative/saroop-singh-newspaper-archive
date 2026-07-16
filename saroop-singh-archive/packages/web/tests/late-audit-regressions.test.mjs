@@ -13,10 +13,7 @@ test("media authorization resolves the complete object key instead of assuming a
   assert.match(route, /const objectKey = key\.join\("\/"\)/);
   assert.match(route, /eq\(archiveImages\.originalKey, objectKey\)/);
   assert.match(route, /eq\(archiveImages\.publishedKey, objectKey\)/);
-  assert.match(
-    route,
-    /image\?\.status === "published" &&\s*\(image\.publishedKey === objectKey \|\| image\.originalKey === objectKey\)/,
-  );
+  assert.match(route, /image\?\.status === "published" &&\s*image\.originalKey === objectKey/);
   assert.match(route, /eq\(restorationRuns\.outputKey, objectKey\)/);
   assert.match(route, /\["approved", "recovered-historical"\]/);
   assert.doesNotMatch(route, /\bkey\s*\[\s*1\s*\]/);
@@ -29,6 +26,38 @@ test("photograph browse cards stay compact and keep previews legible", () => {
   assert.match(gallery, /sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4/);
   assert.match(gallery, /aspect-\[4\/3\]/);
   assert.match(gallery, /object-cover/);
+});
+
+test("gallery viewer gives details a stable rail and opens a selected variation in split comparison", () => {
+  const gallery = read("app/gallery/page.tsx");
+
+  assert.match(gallery, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(22rem,26rem\)\]/);
+  assert.match(gallery, /setShowComparison\(asset\.kind === 'generation'\)/);
+  assert.match(gallery, /aria-label="Compare source and selected variation"/);
+  assert.match(gallery, /aria-label="Show selected variation only"/);
+  assert.match(gallery, /<Columns2 className="h-5 w-5"/);
+  assert.doesNotMatch(gallery, /Back to featured variation|Open split slider/);
+});
+
+test("family curation persists a rating, gallery rank, and visibility without exposing hidden variants", () => {
+  const schema = read("db/schema.ts");
+  const curation = read("app/api/studio/runs/[id]/curation/route.ts");
+  const gallery = read("lib/public-gallery.ts");
+  const media = read("app/api/media/[...key]/route.ts");
+  const studio = read("app/studio/studio.tsx");
+
+  assert.match(schema, /familyRating: integer\("family_rating"\)/);
+  assert.match(schema, /galleryRank: integer\("gallery_rank"\)/);
+  assert.match(schema, /galleryVisibility: text\("gallery_visibility"\)\.notNull\(\)\.default\("visible"\)/);
+  assert.match(curation, /requireArchiveAdmin\("\/studio"\)/);
+  assert.match(curation, /hasTrustedArchiveOrigin/);
+  assert.match(curation, /restoration:family-curation-updated/);
+  assert.match(curation, /galleryVisibility: nextVisibility/);
+  assert.match(gallery, /eq\(restorationRuns\.galleryVisibility, "visible"\)/);
+  assert.match(media, /eq\(restorationRuns\.galleryVisibility, "visible"\)/);
+  assert.match(studio, /Private family curation/);
+  assert.match(studio, /Hide from public gallery/);
+  assert.match(studio, /Family rating/);
 });
 
 test("stories only attach a photograph the contributor explicitly chose", () => {
@@ -163,7 +192,7 @@ test("photograph viewers fit complete images and keep mobile details independent
   assert.match(gallery, /grid-rows-\[minmax\(20rem,56dvh\)_minmax\(0,1fr\)\]/);
   assert.match(gallery, /object-contain p-2 sm:p-4/);
   assert.match(gallery, /Fit to screen · complete source/);
-  assert.match(gallery, /min-h-0 overflow-y-auto overscroll-contain/);
+  assert.match(gallery, /min-h-0 min-w-0 overflow-y-auto overscroll-contain/);
   assert.match(gallery, /safe-area-inset-top/);
   assert.match(gallery, /safe-area-inset-right/);
   assert.match(gallery, /safe-area-inset-bottom/);
@@ -187,7 +216,7 @@ test("the fabricated 1957 record stays withdrawn and redirects to its 1937 canon
   assert.match(frontmatter.withdrawn_reason, /unsupported/);
   assert.equal(frontmatter.canonical_of, "1937-07-19_straits-times_selangor-athletic-championships-full-page");
   assert.doesNotMatch(article, /His time was 2 min/);
-  assert.match(loader, /data\.status !== 'withdrawn'/);
+  assert.match(loader, /\['withdrawn', 'source-unavailable'\]\.includes\(parseArticleFile\(fileContents\)\.data\.status\)/);
   assert.match(page, /const canonicalSlug = getWithdrawnCanonicalSlug\(slug\)/);
   assert.match(page, /if \(canonicalSlug\) permanentRedirect\(`\/articles\/\$\{canonicalSlug\}`\)/);
   assert.match(loader, /data\.status === 'withdrawn' && typeof data\.canonical_of === 'string'/);

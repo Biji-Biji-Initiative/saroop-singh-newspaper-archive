@@ -107,8 +107,8 @@ if (errors.length === 0) {
         fail(`${filename}: date must be YYYY-MM-DD or "unknown".`);
       }
     }
-    if (metadata.status !== undefined && metadata.status !== "withdrawn") {
-      fail(`${filename}: status must be "withdrawn" when supplied.`);
+    if (metadata.status !== undefined && !["withdrawn", "source-unavailable"].includes(metadata.status)) {
+      fail(`${filename}: status must be "withdrawn" or "source-unavailable" when supplied.`);
     }
 
     validateString(metadata.image, "image", filename, { required: true });
@@ -134,6 +134,9 @@ for (const { filename, metadata } of articles.values()) {
   if (metadata.status === "withdrawn" && !metadata.withdrawn_reason) {
     fail(`${filename}: a withdrawn record must explain withdrawn_reason.`);
   }
+  if (metadata.status === "source-unavailable" && !metadata.source_unavailable_reason) {
+    fail(`${filename}: a source-unavailable record must explain source_unavailable_reason.`);
+  }
   if (metadata.canonical_of) {
     const canonical = articles.get(metadata.canonical_of);
     if (!canonical) {
@@ -156,5 +159,5 @@ if (errors.length) {
         .join("\n"),
     )
     .digest("hex");
-  console.log(`Validated ${articles.size} published articles from the canonical corpus (SHA-256 ${digest}).`);
+  console.log(`Validated ${articles.size} canonical article records (SHA-256 ${digest}).`);
 }

@@ -1,5 +1,12 @@
-# published
+# Canonical newspaper catalogue
 
-Current published articles
+An article record without `status` is part of the public evidence layer.
 
-Created: 2025-08-31T10:35:55.882Z
+- `withdrawn` records are auditable duplicate or incorrect catalogue entries and
+  redirect to their `canonical_of` source.
+- `source-unavailable` records are retained only to document a research lead;
+  they never publish until an inspectable source capture is recovered and
+  reviewed.
+
+The scan is the authority. Text is a searchable catalogue extract unless the
+record itself says otherwise.
