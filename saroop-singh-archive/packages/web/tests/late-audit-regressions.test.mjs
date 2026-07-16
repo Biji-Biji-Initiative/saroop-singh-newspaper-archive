@@ -23,6 +23,14 @@ test("media authorization resolves the complete object key instead of assuming a
   assert.doesNotMatch(route, /\bgetImage\s*\(/);
 });
 
+test("photograph browse cards stay compact and preserve each source frame", () => {
+  const gallery = read("app/gallery/page.tsx");
+
+  assert.match(gallery, /sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4/);
+  assert.match(gallery, /aspect-\[3\/2\]/);
+  assert.match(gallery, /object-contain p-2/);
+});
+
 test("stories only attach a photograph the contributor explicitly chose", () => {
   const room = read("app/remember/memory-room.tsx");
   const start = room.indexOf("const shouldAttachSubject");
