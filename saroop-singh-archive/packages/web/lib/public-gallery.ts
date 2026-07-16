@@ -11,6 +11,14 @@ export type PublicGalleryStudy = {
   id: string;
   type: string;
   url: string;
+  provider: string;
+  model: string;
+  recipe: string;
+  interventionClass: string;
+  promptVersion: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  outputSha256: string | null;
 };
 
 export type PublicGalleryRecord = {
@@ -117,6 +125,14 @@ export async function listPublicGalleryRecords(): Promise<PublicGalleryRecord[]>
         id: run.id,
         type: publicStudyLabel(run.recipe),
         url: mediaUrl(run.outputKey!),
+        provider: run.provider,
+        model: run.model,
+        recipe: run.recipe,
+        interventionClass: run.interventionClass,
+        promptVersion: run.promptVersion,
+        createdAt: run.createdAt,
+        reviewedAt: run.reviewedAt,
+        outputSha256: run.outputSha256,
       }));
     return {
       id: image.id,
