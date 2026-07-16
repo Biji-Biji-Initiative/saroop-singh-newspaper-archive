@@ -150,8 +150,8 @@ export default function GalleryPage() {
               onClick={() => { setSelected(item); setSelectedAsset(sourceAsset(item)); setShowComparison(false); }}
               className="group overflow-hidden rounded-2xl border border-amber-900/10 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-700"
             >
-              <div className="relative aspect-[3/2] overflow-hidden bg-[#e9e1d4]">
-                <Image src={item.originalUrl} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw" className="object-contain p-2 transition duration-500 group-hover:scale-[1.03]" />
+              <div className="relative aspect-[4/3] overflow-hidden bg-[#e9e1d4]">
+                <Image src={item.originalUrl} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw" className="object-cover transition duration-500 group-hover:scale-[1.03]" />
               </div>
               <div className="p-4">
                 <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><ShieldCheck className="h-4 w-4" /> Preserved source{item.restorationCount > 0 ? ` + ${item.restorationCount} ${item.restorationCount === 1 ? 'labelled variation' : 'labelled variations'}` : ''}</p>
