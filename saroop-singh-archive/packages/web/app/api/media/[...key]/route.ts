@@ -1,7 +1,7 @@
-import { eq, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
 import { bucket } from "@/lib/archive-server";
 import { getDb } from "@/db";
-import { archiveImages } from "@/db/schema";
+import { archiveImages, restorationRuns } from "@/db/schema";
 import { getArchiveUser } from "@/lib/archive-auth";
 
 export const runtime = "nodejs";
@@ -9,7 +9,8 @@ export const runtime = "nodejs";
 export async function GET(_request: Request, context: { params: Promise<{ key: string[] }> }) {
   const { key } = await context.params;
   const objectKey = key.join("/");
-  const [image] = await getDb()
+  const db = getDb();
+  const [image] = await db
     .select()
     .from(archiveImages)
     .where(
@@ -19,7 +20,26 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
       ),
     )
     .limit(1);
-  const isPublished = image?.status === "published" && (image.publishedKey === objectKey || image.originalKey === objectKey);
+  const [publishedStudy] = await db
+    .select({ id: restorationRuns.id })
+    .from(restorationRuns)
+    .innerJoin(archiveImages, eq(restorationRuns.imageId, archiveImages.id))
+    .where(
+      and(
+        eq(restorationRuns.outputKey, objectKey),
+        eq(restorationRuns.status, "ready"),
+        inArray(restorationRuns.reviewStatus, ["approved", "recovered-historical"]),
+        isNotNull(restorationRuns.publishedAt),
+        eq(archiveImages.status, "published"),
+        isNotNull(archiveImages.publishedAt),
+      ),
+    )
+    .limit(1);
+  const isPublished = Boolean(
+    publishedStudy ||
+      (image?.status === "published" &&
+        (image.publishedKey === objectKey || image.originalKey === objectKey)),
+  );
   if (!isPublished) {
     const user = await getArchiveUser();
     if (!user) return new Response("Not found", { status: 404 });

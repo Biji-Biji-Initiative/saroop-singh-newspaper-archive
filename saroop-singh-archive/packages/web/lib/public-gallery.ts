@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { archiveImages, restorationRuns } from "@/db/schema";
 import {
@@ -11,6 +11,7 @@ export type PublicGalleryStudy = {
   id: string;
   type: string;
   url: string;
+  provenance: "recorded" | "recovered-historical";
   provider: string;
   model: string;
   recipe: string;
@@ -58,8 +59,14 @@ function parseTags(value: string): string[] {
   return parsed;
 }
 
-/** Public labels describe historical intent without leaking provider internals. */
-export function publicStudyLabel(recipe: string) {
+/** Public labels describe the visible intent without leaking private family notes. */
+export function publicStudyLabel(recipe: string, provenance: PublicGalleryStudy["provenance"]) {
+  if (provenance === "recovered-historical") {
+    const historicalIntent = recipe.replace(/^historical-/, "").replace(/([A-Z])/g, " $1").trim();
+    return historicalIntent
+      ? `Recovered · ${historicalIntent.replace(/^./, value => value.toUpperCase())}`
+      : "Recovered historical variation";
+  }
   switch (recipe) {
     case "conservative":
       return "Clean & preserve";
@@ -76,7 +83,9 @@ export function publicStudyLabel(recipe: string) {
 
 /**
  * The public gallery has one authority: published archive records and their
- * approved, explicitly published derivatives in the persistent archive.
+ * explicitly published derivatives in the persistent archive. Recovered
+ * historical variations have their own explicit state: they are visible for
+ * comparison, but never represented as reviewed modern restorations.
  */
 export async function listPublicGalleryRecords(): Promise<PublicGalleryRecord[]> {
   const db = getDb();
@@ -96,11 +105,12 @@ export async function listPublicGalleryRecords(): Promise<PublicGalleryRecord[]>
         and(
           inArray(restorationRuns.imageId, imageIds),
           eq(restorationRuns.status, "ready"),
-          eq(restorationRuns.reviewStatus, "approved"),
+          inArray(restorationRuns.reviewStatus, ["approved", "recovered-historical"]),
           isNotNull(restorationRuns.outputKey),
           isNotNull(restorationRuns.publishedAt),
         ),
-      ),
+      )
+      .orderBy(asc(restorationRuns.createdAt), asc(restorationRuns.id)),
     loadPublishedIdentityTags(imageIds),
   ]);
   const identitiesBySubject = new Map<string, PublicIdentityTag[]>();
@@ -120,20 +130,25 @@ export async function listPublicGalleryRecords(): Promise<PublicGalleryRecord[]>
   return images.map(image => {
     const identityTagsForImage = identitiesBySubject.get(image.id) || [];
     const studies = (runsByImage.get(image.id) || [])
-      .filter(run => run.outputKey === image.publishedKey)
-      .map(run => ({
-        id: run.id,
-        type: publicStudyLabel(run.recipe),
-        url: mediaUrl(run.outputKey!),
-        provider: run.provider,
-        model: run.model,
-        recipe: run.recipe,
-        interventionClass: run.interventionClass,
-        promptVersion: run.promptVersion,
-        createdAt: run.createdAt,
-        reviewedAt: run.reviewedAt,
-        outputSha256: run.outputSha256,
-      }));
+      .map(run => {
+        const provenance: PublicGalleryStudy["provenance"] = run.reviewStatus === "recovered-historical"
+          ? "recovered-historical"
+          : "recorded";
+        return {
+          id: run.id,
+          type: publicStudyLabel(run.recipe, provenance),
+          url: mediaUrl(run.outputKey!),
+          provenance,
+          provider: run.provider,
+          model: run.model,
+          recipe: run.recipe,
+          interventionClass: run.interventionClass,
+          promptVersion: run.promptVersion,
+          createdAt: run.createdAt,
+          reviewedAt: run.reviewedAt,
+          outputSha256: run.outputSha256,
+        };
+      });
     return {
       id: image.id,
       title: image.title,

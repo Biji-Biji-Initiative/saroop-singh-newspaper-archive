@@ -13,11 +13,12 @@ test("published database photographs use their original as the public authority"
   assert.doesNotMatch(loader, /originalImageUrl: mediaUrl\(image\.publishedKey/);
 });
 
-test("only the approved, published derivative is exposed for comparison", () => {
+test("every explicitly published variation is exposed with an explicit provenance state", () => {
   const loader = read("lib/public-gallery.ts");
-  assert.match(loader, /outputKey === image\.publishedKey/);
-  assert.match(loader, /eq\(restorationRuns\.reviewStatus, "approved"\)/);
+  assert.doesNotMatch(loader, /outputKey === image\.publishedKey/);
+  assert.match(loader, /\["approved", "recovered-historical"\]/);
   assert.match(loader, /isNotNull\(restorationRuns\.publishedAt\)/);
+  assert.match(loader, /recovered-historical/);
   assert.match(loader, /Approved restoration study/);
 });
 

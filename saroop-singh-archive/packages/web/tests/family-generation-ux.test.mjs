@@ -20,18 +20,14 @@ test("family uploads are guided, bounded, and clearly consented", () => {
 });
 
 test("generation review features one image with a labelled source-and-study carousel", () => {
-  const dialog = read("components/generation-review-dialog.tsx");
   const studio = read("app/studio/studio.tsx");
 
-  assert.match(dialog, /Choose what to feature/);
-  assert.match(dialog, /aria-label="Source and AI generations"/);
-  assert.match(dialog, /Compare to source/);
-  assert.match(dialog, /Model/);
-  assert.match(dialog, /Prompt set/);
-  assert.match(dialog, /Read the exact prompt and family notes/);
-  assert.match(studio, /GenerationReviewDialog/);
-  assert.match(studio, /privateProvenance/);
-  assert.match(studio, /Open this study in the visual review workspace/);
+  assert.match(studio, /Featured image and all AI variations/);
+  assert.match(studio, /aria-label="Source and AI generations"/);
+  assert.match(studio, /Open split slider/);
+  assert.match(studio, /View exact recorded prompt/);
+  assert.match(studio, /Feature this variation above/);
+  assert.doesNotMatch(studio, /visual review workspace/);
 });
 
 test("public provenance identifies AI studies without exposing private prompts", () => {
@@ -42,8 +38,9 @@ test("public provenance identifies AI studies without exposing private prompts",
   assert.match(loader, /model: run\.model/);
   assert.match(loader, /promptVersion: run\.promptVersion/);
   assert.doesNotMatch(loader, /prompt:\s*run\.prompt/);
-  assert.match(gallery, /aria-label="Source and approved AI studies"/);
-  assert.match(gallery, /Compare this study to the source/);
+  assert.match(gallery, /aria-label="Source and published image variations"/);
+  assert.match(gallery, /Open split slider/);
   assert.match(gallery, /AI study provenance/);
+  assert.match(gallery, /Recovered variation record/);
   assert.match(gallery, /Exact prompts remain in the private preservation record/);
 });

@@ -6,13 +6,13 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const records = await listPublicGalleryRecords();
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     collection: "Saroop Singh Archive",
     generatedAt: new Date().toISOString(),
     fixityAlgorithm: "SHA-256",
     counts: {
       publishedPhotographs: records.length,
-      approvedRestorationStudies: records.reduce((total, record) => total + record.studies.length, 0),
+      publishedComparisonVariations: records.reduce((total, record) => total + record.studies.length, 0),
     },
     photographs: records.map(record => ({
       id: record.id,
@@ -29,7 +29,7 @@ export async function GET() {
         width: record.original.width,
         height: record.original.height,
       },
-      approvedStudies: record.studies,
+      variations: record.studies,
     })),
   };
   return Response.json(manifest, {

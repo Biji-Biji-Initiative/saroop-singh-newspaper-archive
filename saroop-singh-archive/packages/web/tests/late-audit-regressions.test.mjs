@@ -15,8 +15,10 @@ test("media authorization resolves the complete object key instead of assuming a
   assert.match(route, /eq\(archiveImages\.publishedKey, objectKey\)/);
   assert.match(
     route,
-    /image\?\.status === "published" && \(image\.publishedKey === objectKey \|\| image\.originalKey === objectKey\)/,
+    /image\?\.status === "published" &&\s*\(image\.publishedKey === objectKey \|\| image\.originalKey === objectKey\)/,
   );
+  assert.match(route, /eq\(restorationRuns\.outputKey, objectKey\)/);
+  assert.match(route, /\["approved", "recovered-historical"\]/);
   assert.doesNotMatch(route, /\bkey\s*\[\s*1\s*\]/);
   assert.doesNotMatch(route, /\bgetImage\s*\(/);
 });

@@ -14,8 +14,10 @@ contributions, and a source-first restoration review studio.
 - Public contributions require no account and never publish automatically.
 - AI processing is optional, default-off, recorded separately from preservation
   consent, and blocked server-side when permission is absent.
-- Only approved, explicitly published restoration studies are public. Unreviewed
-  derivatives remain private and never stand in for a source image.
+- Only explicitly published comparison variations are public. Modern studies
+  require approval; recovered historical variations retain an explicit
+  unknown-provenance label. Unreviewed derivatives remain private and never
+  stand in for a source image.
 
 The recovered image set contains JPG/PNG source files only. Some are scans,
 some are newspaper crops or screenshots, and one is a known crop of another
@@ -132,6 +134,6 @@ Before every production promotion:
 ## Preservation exports
 
 `/api/archive/manifest` is generated from published canonical image records and
-their approved studies. The owner Studio metadata export includes image records,
+their explicitly published comparison variations. The owner Studio metadata export includes image records,
 restoration runs, audit events and private memory metadata. Media bytes still
 require a separate versioned object-storage backup and tested restore process.
