@@ -142,7 +142,7 @@ export default function GalleryPage() {
         {error && <div role="alert" className="my-12 rounded-xl border border-red-200 bg-red-50 p-5 text-red-800"><p>The photographic catalogue could not be loaded.</p><button type="button" onClick={loadGallery} className="mt-3 min-h-11 rounded-full bg-red-900 px-5 font-semibold text-white">Try again</button></div>}
         {!loading && !error && filtered.length === 0 && <p className="py-20 text-center text-neutral-500">No photographs match that search.</p>}
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map(item => (
             <button
               key={item.id}
@@ -150,10 +150,10 @@ export default function GalleryPage() {
               onClick={() => { setSelected(item); setSelectedAsset(sourceAsset(item)); setShowComparison(false); }}
               className="group overflow-hidden rounded-2xl border border-amber-900/10 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-700"
             >
-              <div className="relative aspect-[4/3] overflow-hidden bg-stone-200">
-                <Image src={item.originalUrl} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition duration-500 group-hover:scale-[1.03]" />
+              <div className="relative aspect-[3/2] overflow-hidden bg-[#e9e1d4]">
+                <Image src={item.originalUrl} alt={item.title} fill unoptimized sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw" className="object-contain p-2 transition duration-500 group-hover:scale-[1.03]" />
               </div>
-              <div className="p-5">
+              <div className="p-4">
                 <p className="mb-3 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><ShieldCheck className="h-4 w-4" /> Preserved source{item.restorationCount > 0 ? ` + ${item.restorationCount} ${item.restorationCount === 1 ? 'labelled variation' : 'labelled variations'}` : ''}</p>
                 <p className="font-serif text-xl leading-snug">{item.title}</p>
                 <div className="mt-3 flex items-center justify-between gap-3 text-sm text-neutral-500">
