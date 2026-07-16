@@ -7,14 +7,15 @@ import ts from "typescript";
 const root = new URL("..", import.meta.url).pathname;
 
 function loadPureArchiveHelpers() {
-  const source = readFileSync(join(root, "lib/archive-server.ts"), "utf8");
+  const source = readFileSync(join(root, "lib/archive-server.ts"), "utf8")
+    .replace(/export\s*\{[\s\S]*?\}\s*from\s*"@\/lib\/restoration-contract";\s*/, "");
   const javascript = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
   }).outputText
     .replace(/^import .*;\s*$/gm, "")
     .replace(/\bexport\s+/g, "");
   return new Function(
-    `${javascript}\nreturn { readSafeRasterDimensions, validateRestorationAspectRatio, MAX_RESTORATION_ASPECT_RATIO_DRIFT };`,
+    `const RESTORATION_MODELS = {};\n${javascript}\nreturn { readSafeRasterDimensions, validateRestorationAspectRatio, MAX_RESTORATION_ASPECT_RATIO_DRIFT };`,
   )();
 }
 

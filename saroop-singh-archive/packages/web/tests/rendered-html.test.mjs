@@ -175,10 +175,20 @@ function contributionForm({
 }
 
 test("persists private family workflows behind signed Studio and AI consent gates", async () => {
+  const sourceLockedReturnTo = "/studio?image=00000000-0000-4000-8000-000000000099&commission=1#new-render";
+  const protectedCommission = await fetch(`${origin}${sourceLockedReturnTo}`, {
+    redirect: "manual",
+  });
+  assert.equal(protectedCommission.status, 200);
+  assert.match(
+    await protectedCommission.text(),
+    /return_to=%2Fstudio%3Fimage%3D00000000-0000-4000-8000-000000000099%26commission%3D1%23new-render/,
+  );
+
   const login = new FormData();
   login.set("email", "archive-test@example.com");
   login.set("password", "test-only-password-that-is-not-secret");
-  login.set("returnTo", "/studio");
+  login.set("returnTo", sourceLockedReturnTo);
   const loginResponse = await fetch(`${origin}/api/studio/session`, {
     method: "POST",
     headers: { origin: publicOrigin },
@@ -186,7 +196,7 @@ test("persists private family workflows behind signed Studio and AI consent gate
     redirect: "manual",
   });
   assert.equal(loginResponse.status, 303);
-  assert.equal(loginResponse.headers.get("location"), `${publicOrigin}/studio`);
+  assert.equal(loginResponse.headers.get("location"), `${publicOrigin}${sourceLockedReturnTo}`);
   const setCookie = loginResponse.headers.get("set-cookie") || "";
   assert.match(setCookie, /saroop_archive_admin=/);
   assert.match(setCookie, /HttpOnly/i);

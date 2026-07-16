@@ -64,6 +64,10 @@ function generationAsset(restoration: GalleryRestoration, index: number): Galler
   };
 }
 
+function commissionHref(item: GalleryItem) {
+  return `/studio?image=${encodeURIComponent(item.id)}&commission=1#new-render`;
+}
+
 export default function GalleryPage() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [query, setQuery] = useState('');
@@ -197,6 +201,13 @@ export default function GalleryPage() {
                 <a href={selected.originalUrl} download={selected.original.filename} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1f2a24] px-3 text-sm font-semibold text-white"><Download className="h-4 w-4" /> Download source</a>
               </div>
               <Link href={`/gallery/${selected.id}`} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-xl bg-amber-300 px-4 text-sm font-bold text-[#17241d]">Open full collection story</Link>
+              <section aria-label="Commission a fresh AI study" className="mt-3 rounded-2xl border border-emerald-900/15 bg-emerald-50 p-4 text-emerald-950">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><Sparkles className="h-4 w-4" /> For family curators</p>
+                <h3 className="mt-2 font-serif text-2xl leading-tight">Commission a fresh AI study from this source.</h3>
+                <p className="mt-2 text-xs leading-5 text-emerald-950/75">Start a new, source-locked study with GPT Image 2, Nano Banana 2, or Nano Banana Pro. The current variation above is never used as the input.</p>
+                <Link href={commissionHref(selected)} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"><Sparkles className="h-4 w-4" /> Commission new AI render</Link>
+                <p className="mt-2 text-center text-[11px] leading-4 text-emerald-950/70">Private studio sign-in required · Every run stays reviewable before publication</p>
+              </section>
               <div className="mt-3 rounded-xl border border-emerald-900/10 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><p className="font-semibold">File fixity recorded with SHA-256</p>{selected.original.sha256 && <p className="mt-1 break-all font-mono text-[10px] text-emerald-900/75">{selected.original.sha256}</p>}<p className="mt-1">{selected.original.filename} · {(selected.original.bytes / 1024).toFixed(0)} KB</p></div>
               <p className="mt-6 rounded-xl bg-amber-100/70 p-3 text-xs leading-5 text-amber-950"><strong>{selectedAsset?.label || 'Preserved source'}:</strong> The best available source file may itself be a scan, screenshot, or crop. Every other option is a labelled derivative and must not replace it.</p>
               {selectedAsset?.kind === 'generation' && (
