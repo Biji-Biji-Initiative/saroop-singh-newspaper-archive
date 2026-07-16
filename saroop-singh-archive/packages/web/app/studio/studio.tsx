@@ -8,6 +8,7 @@ import {
   CloudUpload,
   Download,
   ImageIcon,
+  Images,
   Loader2,
   LockKeyhole,
   RotateCcw,
@@ -19,14 +20,23 @@ import {
   UserRoundCheck,
   XCircle,
 } from "lucide-react";
-import { RestorationCompare } from "@/components/restoration-compare";
+import {
+  GenerationReviewDialog,
+  type GenerationAsset,
+} from "@/components/generation-review-dialog";
 import Image from "next/image";
 
 type Run = {
   id: string;
+  provider: string;
   model: string;
   recipe: string;
   prompt: string;
+  promptVersion?: string;
+  interventionClass?: string;
+  reviewStatus?: string;
+  createdAt?: string;
+  outputSha256?: string | null;
   status: string;
   error?: string | null;
   outputUrl?: string | null;
@@ -125,6 +135,8 @@ export function Studio({ displayName }: { displayName: string }) {
   const [aiConsentEvidence, setAiConsentEvidence] = useState("");
   const [metadataDirty, setMetadataDirty] = useState(false);
   const [uploadPreview, setUploadPreview] = useState<{ url: string; name: string; size: number }>();
+  const [generationViewerOpen, setGenerationViewerOpen] = useState(false);
+  const [generationViewerAssetId, setGenerationViewerAssetId] = useState<string>();
   const selected = useMemo(
     () => items.find((item) => item.id === selectedId) || items[0],
     [items, selectedId],
@@ -145,6 +157,29 @@ export function Studio({ displayName }: { displayName: string }) {
       selected.publishedUrl === selected.originalUrl,
   );
   const hasReadyStudy = Boolean(selected?.runs.some(run => run.status === "ready" && run.outputUrl));
+  const sourceAsset = useMemo<GenerationAsset | undefined>(() => selected ? ({
+    id: `source-${selected.id}`,
+    label: "Preserved source",
+    url: selected.originalUrl,
+    kind: "source",
+  }) : undefined, [selected]);
+  const generationAssets = useMemo<GenerationAsset[]>(() => selected?.runs
+    .filter(run => run.status === "ready" && Boolean(run.outputUrl))
+    .map((run, index) => ({
+      id: run.id,
+      label: recipes.find(option => option.id === run.recipe)?.name || `AI study ${index + 1}`,
+      url: run.outputUrl!,
+      kind: "generation",
+      provider: run.provider,
+      model: run.model,
+      recipe: run.recipe,
+      interventionClass: run.interventionClass,
+      promptVersion: run.promptVersion,
+      prompt: run.prompt,
+      createdAt: run.createdAt,
+      reviewStatus: run.reviewStatus,
+      outputSha256: run.outputSha256,
+    })) || [], [selected]);
   const refresh = useCallback(async () => {
     try {
       const response = await fetch("/api/studio/images");
@@ -168,6 +203,12 @@ export function Studio({ displayName }: { displayName: string }) {
     setAiConsentEvidence("");
     setMetadataDirty(false);
     setMessage("");
+  }
+
+  function openGenerationViewer(assetId?: string) {
+    if (!sourceAsset) return;
+    setGenerationViewerAssetId(assetId || sourceAsset.id);
+    setGenerationViewerOpen(true);
   }
 
   async function upload(event: React.FormEvent<HTMLFormElement>) {
@@ -558,7 +599,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   sizes="(max-width: 1024px) 100vw, 70vw"
                   className="max-h-[65vh] w-full bg-neutral-950 object-contain"
                 />
-                <div className="grid gap-3 border-t p-5 text-xs text-neutral-600 sm:grid-cols-[1fr_auto]">
+                <div className="grid gap-3 border-t p-5 text-xs text-neutral-600 sm:grid-cols-[1fr_auto_auto]">
                   <div>
                     <p className="font-semibold text-neutral-900">
                       {selected.originalName}
@@ -582,8 +623,27 @@ export function Studio({ displayName }: { displayName: string }) {
                   >
                     Download original
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => openGenerationViewer()}
+                    className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-300 px-4 font-semibold text-[#17241d]"
+                  >
+                    <Images className="h-4 w-4" /> View source & studies
+                  </button>
                 </div>
               </div>
+              {sourceAsset && (
+                <GenerationReviewDialog
+                  key={`${generationViewerOpen}-${generationViewerAssetId || sourceAsset.id}`}
+                  open={generationViewerOpen}
+                  onOpenChange={setGenerationViewerOpen}
+                  title={selected.title}
+                  source={sourceAsset}
+                  generations={generationAssets}
+                  initialAssetId={generationViewerAssetId}
+                  privateProvenance
+                />
+              )}
               <form
                   key={selected.id}
                   onChange={() => setMetadataDirty(true)}
@@ -865,7 +925,7 @@ export function Studio({ displayName }: { displayName: string }) {
                   key={run.id}
                   className="overflow-hidden rounded-3xl border border-amber-950/10 bg-white shadow-sm"
                 >
-                  <div className="border-b p-4 sm:p-6"><div className="mb-4 flex flex-wrap items-center justify-between gap-2"><p className="text-xs font-semibold uppercase tracking-[.16em]">{recipes.find(option => option.id === run.recipe)?.name || run.recipe} · {run.model}</p><span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">{run.status}</span></div>{run.outputUrl ? <RestorationCompare originalUrl={selected.originalUrl} studyUrl={run.outputUrl} title={selected.title} studyLabel={recipes.find(option => option.id === run.recipe)?.name || "Restoration study"} /> : <div className="flex aspect-[4/3] items-center justify-center rounded-2xl bg-stone-100 p-6 text-center text-sm text-neutral-500">{run.error || "Processing…"}</div>}</div>
+                  <div className="border-b p-4 sm:p-6"><div className="flex flex-wrap items-center justify-between gap-2"><div><p className="text-xs font-semibold uppercase tracking-[.16em]">{recipes.find(option => option.id === run.recipe)?.name || run.recipe}</p><p className="mt-1 text-sm text-neutral-500">{run.model} · {run.provider} · {run.promptVersion || "prompt version recorded"}</p></div><span className="rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold">{run.status}</span></div>{run.outputUrl ? <button type="button" onClick={() => openGenerationViewer(run.id)} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-neutral-950 px-5 font-semibold text-white"><Images className="h-5 w-5" /> Open this study in the visual review workspace</button> : <div className="mt-4 flex min-h-28 items-center justify-center rounded-2xl bg-stone-100 p-6 text-center text-sm text-neutral-500">{run.error || "Processing…"}</div>}</div>
                   <div className="p-5">
                     <details>
                       <summary className="cursor-pointer text-sm font-semibold">View exact preservation prompt</summary>

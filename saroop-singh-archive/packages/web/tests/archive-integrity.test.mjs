@@ -308,13 +308,15 @@ test('one comparison instrument covers modal and Studio restoration studies', ()
   const compare = readFileSync(join(root, 'components/restoration-compare.tsx'), 'utf8');
   const modal = readFileSync(join(root, 'app/gallery/page.tsx'), 'utf8');
   const studio = readFileSync(join(root, 'app/studio/studio.tsx'), 'utf8');
+  const reviewDialog = readFileSync(join(root, 'components/generation-review-dialog.tsx'), 'utf8');
   assert.match(compare, /type="range"/);
   assert.match(compare, /sourceLabel = "Source"/);
   assert.match(compare, />Split<|>Split\s*</);
   assert.match(compare, />Study<|>Study\s*</);
   assert.match(compare, /requestFullscreen/);
   assert.match(modal, /<RestorationCompare/);
-  assert.match(studio, /<RestorationCompare/);
+  assert.match(studio, /<GenerationReviewDialog/);
+  assert.match(reviewDialog, /<RestorationCompare/);
 });
 
 test('restoration presents three family intents and keeps engine choice advanced', () => {
@@ -326,7 +328,7 @@ test('restoration presents three family intents and keeps engine choice advanced
   assert.match(studio, /Advanced engine choice/);
   assert.match(contribute, /name="restorationPreference"/);
   assert.match(contribute, /name="aiProcessingConsent"/);
-  assert.match(contribute, /Optional: allow a private AI restoration study/);
+  assert.match(contribute, /May the archive create a private AI restoration study/);
   assert.match(contribute, /Preserve only selected/);
 });
 

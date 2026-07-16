@@ -3,10 +3,31 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Download, ExternalLink, Images, Search, ShieldCheck, X } from 'lucide-react';
+import { Download, ExternalLink, Images, Info, Search, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { useModalFocus } from '@/hooks/useModalFocus';
 import { RestorationCompare } from '@/components/restoration-compare';
 import { fetchAllPublicGallery } from '@/lib/fetch-public-gallery';
+
+type GalleryRestoration = {
+  id: string;
+  type: string;
+  url: string;
+  provider: string;
+  model: string;
+  recipe: string;
+  interventionClass: string;
+  promptVersion: string;
+  createdAt: string;
+  reviewedAt: string | null;
+  outputSha256: string | null;
+};
+
+type GalleryAsset = {
+  id: string;
+  label: string;
+  url: string;
+  kind: 'source' | 'generation';
+} & Partial<Omit<GalleryRestoration, 'id' | 'type' | 'url'>>;
 
 interface GalleryItem {
   id: string;
@@ -15,20 +36,42 @@ interface GalleryItem {
   familyMember?: string;
   tags: string[];
   originalUrl: string;
-  restorations: Array<{ id: string; type?: string; url: string }>;
+  restorations: GalleryRestoration[];
   original: { filename: string; mimeType: string; bytes: number; sha256?: string | null };
   sourceProvenance: string;
   restorationCount: number;
+}
+
+function labelGeneration(restoration: GalleryRestoration, index: number) {
+  return restoration.type || `AI study ${index + 1}`;
+}
+
+function sourceAsset(item: GalleryItem): GalleryAsset {
+  return {
+    id: `source-${item.id}`,
+    label: 'Preserved source',
+    url: item.originalUrl,
+    kind: 'source',
+  };
+}
+
+function generationAsset(restoration: GalleryRestoration, index: number): GalleryAsset {
+  return {
+    ...restoration,
+    label: labelGeneration(restoration, index),
+    kind: 'generation',
+  };
 }
 
 export default function GalleryPage() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<GalleryItem | null>(null);
-  const [selectedAsset, setSelectedAsset] = useState<{ label: string; url: string } | null>(null);
+  const [selectedAsset, setSelectedAsset] = useState<GalleryAsset | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); }, []);
+  const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); setShowComparison(false); }, []);
   const viewerRef = useModalFocus<HTMLDivElement>(Boolean(selected), closeViewer);
 
   const requestGallery = useCallback(() => fetchAllPublicGallery<GalleryItem>(), []);
@@ -103,7 +146,7 @@ export default function GalleryPage() {
             <button
               key={item.id}
               type="button"
-              onClick={() => { setSelected(item); setSelectedAsset({ label: 'Source', url: item.originalUrl }); }}
+              onClick={() => { setSelected(item); setSelectedAsset(sourceAsset(item)); setShowComparison(false); }}
               className="group overflow-hidden rounded-2xl border border-amber-900/10 bg-white text-left shadow-sm transition hover:-translate-y-1 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-amber-700"
             >
               <div className="relative aspect-[4/3] overflow-hidden bg-stone-200">
@@ -128,8 +171,8 @@ export default function GalleryPage() {
             <button type="button" onClick={closeViewer} aria-label="Close photograph" className="absolute right-[max(.75rem,env(safe-area-inset-right))] top-[max(.75rem,env(safe-area-inset-top))] z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/80 text-white shadow-lg ring-1 ring-white/20 hover:bg-black focus:outline-none focus:ring-4 focus:ring-amber-300">
               <X className="h-5 w-5" />
             </button>
-            <div className={`relative min-h-0 overflow-hidden bg-neutral-950 ${selectedAsset?.label !== 'Source' ? 'flex items-center overflow-y-auto p-3 sm:p-5' : ''}`}>
-              {selectedAsset?.label !== 'Source' && selectedAsset?.url ? <RestorationCompare originalUrl={selected.originalUrl} studyUrl={selectedAsset.url} title={selected.title} studyLabel={selectedAsset.label} className="mx-auto w-full max-w-4xl text-white" /> : <><Image src={selected.originalUrl} alt={`${selected.title} — best available source`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain p-2 sm:p-4" /><span className="absolute bottom-3 left-3 rounded-full bg-emerald-950/90 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] text-white">Fit to screen · complete source</span></>}
+            <div className={`relative min-h-0 overflow-hidden bg-neutral-950 ${showComparison ? 'flex items-center overflow-y-auto p-3 sm:p-5' : ''}`}>
+              {showComparison && selectedAsset?.kind === 'generation' && selectedAsset.url ? <><RestorationCompare originalUrl={selected.originalUrl} studyUrl={selectedAsset.url} title={selected.title} studyLabel={selectedAsset.label} className="mx-auto w-full max-w-4xl text-white" /><button type="button" onClick={() => setShowComparison(false)} className="absolute bottom-4 right-4 min-h-11 rounded-full bg-white px-4 text-sm font-semibold text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300">Back to featured study</button></> : <><Image src={selectedAsset?.url || selected.originalUrl} alt={`${selected.title} — ${selectedAsset?.label || 'preserved source'}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain p-2 sm:p-4" /><span className={`absolute bottom-3 left-3 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] ${selectedAsset?.kind === 'generation' ? 'bg-amber-300 text-[#17241d]' : 'bg-emerald-950/90 text-white'}`}>{selectedAsset?.kind === 'generation' ? selectedAsset.label : 'Fit to screen · complete source'}</span></>}
             </div>
             <div className="min-h-0 overflow-y-auto overscroll-contain p-5 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-10">
               <Images className="h-7 w-7 text-amber-800" />
@@ -143,16 +186,24 @@ export default function GalleryPage() {
               <Link href={`/gallery/${selected.id}`} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-xl bg-amber-300 px-4 text-sm font-bold text-[#17241d]">Open full collection story</Link>
               <div className="mt-3 rounded-xl border border-emerald-900/10 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><p className="font-semibold">File fixity recorded with SHA-256</p>{selected.original.sha256 && <p className="mt-1 break-all font-mono text-[10px] text-emerald-900/75">{selected.original.sha256}</p>}<p className="mt-1">{selected.original.filename} · {(selected.original.bytes / 1024).toFixed(0)} KB</p></div>
               <div className="mt-6">
-                <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-900">View source and studies</p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button type="button" aria-pressed={selectedAsset?.label === 'Source'} onClick={() => setSelectedAsset({ label: 'Source', url: selected.originalUrl })} className={`min-h-11 rounded-full px-4 py-2 text-sm font-semibold ${selectedAsset?.label === 'Source' ? 'bg-[#1f2a24] text-white' : 'border border-amber-900/20 bg-white'}`}>Source</button>
-                  {selected.restorations.map((restoration, index) => {
-                    const label = restoration.type ? restoration.type.replace(/([A-Z])/g, ' $1').replace(/^./, value => value.toUpperCase()) : `Study ${index + 1}`;
-                    return <button key={restoration.id} type="button" aria-pressed={selectedAsset?.url === restoration.url} onClick={() => setSelectedAsset({ label, url: restoration.url })} className={`min-h-11 rounded-full px-4 py-2 text-sm font-semibold ${selectedAsset?.url === restoration.url ? 'bg-amber-800 text-white' : 'border border-amber-900/20 bg-white'}`}>{label}</button>;
+                <p className="text-xs font-semibold uppercase tracking-[.18em] text-amber-900">Feature an image, then compare</p>
+                <div role="list" aria-label="Source and approved AI studies" className="mt-3 flex snap-x gap-3 overflow-x-auto pb-2">
+                  {[sourceAsset(selected), ...selected.restorations.map(generationAsset)].map(asset => {
+                    const active = selectedAsset?.id === asset.id;
+                    return <div key={asset.id} role="listitem" className="w-32 shrink-0 snap-start"><button type="button" aria-pressed={active} onClick={() => { setSelectedAsset(asset); setShowComparison(false); }} className={`w-full overflow-hidden rounded-2xl border-2 text-left transition focus:outline-none focus:ring-4 focus:ring-amber-300 ${active ? 'border-amber-700 bg-amber-50' : 'border-amber-900/15 bg-white hover:border-amber-700/50'}`}><span className="relative block aspect-[4/3] bg-stone-200"><Image src={asset.url} alt="" fill unoptimized sizes="128px" className="object-cover" /></span><span className="block p-2"><span className="block truncate text-xs font-bold">{asset.label}</span><span className="mt-1 block truncate text-[10px] text-neutral-500">{asset.kind === 'source' ? 'Original authority' : asset.model || 'AI study'}</span></span></button></div>;
                   })}
                 </div>
-                <p className="mt-3 rounded-xl bg-amber-100/70 p-3 text-xs leading-5 text-amber-950"><strong>{selectedAsset?.label || 'Source'}:</strong> The best available source file may itself be a scan, screenshot, or crop. Every other option is a labelled derivative and must not replace it.</p>
+                <p className="mt-3 rounded-xl bg-amber-100/70 p-3 text-xs leading-5 text-amber-950"><strong>{selectedAsset?.label || 'Preserved source'}:</strong> The best available source file may itself be a scan, screenshot, or crop. Every other option is a labelled derivative and must not replace it.</p>
               </div>
+              {selectedAsset?.kind === 'generation' && (
+                <div className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4 text-sm">
+                  <p className="flex items-center gap-2 font-semibold text-amber-950"><Sparkles className="h-4 w-4" /> AI study provenance</p>
+                  <button type="button" onClick={() => setShowComparison(true)} className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-[#1f2a24] px-4 text-sm font-semibold text-white focus:outline-none focus:ring-4 focus:ring-amber-300">Compare this study to the source</button>
+                  <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2"><div><dt className="text-neutral-500">Model</dt><dd className="mt-1 font-semibold">{selectedAsset.model}</dd></div><div><dt className="text-neutral-500">Provider</dt><dd className="mt-1 font-semibold">{selectedAsset.provider}</dd></div><div><dt className="text-neutral-500">Restoration intent</dt><dd className="mt-1 font-semibold">{selectedAsset.label}</dd></div><div><dt className="text-neutral-500">Prompt version</dt><dd className="mt-1 font-semibold">{selectedAsset.promptVersion}</dd></div><div><dt className="text-neutral-500">Intervention class</dt><dd className="mt-1 font-semibold">{selectedAsset.interventionClass}</dd></div><div><dt className="text-neutral-500">Human review</dt><dd className="mt-1 font-semibold">{selectedAsset.reviewedAt ? new Date(selectedAsset.reviewedAt).toLocaleDateString() : 'Approved before publication'}</dd></div></dl>
+                  {selectedAsset.outputSha256 && <p className="mt-3 break-all font-mono text-[10px] text-neutral-500">Output SHA-256 {selectedAsset.outputSha256}</p>}
+                  <p className="mt-3 flex gap-2 rounded-xl bg-stone-100 p-3 text-xs leading-5 text-neutral-600"><Info className="h-4 w-4 shrink-0" /> Exact prompts remain in the private preservation record because they can include family notes. The model, provider, intent, prompt version and review are shown here.</p>
+                </div>
+              )}
               <div className="mt-7 flex flex-wrap gap-2">
                 {selected.tags.map(tag => <span key={tag} className="rounded-full bg-amber-900/8 px-3 py-1.5 text-xs font-medium text-amber-950">{tag}</span>)}
               </div>
