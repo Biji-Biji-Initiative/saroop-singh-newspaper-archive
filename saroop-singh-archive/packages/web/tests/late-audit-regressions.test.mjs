@@ -48,8 +48,8 @@ test("gallery keeps direct family image-making beside the compared variation", (
   const familyCuration = read("app/api/family/studies/[id]/route.ts");
 
   assert.match(gallery, /FamilyStudyMaker/);
-  assert.match(maker, /Make a version from the source/);
-  assert.match(maker, /Using \{selectedModel\.label\}\. The original remains untouched/);
+  assert.match(maker, /Make a new version/);
+  assert.match(maker, /Starts with \{selectedModel\.label\}\. The original remains untouched/);
   assert.match(maker, /useState<RestorationModel>\("gpt-image-2"\)/);
   assert.match(familyCuration, /restoration:family-curation-updated/);
   assert.match(familyCuration, /family-workspace/);

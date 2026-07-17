@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Link2, Loader2, Sparkles, WandSparkles } from "lucide-react";
+import { Loader2, Sparkles, WandSparkles } from "lucide-react";
 import {
   buildRestorationPrompt,
   RESTORATION_MODEL_OPTIONS,
@@ -25,7 +25,7 @@ export type FamilyStudy = {
   status: string;
   error: string | null;
   createdAt: string;
-  private: boolean;
+  workspaceOnly: boolean;
   familyRating: number | null;
   galleryRank: number | null;
   galleryVisibility: "visible" | "hidden";
@@ -39,18 +39,14 @@ const choices: Array<{ id: RestorationRecipe; label: string; note: string; actio
 
 export function FamilyStudyMaker({
   image,
-  access,
   onCreated,
 }: {
   image: { id: string; title: string };
-  access: "loading" | "active" | "inactive";
   onCreated: (study: FamilyStudy) => void;
 }) {
   const [recipe, setRecipe] = useState<RestorationRecipe>("conservative");
   const [model, setModel] = useState<RestorationModel>("gpt-image-2");
   const [notes, setNotes] = useState("");
-  const [invite, setInvite] = useState("");
-  const [inviteError, setInviteError] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const selectedModel = useMemo(
@@ -85,45 +81,10 @@ export function FamilyStudyMaker({
     }
   }
 
-  function openFamilyWorkspace() {
-    setInviteError("");
-    try {
-      const url = new URL(invite.trim(), window.location.origin);
-      if (url.origin !== window.location.origin || url.pathname !== "/family" || !url.searchParams.get("access")) {
-        throw new Error("not a family link");
-      }
-      url.searchParams.set("return_to", `/gallery?image=${encodeURIComponent(image.id)}`);
-      window.location.assign(url.toString());
-    } catch {
-      setInviteError("Paste the family link you were sent. It starts with this archive’s /family address.");
-    }
-  }
-
-  if (access === "loading") {
-    return <section className="rounded-2xl border border-emerald-900/15 bg-emerald-50 p-4 text-emerald-950" aria-busy="true" aria-label="Family image workspace">
-      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><Sparkles className="h-4 w-4" /> Family image workspace</p>
-      <p className="mt-2 text-sm leading-5 text-emerald-950/75">Opening family tools for this photograph…</p>
-    </section>;
-  }
-
-  if (access === "inactive") {
-    return <section className="rounded-2xl border border-emerald-900/15 bg-emerald-50 p-4 text-emerald-950" aria-labelledby="unlock-family-workspace-heading">
-      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><Sparkles className="h-4 w-4" /> Family image workspace</p>
-      <h3 id="unlock-family-workspace-heading" className="mt-2 font-serif text-2xl leading-tight">Make a version from this source.</h3>
-      <p className="mt-2 text-sm leading-5 text-emerald-950/75">Open your family invitation once on this browser—no account, password, or Studio. You will return to this exact photograph with the maker ready.</p>
-      <form className="mt-4 flex gap-2" onSubmit={event => { event.preventDefault(); openFamilyWorkspace(); }}>
-        <label className="sr-only" htmlFor="family-invite">Family invitation link</label>
-        <input id="family-invite" value={invite} onChange={event => setInvite(event.target.value)} className="field min-w-0 flex-1 bg-white text-sm" type="url" inputMode="url" autoComplete="off" spellCheck="false" placeholder="Paste family link" />
-        <button type="submit" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-3 text-sm font-semibold text-white transition hover:bg-emerald-950"><Link2 className="h-4 w-4" /> Open</button>
-      </form>
-      {inviteError && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm leading-5 text-red-800">{inviteError}</p>}
-    </section>;
-  }
-
   return <section className="rounded-2xl border border-emerald-900/15 bg-emerald-50 p-4 text-emerald-950" aria-labelledby="make-version-heading">
     <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><Sparkles className="h-4 w-4" /> Family workspace</p>
-    <h3 id="make-version-heading" className="mt-2 font-serif text-2xl leading-tight">Make a version from the source.</h3>
-    <p className="mt-2 text-sm leading-5 text-emerald-950/75">Choose a treatment and compare it here. The preserved source stays untouched; new work starts private.</p>
+    <h3 id="make-version-heading" className="mt-2 font-serif text-2xl leading-tight">Make a new version.</h3>
+    <p className="mt-2 text-sm leading-5 text-emerald-950/75">Pick a direction and create it. Every new result starts from the preserved source and appears beside it below.</p>
 
     <div className="mt-4 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Choose the look for this new image">
       {choices.map(choice => <button key={choice.id} type="button" role="radio" aria-checked={recipe === choice.id} onClick={() => setRecipe(choice.id)} className={`flex min-h-20 flex-col items-start justify-center rounded-xl border px-3 text-left transition focus:outline-none focus:ring-4 focus:ring-amber-300 ${recipe === choice.id ? "border-emerald-800 bg-white shadow-sm" : "border-transparent bg-white/60 hover:border-emerald-800/30"}`}><span className="font-semibold leading-tight">{choice.label}</span><span className="mt-1 text-xs leading-4 text-emerald-950/65">{choice.note}</span></button>)}
@@ -133,7 +94,7 @@ export function FamilyStudyMaker({
       {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <WandSparkles className="h-5 w-5" />}
       {busy ? "Making your new image…" : selectedChoice.actionLabel}
     </button>
-    <p className="mt-2 text-center text-xs leading-5 text-emerald-950/70">Using {selectedModel.label}. The original remains untouched.</p>
+    <p className="mt-2 text-center text-xs leading-5 text-emerald-950/70">Starts with {selectedModel.label}. The original remains untouched.</p>
 
     <details className="mt-4 rounded-xl border border-emerald-900/10 bg-white/70 p-3">
       <summary className="cursor-pointer text-sm font-semibold">Fine-tune this version</summary>

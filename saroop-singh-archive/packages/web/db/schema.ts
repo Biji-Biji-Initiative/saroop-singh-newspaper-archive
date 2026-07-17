@@ -60,10 +60,10 @@ export const restorationRuns = sqliteTable("restoration_runs", {
   galleryCuratedAt: text("gallery_curated_at"),
   status: text("status").notNull().default("processing"),
   error: text("error"),
-  familySessionHash: text("family_session_hash"),
+  familyWorkspaceHash: text("family_workspace_hash"),
   createdBy: text("created_by").notNull(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
-}, table => [index("restoration_runs_image_idx").on(table.imageId), index("restoration_runs_review_idx").on(table.reviewStatus), index("restoration_runs_gallery_visibility_idx").on(table.imageId, table.galleryVisibility), index("restoration_runs_family_session_idx").on(table.familySessionHash)]);
+}, table => [index("restoration_runs_image_idx").on(table.imageId), index("restoration_runs_review_idx").on(table.reviewStatus), index("restoration_runs_gallery_visibility_idx").on(table.imageId, table.galleryVisibility), index("restoration_runs_family_workspace_idx").on(table.familyWorkspaceHash)]);
 
 export const archiveEvents = sqliteTable("archive_events", {
   id: text("id").primaryKey(),
