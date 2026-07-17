@@ -62,14 +62,14 @@ export async function createRestorationDerivative({
   recipe,
   notes,
   createdBy,
-  familySessionHash,
+  familyWorkspaceHash,
 }: {
   imageId: string;
   model: RestorationModel;
   recipe: RestorationRecipe;
   notes?: string;
   createdBy: string;
-  familySessionHash?: string;
+  familyWorkspaceHash?: string;
 }) {
   const image = await getImage(imageId);
   if (!image) throw new RestorationRequestError("Photograph not found.", 404);
@@ -102,7 +102,7 @@ export async function createRestorationDerivative({
     interventionClass,
     promptVersion: RESTORATION_PROMPT_VERSION,
     createdBy,
-    familySessionHash,
+    familyWorkspaceHash,
   });
 
   try {

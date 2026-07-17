@@ -23,15 +23,15 @@ function rankedFirst<T extends { galleryRank: number | null; createdAt: string; 
   return leftRank - rightRank || left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id);
 }
 
-function familyAccessError() {
+function familyWorkspaceUnavailable() {
   return familyJson(
     {
       error: {
-        code: "FAMILY_ACCESS_REQUIRED",
-        message: "Open the family link once to make and view private image studies here.",
+        code: "FAMILY_WORKSPACE_UNAVAILABLE",
+        message: "Family image-making is not configured yet.",
       },
     },
-    401,
+    503,
   );
 }
 
@@ -44,8 +44,8 @@ function outputUrl(key: string | null) {
 }
 
 export async function GET(request: Request) {
-  const workspace = await getFamilyWorkspace();
-  if (!workspace) return familyAccessError();
+  const workspace = getFamilyWorkspace();
+  if (!workspace) return familyWorkspaceUnavailable();
 
   const imageId = new URL(request.url).searchParams.get("image") || "";
   if (!imageIdPattern.test(imageId)) {
@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       and(
         eq(restorationRuns.imageId, imageId),
         or(
-          eq(restorationRuns.familySessionHash, workspace.sessionHash),
+          eq(restorationRuns.familyWorkspaceHash, workspace.hash),
           and(
             inArray(restorationRuns.reviewStatus, ["approved", "recovered-historical"]),
             isNotNull(restorationRuns.outputKey),
@@ -87,7 +87,7 @@ export async function GET(request: Request) {
         status: run.status,
         error: run.error,
         createdAt: run.createdAt,
-        private: run.familySessionHash === workspace.sessionHash && !["approved", "recovered-historical"].includes(run.reviewStatus),
+        workspaceOnly: run.familyWorkspaceHash === workspace.hash && !["approved", "recovered-historical"].includes(run.reviewStatus),
         familyRating: run.familyRating,
         galleryRank: run.galleryRank,
         galleryVisibility: run.galleryVisibility === "hidden" ? "hidden" : "visible",
@@ -100,11 +100,9 @@ export async function POST(request: Request) {
   if (!hasTrustedArchiveOrigin(request)) {
     return familyJson({ error: { code: "UNTRUSTED_ORIGIN", message: "Untrusted request origin." } }, 403);
   }
-  if (!familyWorkspaceConfigured()) {
-    return familyJson({ error: { code: "FAMILY_ACCESS_UNAVAILABLE", message: "Family image-making is not configured yet." } }, 503);
-  }
-  const workspace = await getFamilyWorkspace();
-  if (!workspace) return familyAccessError();
+  if (!familyWorkspaceConfigured()) return familyWorkspaceUnavailable();
+  const workspace = getFamilyWorkspace();
+  if (!workspace) return familyWorkspaceUnavailable();
 
   const body = await request.json() as { imageId?: unknown; model?: unknown; recipe?: unknown; notes?: unknown };
   const imageId = typeof body.imageId === "string" ? body.imageId : "";
@@ -135,7 +133,7 @@ export async function POST(request: Request) {
   const [[{ value: generatedToday }], [{ value: generatedGlobally }], existing] = await Promise.all([
     getDb().select({ value: count() }).from(restorationRuns).where(and(eq(restorationRuns.createdBy, actor), gte(restorationRuns.createdAt, `${day} 00:00:00`))),
     getDb().select({ value: count() }).from(restorationRuns).where(and(like(restorationRuns.createdBy, "family:%"), gte(restorationRuns.createdAt, `${day} 00:00:00`))),
-    getDb().select({ id: restorationRuns.id }).from(restorationRuns).where(and(eq(restorationRuns.imageId, imageId), eq(restorationRuns.familySessionHash, workspace.sessionHash), eq(restorationRuns.status, "processing"))).limit(1),
+    getDb().select({ id: restorationRuns.id }).from(restorationRuns).where(and(eq(restorationRuns.imageId, imageId), eq(restorationRuns.familyWorkspaceHash, workspace.hash), eq(restorationRuns.status, "processing"))).limit(1),
   ]);
   if (existing) {
     return familyJson({ error: { code: "STUDY_IN_PROGRESS", message: "A version of this source is already being made for you." } }, 409);
@@ -151,7 +149,7 @@ export async function POST(request: Request) {
       recipe,
       notes,
       createdBy: actor,
-      familySessionHash: workspace.sessionHash,
+      familyWorkspaceHash: workspace.hash,
     });
     return familyJson({
       data: {
@@ -160,7 +158,7 @@ export async function POST(request: Request) {
         provenance: "recorded",
         status: "ready",
         error: null,
-        private: true,
+        workspaceOnly: true,
         familyRating: null,
         galleryRank: null,
         galleryVisibility: "visible",

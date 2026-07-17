@@ -29,7 +29,7 @@ type GalleryAsset = {
   label: string;
   url: string;
   kind: 'source' | 'generation';
-  familyPrivate?: boolean;
+  workspaceOnly?: boolean;
 } & Partial<Omit<GalleryRestoration, 'id' | 'type' | 'url'>>;
 
 interface GalleryItem {
@@ -86,7 +86,7 @@ function familyStudyAsset(study: FamilyStudy): GalleryAsset {
     promptVersion: study.promptVersion || undefined,
     outputSha256: study.outputSha256,
     createdAt: study.createdAt,
-    familyPrivate: true,
+    workspaceOnly: true,
   };
 }
 
@@ -96,13 +96,12 @@ export default function GalleryPage() {
   const [selected, setSelected] = useState<GalleryItem | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<GalleryAsset | null>(null);
   const [showComparison, setShowComparison] = useState(false);
-  const [familyAccess, setFamilyAccess] = useState<'loading' | 'active' | 'inactive'>('inactive');
   const [familyStudies, setFamilyStudies] = useState<Record<string, FamilyStudy>>({});
   const [curationError, setCurationError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const openedFromUrl = useRef(false);
-  const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); setShowComparison(false); setFamilyStudies({}); setFamilyAccess('inactive'); setCurationError(''); }, []);
+  const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); setShowComparison(false); setFamilyStudies({}); setCurationError(''); }, []);
   const viewerRef = useModalFocus<HTMLDivElement>(Boolean(selected), closeViewer);
 
   const requestGallery = useCallback(() => fetchAllPublicGallery<GalleryItem>(), []);
@@ -150,21 +149,16 @@ export default function GalleryPage() {
     let active = true;
     const abort = new AbortController();
     const start = window.setTimeout(() => {
-      setFamilyAccess('loading');
       setFamilyStudies({});
       fetch(`/api/family/studies?image=${encodeURIComponent(selected.id)}`, { signal: abort.signal })
         .then(async response => ({ response, body: await response.json() as { data?: { studies?: FamilyStudy[] } } }))
         .then(({ response, body }) => {
           if (!active) return;
-          if (!response.ok) {
-            setFamilyAccess('inactive');
-            return;
-          }
+          if (!response.ok) return;
           const studies = body.data?.studies || [];
           setFamilyStudies(Object.fromEntries(studies.map(study => [study.id, study])));
-          setFamilyAccess('active');
         })
-        .catch(() => { if (active && !abort.signal.aborted) setFamilyAccess('inactive'); });
+        .catch(() => { /* The maker reports a configured-workspace error only if creation is requested. */ });
     }, 0);
     return () => { active = false; abort.abort(); window.clearTimeout(start); };
   }, [selected]);
@@ -189,11 +183,11 @@ export default function GalleryPage() {
           || left.createdAt.localeCompare(right.createdAt)
           || left.id.localeCompare(right.id);
       });
-    const privateStudies = Object.values(familyStudies)
-      .filter(study => study.private && study.galleryVisibility === 'visible' && study.status === 'ready' && study.url)
+    const workspaceStudies = Object.values(familyStudies)
+      .filter(study => study.workspaceOnly && study.galleryVisibility === 'visible' && study.status === 'ready' && study.url)
       .sort((left, right) => (left.galleryRank ?? Number.MAX_SAFE_INTEGER) - (right.galleryRank ?? Number.MAX_SAFE_INTEGER) || left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id))
       .map(familyStudyAsset);
-    return [sourceAsset(selected), ...visibleRestorations.map(generationAsset), ...privateStudies];
+    return [sourceAsset(selected), ...visibleRestorations.map(generationAsset), ...workspaceStudies];
   }, [familyStudies, selected]);
   const selectedStudy = selectedAsset?.kind === 'generation' ? familyStudies[selectedAsset.id] : undefined;
   const onFamilyStudyCreated = useCallback((study: FamilyStudy) => {
@@ -329,14 +323,14 @@ export default function GalleryPage() {
                         <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap text-xs leading-5 text-neutral-700">{selectedStudy.prompt}</pre>
                       </details>
                     ) : (
-                      <p className="mt-4 text-sm leading-6 text-neutral-600">{familyAccess === 'active' ? 'No saved prompt exists for this earlier image.' : 'Open the shared family link once to see full prompts and make a version yourself.'}</p>
+                      <p className="mt-4 text-sm leading-6 text-neutral-600">No saved prompt exists for this earlier image.</p>
                     )}
                   </>
                 )}
-                {selectedStudy?.private && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><strong>Family workspace version.</strong> It is visible to the family here and has not been added to the public gallery.</p>}
+                {selectedStudy?.workspaceOnly && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><strong>Shared family workspace version.</strong> It remains out of the published archive record until it is deliberately reviewed.</p>}
               </section>
 
-              {familyAccess === 'active' && selectedAsset?.kind === 'generation' && selectedStudy && (
+              {selectedAsset?.kind === 'generation' && selectedStudy && (
                 <section aria-label="Family choices for this image version" className="mt-4 rounded-2xl border border-amber-900/10 bg-[#fffaf1] p-4">
                   <p className="text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Family choice</p>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
@@ -356,9 +350,7 @@ export default function GalleryPage() {
                 </section>
               )}
 
-              <div className="mt-4">
-                <FamilyStudyMaker image={{ id: selected.id, title: selected.title }} access={familyAccess} onCreated={onFamilyStudyCreated} />
-              </div>
+              <div className="mt-4"><FamilyStudyMaker image={{ id: selected.id, title: selected.title }} onCreated={onFamilyStudyCreated} /></div>
 
               <section aria-label="Add family knowledge to this photograph" className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4">
                 <p className="text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Family memory</p>

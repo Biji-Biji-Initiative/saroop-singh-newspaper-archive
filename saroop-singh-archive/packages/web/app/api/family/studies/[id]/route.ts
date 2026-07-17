@@ -29,10 +29,10 @@ function requestedRank(value: unknown) {
   return typeof value === "number" && Number.isInteger(value) && value >= 1 && value <= 100 ? value : undefined;
 }
 
-function familyAccessError() {
+function familyWorkspaceUnavailable() {
   return familyJson(
-    { error: { code: "FAMILY_ACCESS_REQUIRED", message: "Open the family link once to organise image versions here." } },
-    401,
+    { error: { code: "FAMILY_WORKSPACE_UNAVAILABLE", message: "Family image-making is not configured yet." } },
+    503,
   );
 }
 
@@ -41,15 +41,15 @@ function familyJson(body: unknown, status = 200) {
 }
 
 /**
- * The family link is a deliberate shared curation capability. It can arrange
- * or hide ready variations, but cannot publish an unreviewed private study.
+ * The shared family workspace can arrange or hide ready variations, but
+ * cannot publish an unreviewed study.
  */
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!hasTrustedArchiveOrigin(request)) {
     return familyJson({ error: { code: "UNTRUSTED_ORIGIN", message: "Untrusted request origin." } }, 403);
   }
-  const workspace = await getFamilyWorkspace();
-  if (!workspace) return familyAccessError();
+  const workspace = getFamilyWorkspace();
+  if (!workspace) return familyWorkspaceUnavailable();
 
   const { id } = await context.params;
   const body = await request.json() as CurationRequest;
@@ -72,16 +72,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     if (!run) return { error: "Image version not found.", status: 404 as const };
     if (run.status !== "ready") return { error: "Only a finished image version can be organised.", status: 409 as const };
     const publishedStudy = ["approved", "recovered-historical"].includes(run.reviewStatus);
-    const sharedPrivateStudy = !publishedStudy && run.familySessionHash === workspace.sessionHash;
-    if (!sharedPrivateStudy && !publishedStudy) return { error: "Image version not found.", status: 404 as const };
+    const workspaceStudy = !publishedStudy && run.familyWorkspaceHash === workspace.hash;
+    if (!workspaceStudy && !publishedStudy) return { error: "Image version not found.", status: 404 as const };
 
     const nextVisibility = visibility || run.galleryVisibility;
     const candidates = transaction
       .select()
       .from(restorationRuns)
       .where(
-        sharedPrivateStudy
-          ? and(eq(restorationRuns.imageId, run.imageId), eq(restorationRuns.familySessionHash, workspace.sessionHash), eq(restorationRuns.status, "ready"))
+        workspaceStudy
+          ? and(eq(restorationRuns.imageId, run.imageId), eq(restorationRuns.familyWorkspaceHash, workspace.hash), eq(restorationRuns.status, "ready"))
           : and(eq(restorationRuns.imageId, run.imageId), eq(restorationRuns.status, "ready"), inArray(restorationRuns.reviewStatus, ["approved", "recovered-historical"])),
       )
       .all();

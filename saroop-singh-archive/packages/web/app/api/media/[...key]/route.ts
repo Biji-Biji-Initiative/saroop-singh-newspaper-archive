@@ -42,8 +42,8 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
       (image?.status === "published" &&
         image.originalKey === objectKey),
   );
-  const familyWorkspace = isPublished ? null : await getFamilyWorkspace();
-  const [familyStudy] = familyWorkspace
+  const familyWorkspace = isPublished ? null : getFamilyWorkspace();
+  const [workspaceStudy] = familyWorkspace
     ? await db
       .select({ id: restorationRuns.id })
       .from(restorationRuns)
@@ -51,13 +51,13 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
         and(
           eq(restorationRuns.outputKey, objectKey),
           eq(restorationRuns.status, "ready"),
-          eq(restorationRuns.familySessionHash, familyWorkspace.sessionHash),
+          eq(restorationRuns.familyWorkspaceHash, familyWorkspace.hash),
         ),
       )
       .limit(1)
     : [];
-  const isFamilyDraft = Boolean(familyStudy);
-  if (!isPublished && !isFamilyDraft) {
+  const isWorkspaceStudy = Boolean(workspaceStudy);
+  if (!isPublished && !isWorkspaceStudy) {
     const user = await getArchiveUser();
     if (!user) return new Response("Not found", { status: 404 });
   }
@@ -66,8 +66,8 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
   const headers = new Headers();
   object.writeHttpMetadata(headers);
   headers.set("etag", object.httpEtag);
-  headers.set("cache-control", isPublished ? "public, max-age=0, must-revalidate" : "private, no-store");
+  headers.set("cache-control", (isPublished || isWorkspaceStudy) ? "public, max-age=0, must-revalidate" : "private, no-store");
   headers.set("x-content-type-options", "nosniff");
-  if (!isPublished && !isFamilyDraft) headers.set("content-disposition", `attachment; filename="${(image?.originalName || "archive-original").replace(/["\\\r\n]/g, "-")}"`);
+  if (!isPublished && !isWorkspaceStudy) headers.set("content-disposition", `attachment; filename="${(image?.originalName || "archive-original").replace(/["\\\r\n]/g, "-")}"`);
   return new Response(await object.arrayBuffer(), { headers });
 }

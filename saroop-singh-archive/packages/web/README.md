@@ -32,7 +32,6 @@ or complete digitisation histories were recovered.
 - `/gallery` — source-first photographic records and optional comparisons
 - `/remember` — private names, stories, corrections, voice, fronts and backs
 - `/contribute` — multi-photo family intake with per-photo metadata
-- `/family?access=…` — passwordless shared family workspace for making, comparing and organising private image versions
 - `/studio` — owner-only preservation review and deliberate publication
 - `/methodology` — evidence, provenance, originals and restoration policy
 
@@ -63,8 +62,7 @@ Important runtime values:
 - `CONTRIBUTION_DAILY_GLOBAL_LIMIT` — durable daily photograph intake cap
 - `CONTRIBUTIONS_ENABLED` — set `false`, `0`, or `off` to close public photo intake
 - `MEMORY_DAILY_GLOBAL_LIMIT` — durable daily memory intake cap
-- `FAMILY_WORKSPACE_INVITE_SECRET` — at least 32 random characters; the private shared family-link capability
-- `FAMILY_WORKSPACE_ID` — separate stable 32+ character workspace identity; retain it when rotating the invite secret
+- `FAMILY_WORKSPACE_ID` — stable 32+ character server-only identity for grouping shared family-workspace studies
 - `FAMILY_GENERATION_DAILY_NETWORK_LIMIT` — per-network daily image-making limit (default 12, max 40)
 - `FAMILY_GENERATION_DAILY_GLOBAL_LIMIT` — global daily family image-making limit (default 100, max 500)
 - `OPENAI_API_KEY` — GPT Image restoration provider
@@ -92,16 +90,16 @@ media isolation, AI consent gates and receipt privacy.
 
 ## Restoration contract
 
-The normal family flow is intentionally direct: open the shared private link
-once, select a source, choose Clean & preserve, Repair damage, or Try colour,
-and make a version. GPT Image 2 is the default; Nano Banana 2 and Nano Banana
-Pro remain available under “Fine-tune this version.” Each finished thumbnail
-opens its exact model, provider, versioned prompt, preset and output checksum.
-The family can rate a version, put a preferred result first, or hide a weak
-older result while retaining its record. Every new run is source-locked and
-private to the shared family workspace; only a later explicit Studio decision
-can publish it. Gemini calls use stateless storage settings. Outputs with
-material aspect-ratio drift are rejected before storage.
+The normal family flow is intentionally direct: open any photograph, choose
+Clean & preserve, Repair damage, or Try colour, and make a version. GPT Image 2
+is the default; Nano Banana 2 and Nano Banana Pro remain available under
+“Fine-tune this version.” Each finished thumbnail opens its exact model,
+provider, versioned prompt, preset and output checksum. The family can rate a
+version, put a preferred result first, or hide a weak older result while
+retaining its record. Every new run is source-locked and belongs to the shared
+family workspace; only a later explicit Studio decision can add it to the
+published archive record. Gemini calls use stateless storage settings. Outputs
+with material aspect-ratio drift are rejected before storage.
 
 The slider is a review instrument, not proof of geometric registration. Every
 published comparison still requires human landmark and alignment inspection.
@@ -137,8 +135,8 @@ Before every production promotion:
 5. preserve proxy request-body and rate limits;
 6. run the full test suite and container health check;
 7. verify backup and restore for `archive.sqlite*` and the `objects/` tree;
-8. exercise contribution, memory receipt, the passwordless family workspace,
-   Studio publication and withdrawal on the deployed domain.
+8. exercise contribution, memory receipt, direct family image-making, Studio
+   publication and withdrawal on the deployed domain.
 
 ## Preservation exports
 

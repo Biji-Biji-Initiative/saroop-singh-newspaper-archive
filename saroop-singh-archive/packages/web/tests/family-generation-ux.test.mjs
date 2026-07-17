@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
 
@@ -30,7 +30,7 @@ test("generation review features one image with a labelled source-and-study caro
   assert.doesNotMatch(studio, /visual review workspace/);
 });
 
-test("the public gallery keeps prompts private while the family workspace can inspect them", () => {
+test("the public gallery keeps general prompt records scoped while the shared workspace can inspect them", () => {
   const loader = read("lib/public-gallery.ts");
   const gallery = read("app/gallery/page.tsx");
   const familyStudies = read("app/api/family/studies/route.ts");
@@ -43,46 +43,39 @@ test("the public gallery keeps prompts private while the family workspace can in
   assert.match(gallery, /aria-label="Compare source and selected variation"/);
   assert.match(gallery, /Now viewing/);
   assert.match(gallery, /Exact prompt sent/);
-  assert.match(gallery, /Open the shared family link once to see full prompts/);
+  assert.match(gallery, /No saved prompt exists for this earlier image/);
   assert.match(familyStudies, /prompt: recovered \? null : run\.prompt/);
-  assert.match(familyStudies, /FAMILY_ACCESS_REQUIRED/);
+  assert.match(familyStudies, /FAMILY_WORKSPACE_UNAVAILABLE/);
   assert.match(familyStudies, /Cache-Control": "private, no-store"/);
 });
 
-test("a shared family link unlocks direct source-only image-making without Studio sign-in", () => {
+test("the gallery opens direct source-only image-making without a link, account, or Studio sign-in", () => {
   const gallery = read("app/gallery/page.tsx");
   const detail = read("app/gallery/[id]/page.tsx");
   const maker = read("components/family-study-maker.tsx");
-  const familyRoute = read("app/family/route.ts");
   const studiesRoute = read("app/api/family/studies/route.ts");
   const service = read("lib/restoration-service.ts");
   const workspace = read("lib/family-workspace.ts");
   const contract = read("lib/restoration-contract.ts");
 
+  assert.equal(existsSync(join(root, "app/family/route.ts")), false);
   assert.match(gallery, /FamilyStudyMaker/);
   assert.match(gallery, /\/api\/family\/studies/);
-  assert.match(gallery, /familyAccess/);
+  assert.doesNotMatch(gallery, /familyAccess|shared family link/);
   assert.match(detail, /Make a family image version/);
   assert.match(detail, /\/gallery\?image=/);
-  assert.match(maker, /Make a version from this source/);
-  assert.match(maker, /Paste family link/);
-  assert.match(maker, /Open your family invitation once/);
+  assert.match(maker, /Make a new version/);
+  assert.doesNotMatch(maker, /Paste family link|family invitation/);
   assert.match(maker, /Make a clean version/);
   assert.match(maker, /Fine-tune this version/);
   assert.match(maker, /See the exact prompt we will send/);
   assert.match(maker, /\/api\/family\/studies/);
-  assert.match(familyRoute, /acceptsFamilyInvite/);
-  assert.match(familyRoute, /createFamilyWorkspaceToken/);
-  assert.match(familyRoute, /familyWorkspaceConfigured/);
-  assert.match(familyRoute, /Cache-Control", "private, no-store"/);
-  assert.match(workspace, /FAMILY_WORKSPACE_INVITE_SECRET/);
   assert.match(workspace, /FAMILY_WORKSPACE_ID/);
-  assert.match(workspace, /httpOnly: true/);
-  assert.match(workspace, /sameSite: "lax"/);
-  assert.doesNotMatch(workspace, /localStorage|sessionStorage/);
+  assert.doesNotMatch(workspace, /INVITE|cookies|localStorage|sessionStorage/);
   assert.match(studiesRoute, /createRestorationDerivative/);
   assert.match(studiesRoute, /hasTrustedArchiveOrigin/);
   assert.match(studiesRoute, /configuredDailyLimit/);
+  assert.match(studiesRoute, /familyWorkspaceHash/);
   assert.doesNotMatch(studiesRoute, /requireArchiveAdmin/);
   assert.match(service, /bucket\(\)\.get\(image\.originalKey\)/);
   assert.match(service, /buildRestorationPrompt\(recipe, notes \|\| "", modelConfig\.apiModel\)/);
