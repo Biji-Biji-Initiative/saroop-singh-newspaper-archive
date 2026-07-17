@@ -162,6 +162,7 @@ test('contribution receipts are aggregate-only private capabilities with conflic
   assert.match(page, /robots: \{ index: false, follow: false \}/);
   assert.match(page, /dynamic = "force-dynamic"/);
   assert.match(health, /contributionIntakeEnabled: contributionIntakeEnabled\(\)/);
+  assert.match(health, /familyWorkspaceConfigured: familyWorkspaceConfigured\(\)/);
   assert.match(robots, /\/contribution-receipt\//);
   assert.match(worker, /"\/contribution-receipt"/);
 });
@@ -358,7 +359,7 @@ test('restoration makes source-safe current-model commissioning explicit', () =>
 test('current image-model contract is versioned and preservation constrained', () => {
   const server = readFileSync(join(root, 'lib/archive-server.ts'), 'utf8');
   const contract = readFileSync(join(root, 'lib/restoration-contract.ts'), 'utf8');
-  const route = readFileSync(join(root, 'app/api/studio/restore/route.ts'), 'utf8');
+  const route = readFileSync(join(root, 'lib/restoration-service.ts'), 'utf8');
   assert.match(server, /MODEL_REGISTRY = RESTORATION_MODELS/);
   assert.match(contract, /gpt-image-2-2026-04-21/);
   assert.match(contract, /gemini-3\.1-flash-image/);

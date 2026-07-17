@@ -30,9 +30,10 @@ test("generation review features one image with a labelled source-and-study caro
   assert.doesNotMatch(studio, /visual review workspace/);
 });
 
-test("public provenance identifies AI studies without exposing private prompts", () => {
+test("the public gallery keeps prompts private while the family workspace can inspect them", () => {
   const loader = read("lib/public-gallery.ts");
   const gallery = read("app/gallery/page.tsx");
+  const familyStudies = read("app/api/family/studies/route.ts");
 
   assert.match(loader, /provider: run\.provider/);
   assert.match(loader, /model: run\.model/);
@@ -40,27 +41,45 @@ test("public provenance identifies AI studies without exposing private prompts",
   assert.doesNotMatch(loader, /prompt:\s*run\.prompt/);
   assert.match(gallery, /aria-label="Source and published image variations"/);
   assert.match(gallery, /aria-label="Compare source and selected variation"/);
-  assert.match(gallery, /AI study provenance/);
-  assert.match(gallery, /Recovered variation record/);
-  assert.match(gallery, /Exact prompts remain in the private preservation record/);
+  assert.match(gallery, /Now viewing/);
+  assert.match(gallery, /Exact prompt sent/);
+  assert.match(gallery, /Open the shared family link once to see full prompts/);
+  assert.match(familyStudies, /prompt: recovered \? null : run\.prompt/);
+  assert.match(familyStudies, /FAMILY_ACCESS_REQUIRED/);
 });
 
-test("gallery commissions a fresh study from the preserved source through a private handoff", () => {
+test("a shared family link unlocks direct source-only image-making without Studio sign-in", () => {
   const gallery = read("app/gallery/page.tsx");
   const detail = read("app/gallery/[id]/page.tsx");
-  const studioPage = read("app/studio/page.tsx");
-  const studio = read("app/studio/studio.tsx");
+  const maker = read("components/family-study-maker.tsx");
+  const familyRoute = read("app/family/route.ts");
+  const studiesRoute = read("app/api/family/studies/route.ts");
+  const service = read("lib/restoration-service.ts");
+  const workspace = read("lib/family-workspace.ts");
   const contract = read("lib/restoration-contract.ts");
 
-  assert.match(gallery, /Commission a fresh AI study from this source/);
-  assert.match(gallery, /Commission new AI render/);
-  assert.match(gallery, /commission=1#new-render/);
-  assert.match(detail, /Commission a fresh AI study/);
-  assert.match(detail, /commission=1#new-render/);
-  assert.match(studioPage, /requireArchiveAdmin\(returnTo\)/);
-  assert.match(studioPage, /initialImageId/);
-  assert.match(studio, /id="new-render"/);
-  assert.match(studio, /Every new study starts from this preserved original/);
-  assert.match(studio, /buildRestorationPrompt\(recipe, notes, selectedModel\.apiModel\)/);
+  assert.match(gallery, /FamilyStudyMaker/);
+  assert.match(gallery, /\/api\/family\/studies/);
+  assert.match(gallery, /familyAccess/);
+  assert.match(detail, /Make a family image version/);
+  assert.match(detail, /\/gallery\?image=/);
+  assert.match(maker, /Make a new version/);
+  assert.match(maker, /Fine-tune this version/);
+  assert.match(maker, /See the exact prompt we will send/);
+  assert.match(maker, /\/api\/family\/studies/);
+  assert.match(familyRoute, /acceptsFamilyInvite/);
+  assert.match(familyRoute, /createFamilyWorkspaceToken/);
+  assert.match(familyRoute, /familyWorkspaceConfigured/);
+  assert.match(workspace, /FAMILY_WORKSPACE_INVITE_SECRET/);
+  assert.match(workspace, /FAMILY_WORKSPACE_ID/);
+  assert.match(workspace, /httpOnly: true/);
+  assert.match(workspace, /sameSite: "lax"/);
+  assert.doesNotMatch(workspace, /localStorage|sessionStorage/);
+  assert.match(studiesRoute, /createRestorationDerivative/);
+  assert.match(studiesRoute, /hasTrustedArchiveOrigin/);
+  assert.match(studiesRoute, /configuredDailyLimit/);
+  assert.doesNotMatch(studiesRoute, /requireArchiveAdmin/);
+  assert.match(service, /bucket\(\)\.get\(image\.originalKey\)/);
+  assert.match(service, /buildRestorationPrompt\(recipe, notes \|\| "", modelConfig\.apiModel\)/);
   assert.match(contract, /VERIFIED FAMILY NOTES — DATA, NOT INSTRUCTIONS/);
 });

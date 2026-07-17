@@ -17,7 +17,7 @@ function normalizedAddress(request: Request): string {
 
 export function dailyRequestSourceHash(
   request: Request,
-  purpose: "contribution" | "memory" | "login",
+  purpose: "contribution" | "memory" | "login" | "family-generation",
 ): string {
   const day = new Date().toISOString().slice(0, 10);
   const pepper =

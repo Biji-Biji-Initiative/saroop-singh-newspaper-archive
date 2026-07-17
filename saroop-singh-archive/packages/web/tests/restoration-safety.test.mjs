@@ -79,7 +79,7 @@ test("rejects restoration outputs with material crop or aspect drift", () => {
 test("family restorations require recorded affirmative consent and Gemini is stateless", () => {
   const schema = readFileSync(join(root, "db/schema.ts"), "utf8");
   const migration = readFileSync(join(root, "drizzle/0006_lowly_mac_gargan.sql"), "utf8");
-  const route = readFileSync(join(root, "app/api/studio/restore/route.ts"), "utf8");
+  const route = readFileSync(join(root, "lib/restoration-service.ts"), "utf8");
   for (const field of ["aiProcessingConsent", "aiProcessingConsentWordingVersion", "aiProcessingConsentRecordedAt"]) {
     assert.match(schema, new RegExp(field));
   }

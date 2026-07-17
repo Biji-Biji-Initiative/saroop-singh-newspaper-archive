@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Columns2, Download, ExternalLink, Images, Info, Search, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { ArrowUp, Columns2, Download, ExternalLink, Eye, EyeOff, Images, MessageCircleHeart, Search, ShieldCheck, Star, UserRoundPlus, X } from 'lucide-react';
+import { FamilyStudyMaker, type FamilyStudy } from '@/components/family-study-maker';
 import { useModalFocus } from '@/hooks/useModalFocus';
 import { RestorationCompare } from '@/components/restoration-compare';
 import { fetchAllPublicGallery } from '@/lib/fetch-public-gallery';
@@ -28,6 +29,7 @@ type GalleryAsset = {
   label: string;
   url: string;
   kind: 'source' | 'generation';
+  familyPrivate?: boolean;
 } & Partial<Omit<GalleryRestoration, 'id' | 'type' | 'url'>>;
 
 interface GalleryItem {
@@ -69,8 +71,23 @@ function defaultViewerAsset(item: GalleryItem): GalleryAsset {
   return featuredVariation ? generationAsset(featuredVariation, 0) : sourceAsset(item);
 }
 
-function commissionHref(item: GalleryItem) {
-  return `/studio?image=${encodeURIComponent(item.id)}&commission=1#new-render`;
+function familyStudyAsset(study: FamilyStudy): GalleryAsset {
+  if (!study.url) throw new Error('A ready family study must include its image URL.');
+  return {
+    id: study.id,
+    label: `New · ${study.type}`,
+    url: study.url,
+    kind: 'generation',
+    provenance: study.provenance,
+    provider: study.provider,
+    model: study.model,
+    recipe: study.recipe,
+    interventionClass: study.interventionClass,
+    promptVersion: study.promptVersion || undefined,
+    outputSha256: study.outputSha256,
+    createdAt: study.createdAt,
+    familyPrivate: true,
+  };
 }
 
 export default function GalleryPage() {
@@ -79,9 +96,13 @@ export default function GalleryPage() {
   const [selected, setSelected] = useState<GalleryItem | null>(null);
   const [selectedAsset, setSelectedAsset] = useState<GalleryAsset | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [familyAccess, setFamilyAccess] = useState<'loading' | 'active' | 'inactive'>('inactive');
+  const [familyStudies, setFamilyStudies] = useState<Record<string, FamilyStudy>>({});
+  const [curationError, setCurationError] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); setShowComparison(false); }, []);
+  const openedFromUrl = useRef(false);
+  const closeViewer = useCallback(() => { setSelected(null); setSelectedAsset(null); setShowComparison(false); setFamilyStudies({}); setFamilyAccess('inactive'); setCurationError(''); }, []);
   const viewerRef = useModalFocus<HTMLDivElement>(Boolean(selected), closeViewer);
 
   const requestGallery = useCallback(() => fetchAllPublicGallery<GalleryItem>(), []);
@@ -97,7 +118,19 @@ export default function GalleryPage() {
   useEffect(() => {
     let active = true;
     requestGallery()
-      .then((result) => { if (active) { setItems(result.items); } })
+      .then((result) => {
+        if (!active) return;
+        setItems(result.items);
+        if (openedFromUrl.current) return;
+        const imageId = new URLSearchParams(window.location.search).get('image');
+        const image = imageId ? result.items.find(item => item.id === imageId) : undefined;
+        if (!image) return;
+        openedFromUrl.current = true;
+        const initialAsset = defaultViewerAsset(image);
+        setSelected(image);
+        setSelectedAsset(initialAsset);
+        setShowComparison(initialAsset.kind === 'generation');
+      })
       .catch(() => { if (active) setError(true); })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
@@ -112,6 +145,30 @@ export default function GalleryPage() {
     };
   }, [selected]);
 
+  useEffect(() => {
+    if (!selected) return;
+    let active = true;
+    const abort = new AbortController();
+    const start = window.setTimeout(() => {
+      setFamilyAccess('loading');
+      setFamilyStudies({});
+      fetch(`/api/family/studies?image=${encodeURIComponent(selected.id)}`, { signal: abort.signal })
+        .then(async response => ({ response, body: await response.json() as { data?: { studies?: FamilyStudy[] } } }))
+        .then(({ response, body }) => {
+          if (!active) return;
+          if (!response.ok) {
+            setFamilyAccess('inactive');
+            return;
+          }
+          const studies = body.data?.studies || [];
+          setFamilyStudies(Object.fromEntries(studies.map(study => [study.id, study])));
+          setFamilyAccess('active');
+        })
+        .catch(() => { if (active && !abort.signal.aborted) setFamilyAccess('inactive'); });
+    }, 0);
+    return () => { active = false; abort.abort(); window.clearTimeout(start); };
+  }, [selected]);
+
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return items;
@@ -121,6 +178,52 @@ export default function GalleryPage() {
         .some(value => value!.toLowerCase().includes(term))
     );
   }, [items, query]);
+  const carouselAssets = useMemo(() => {
+    if (!selected) return [];
+    const visibleRestorations = selected.restorations
+      .filter(study => familyStudies[study.id]?.galleryVisibility !== 'hidden')
+      .sort((left, right) => {
+        const leftStudy = familyStudies[left.id];
+        const rightStudy = familyStudies[right.id];
+        return (leftStudy?.galleryRank ?? Number.MAX_SAFE_INTEGER) - (rightStudy?.galleryRank ?? Number.MAX_SAFE_INTEGER)
+          || left.createdAt.localeCompare(right.createdAt)
+          || left.id.localeCompare(right.id);
+      });
+    const privateStudies = Object.values(familyStudies)
+      .filter(study => study.private && study.galleryVisibility === 'visible' && study.status === 'ready' && study.url)
+      .sort((left, right) => (left.galleryRank ?? Number.MAX_SAFE_INTEGER) - (right.galleryRank ?? Number.MAX_SAFE_INTEGER) || left.createdAt.localeCompare(right.createdAt) || left.id.localeCompare(right.id))
+      .map(familyStudyAsset);
+    return [sourceAsset(selected), ...visibleRestorations.map(generationAsset), ...privateStudies];
+  }, [familyStudies, selected]);
+  const selectedStudy = selectedAsset?.kind === 'generation' ? familyStudies[selectedAsset.id] : undefined;
+  const onFamilyStudyCreated = useCallback((study: FamilyStudy) => {
+    const asset = familyStudyAsset(study);
+    setFamilyStudies(current => ({ ...current, [study.id]: study }));
+    setSelectedAsset(asset);
+    setShowComparison(true);
+  }, []);
+  const updateFamilyStudy = useCallback(async (id: string, changes: { rating?: number | null; rank?: number; visibility?: 'visible' | 'hidden' }) => {
+    setCurationError('');
+    try {
+      const response = await fetch(`/api/family/studies/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(changes),
+      });
+      const result = await response.json() as { data?: Pick<FamilyStudy, 'id' | 'familyRating' | 'galleryRank' | 'galleryVisibility'>; error?: { message?: string } };
+      if (!response.ok || !result.data) {
+        setCurationError(result.error?.message || 'That family choice could not be saved. Please try again.');
+        return;
+      }
+      setFamilyStudies(current => current[id] ? { ...current, [id]: { ...current[id], ...result.data } } : current);
+      if (changes.visibility === 'hidden' && selectedAsset?.id === id && selected) {
+        setSelectedAsset(sourceAsset(selected));
+        setShowComparison(false);
+      }
+    } catch {
+      setCurationError('The connection dropped before that family choice was saved. Please try again.');
+    }
+  }, [selected, selectedAsset]);
 
   return (
     <main className="min-h-screen bg-[#f6f1e8] text-neutral-900">
@@ -182,7 +285,7 @@ export default function GalleryPage() {
 
       {selected && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 sm:p-8" role="dialog" aria-modal="true" aria-label={selected.title} onClick={closeViewer}>
-          <div ref={viewerRef} className="relative grid h-screen h-[100dvh] min-h-0 w-full grid-rows-[minmax(20rem,56dvh)_minmax(0,1fr)] overflow-hidden bg-[#f6f1e8] shadow-2xl sm:h-[min(92dvh,56rem)] sm:w-[min(94vw,82rem)] sm:max-w-none sm:rounded-2xl lg:grid-cols-[minmax(0,1fr)_minmax(22rem,26rem)] lg:grid-rows-1" onClick={event => event.stopPropagation()}>
+          <div ref={viewerRef} className="relative grid h-screen h-[100dvh] min-h-0 w-full grid-rows-[minmax(20rem,56dvh)_minmax(0,1fr)] overflow-hidden bg-[#f6f1e8] shadow-2xl sm:h-[min(92dvh,60rem)] sm:w-[min(96vw,100rem)] sm:max-w-none sm:rounded-2xl lg:grid-cols-[minmax(0,1fr)_minmax(29rem,34rem)] lg:grid-rows-1" onClick={event => event.stopPropagation()}>
             <button type="button" onClick={closeViewer} aria-label="Close photograph" className="absolute right-[max(.75rem,env(safe-area-inset-right))] top-[max(.75rem,env(safe-area-inset-top))] z-20 flex h-12 w-12 items-center justify-center rounded-full bg-black/80 text-white shadow-lg ring-1 ring-white/20 hover:bg-black focus:outline-none focus:ring-4 focus:ring-amber-300">
               <X className="h-5 w-5" />
             </button>
@@ -193,7 +296,7 @@ export default function GalleryPage() {
               <div className="mt-4 px-1">
                 <p className="text-xs font-semibold uppercase tracking-[.16em] text-stone-300">All images and variations</p>
                 <div role="list" aria-label="Source and published image variations" className="mt-3 flex snap-x gap-2.5 overflow-x-auto pb-2">
-                  {[sourceAsset(selected), ...selected.restorations.map(generationAsset)].map(asset => {
+                  {carouselAssets.map(asset => {
                     const active = selectedAsset?.id === asset.id;
                     const recovered = asset.provenance === 'recovered-historical';
                     return <div key={asset.id} role="listitem" className="w-28 shrink-0 snap-start"><button type="button" aria-pressed={active} onClick={() => { setSelectedAsset(asset); setShowComparison(asset.kind === 'generation'); }} className={`w-full overflow-hidden rounded-2xl border-2 text-left transition focus:outline-none focus:ring-4 focus:ring-amber-300 ${active ? 'border-amber-300 bg-white' : 'border-white/15 bg-white/10 text-white hover:border-white/60'}`}><span className="relative block aspect-[4/3] bg-black"><Image src={asset.url} alt="" fill unoptimized sizes="112px" className="object-cover" /></span><span className="block p-2"><span className={`block truncate text-xs font-bold ${active ? 'text-[#17241d]' : 'text-white'}`}>{asset.label}</span><span className={`mt-1 block truncate text-[10px] ${active ? 'text-neutral-500' : 'text-stone-300'}`}>{asset.kind === 'source' ? 'Original authority' : recovered ? 'Model not recorded' : asset.model || 'AI study'}</span></span></button></div>;
@@ -203,35 +306,85 @@ export default function GalleryPage() {
             </div>
             <div className="min-h-0 min-w-0 overflow-y-auto overscroll-contain p-5 pb-[max(2rem,env(safe-area-inset-bottom))] sm:p-7">
               <Images className="h-7 w-7 text-amber-800" />
-              <h2 className="mt-5 break-words font-serif text-3xl leading-tight">{selected.title}</h2>
-              <p className="mt-4 leading-7 text-neutral-600">{selected.familyMember || 'Saroop Singh family collection'}</p>
-              <p className="mt-2 text-sm text-neutral-500">{selected.restorationCount ? `${selected.restorationCount} labelled variation${selected.restorationCount === 1 ? '' : 's'} can be featured and compared here.` : 'No restoration study is public for this source.'}</p>
-              <div className="mt-5 grid grid-cols-2 gap-2">
-                <a href={selected.originalUrl} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-900/20 bg-white px-3 text-sm font-semibold"><ExternalLink className="h-4 w-4" /> Open source</a>
-                <a href={selected.originalUrl} download={selected.original.filename} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1f2a24] px-3 text-sm font-semibold text-white"><Download className="h-4 w-4" /> Download source</a>
-              </div>
-              <Link href={`/gallery/${selected.id}`} className="mt-2 flex min-h-12 w-full items-center justify-center rounded-xl bg-amber-300 px-4 text-sm font-bold text-[#17241d]">Open full collection story</Link>
-              <section aria-label="Commission a fresh AI study" className="mt-3 rounded-2xl border border-emerald-900/15 bg-emerald-50 p-4 text-emerald-950">
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-emerald-800"><Sparkles className="h-4 w-4" /> For family curators</p>
-                <h3 className="mt-2 font-serif text-2xl leading-tight">Commission a fresh AI study from this source.</h3>
-                <p className="mt-2 text-xs leading-5 text-emerald-950/75">Start a new, source-locked study with GPT Image 2, Nano Banana 2, or Nano Banana Pro. The current variation above is never used as the input.</p>
-                <Link href={commissionHref(selected)} className="mt-4 flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-900 px-4 text-sm font-semibold text-white transition hover:bg-emerald-950"><Sparkles className="h-4 w-4" /> Commission new AI render</Link>
-                <p className="mt-2 text-center text-[11px] leading-4 text-emerald-950/70">Private studio sign-in required · Every run stays reviewable before publication</p>
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[.16em] text-amber-800">Source and versions</p>
+              <h2 className="mt-2 break-words font-serif text-3xl leading-tight">{selected.title}</h2>
+              <p className="mt-3 text-sm leading-6 text-neutral-600">{selected.familyMember || 'Saroop Singh family collection'}</p>
+
+              <section aria-label="Selected image details" className="mt-5 rounded-2xl border border-amber-900/10 bg-white p-4 shadow-sm">
+                <p className="text-xs font-semibold uppercase tracking-[.14em] text-emerald-800">Now viewing</p>
+                <h3 className="mt-2 font-serif text-2xl leading-tight">{selectedAsset?.label || 'Preserved source'}</h3>
+                {selectedAsset?.kind !== 'generation' ? (
+                  <p className="mt-2 text-sm leading-6 text-neutral-600">This is the preserved source. Every AI image beside it is a separate, labelled version.</p>
+                ) : selectedAsset.provenance === 'recovered-historical' ? (
+                  <p className="mt-2 text-sm leading-6 text-neutral-600">An earlier saved version. Its original model and prompt were not recorded, so we show it honestly as an unknown earlier study.</p>
+                ) : (
+                  <>
+                    <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                      <div><dt className="text-neutral-500">Made with</dt><dd className="mt-1 font-semibold text-neutral-900">{selectedAsset.model}</dd></div>
+                      <div><dt className="text-neutral-500">Purpose</dt><dd className="mt-1 font-semibold text-neutral-900">{selectedAsset.label}</dd></div>
+                    </dl>
+                    {selectedStudy?.prompt ? (
+                      <details className="mt-4 rounded-xl bg-stone-100 p-3" open>
+                        <summary className="cursor-pointer text-sm font-semibold text-neutral-900">Exact prompt sent</summary>
+                        <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap text-xs leading-5 text-neutral-700">{selectedStudy.prompt}</pre>
+                      </details>
+                    ) : (
+                      <p className="mt-4 text-sm leading-6 text-neutral-600">{familyAccess === 'active' ? 'No saved prompt exists for this earlier image.' : 'Open the shared family link once to see full prompts and make a version yourself.'}</p>
+                    )}
+                  </>
+                )}
+                {selectedStudy?.private && <p className="mt-4 rounded-xl bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><strong>Family workspace version.</strong> It is visible to the family here and has not been added to the public gallery.</p>}
               </section>
-              <div className="mt-3 rounded-xl border border-emerald-900/10 bg-emerald-50 p-3 text-xs leading-5 text-emerald-950"><p className="font-semibold">File fixity recorded with SHA-256</p>{selected.original.sha256 && <p className="mt-1 break-all font-mono text-[10px] text-emerald-900/75">{selected.original.sha256}</p>}<p className="mt-1">{selected.original.filename} · {(selected.original.bytes / 1024).toFixed(0)} KB</p></div>
-              <p className="mt-6 rounded-xl bg-amber-100/70 p-3 text-xs leading-5 text-amber-950"><strong>{selectedAsset?.label || 'Preserved source'}:</strong> The best available source file may itself be a scan, screenshot, or crop. Every other option is a labelled derivative and must not replace it.</p>
-              {selectedAsset?.kind === 'generation' && (
-                <div className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4 text-sm">
-                  <p className="flex items-center gap-2 font-semibold text-amber-950"><Sparkles className="h-4 w-4" /> {selectedAsset.provenance === 'recovered-historical' ? 'Recovered variation record' : 'AI study provenance'}</p>
-                  {selectedAsset.provenance === 'recovered-historical' ? <p className="mt-3 rounded-xl bg-amber-100/70 p-3 text-xs leading-5 text-amber-950">This output was recovered from the earlier archive and remains visible so the family can inspect the full record. Its exact provider, model and prompt were not retained; it is not an approved modern restoration.</p> : <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2"><div><dt className="text-neutral-500">Model</dt><dd className="mt-1 font-semibold">{selectedAsset.model}</dd></div><div><dt className="text-neutral-500">Provider</dt><dd className="mt-1 font-semibold">{selectedAsset.provider}</dd></div><div><dt className="text-neutral-500">Restoration intent</dt><dd className="mt-1 font-semibold">{selectedAsset.label}</dd></div><div><dt className="text-neutral-500">Prompt version</dt><dd className="mt-1 font-semibold">{selectedAsset.promptVersion}</dd></div><div><dt className="text-neutral-500">Intervention class</dt><dd className="mt-1 font-semibold">{selectedAsset.interventionClass}</dd></div><div><dt className="text-neutral-500">Human review</dt><dd className="mt-1 font-semibold">{selectedAsset.reviewedAt ? new Date(selectedAsset.reviewedAt).toLocaleDateString() : 'Approved before publication'}</dd></div></dl>}
-                  {selectedAsset.outputSha256 && <p className="mt-3 break-all font-mono text-[10px] text-neutral-500">Output SHA-256 {selectedAsset.outputSha256}</p>}
-                  <p className="mt-3 flex gap-2 rounded-xl bg-stone-100 p-3 text-xs leading-5 text-neutral-600"><Info className="h-4 w-4 shrink-0" /> Exact prompts remain in the private preservation record because they can include family notes. The model, provider, intent, prompt version and review are shown here.</p>
-                </div>
+
+              {familyAccess === 'active' && selectedAsset?.kind === 'generation' && selectedStudy && (
+                <section aria-label="Family choices for this image version" className="mt-4 rounded-2xl border border-amber-900/10 bg-[#fffaf1] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Family choice</p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold">How good is this version?</p>
+                      <div className="mt-2 flex gap-1" aria-label="Family rating">
+                        {[1, 2, 3, 4, 5].map(value => <button key={value} type="button" aria-label={`${value} out of 5`} aria-pressed={selectedStudy.familyRating === value} onClick={() => updateFamilyStudy(selectedStudy.id, { rating: selectedStudy.familyRating === value ? null : value })} className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-900/15 bg-white text-amber-800 transition hover:bg-amber-100 focus:outline-none focus:ring-4 focus:ring-amber-300"><Star className={`h-5 w-5 ${Number(selectedStudy.familyRating || 0) >= value ? 'fill-current' : ''}`} /></button>)}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" onClick={() => updateFamilyStudy(selectedStudy.id, { rank: 1, visibility: 'visible' })} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-900/20 bg-white px-3 text-sm font-semibold transition hover:bg-amber-50"><ArrowUp className="h-4 w-4" /> Make top pick</button>
+                      <button type="button" onClick={() => updateFamilyStudy(selectedStudy.id, { visibility: selectedStudy.galleryVisibility === 'hidden' ? 'visible' : 'hidden' })} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-amber-900/20 bg-white px-3 text-sm font-semibold transition hover:bg-amber-50">{selectedStudy.galleryVisibility === 'hidden' ? <><Eye className="h-4 w-4" /> Show again</> : <><EyeOff className="h-4 w-4" /> Hide</>}</button>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-neutral-600">{selectedStudy.galleryVisibility === 'hidden' ? 'Hidden from the public image rail, but kept in the family record.' : selectedStudy.galleryRank === 1 ? 'This is the family’s top pick for this photograph.' : 'Stars help the family decide; “Make top pick” puts it first in the image rail.'}</p>
+                  {curationError && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm leading-5 text-red-800">{curationError}</p>}
+                </section>
               )}
-              <div className="mt-7 flex flex-wrap gap-2">
-                {selected.tags.map(tag => <span key={tag} className="rounded-full bg-amber-900/8 px-3 py-1.5 text-xs font-medium text-amber-950">{tag}</span>)}
+
+              <div className="mt-4">
+                <FamilyStudyMaker image={{ id: selected.id, title: selected.title }} access={familyAccess} onCreated={onFamilyStudyCreated} />
               </div>
-              <p className="mt-8 border-t border-amber-900/15 pt-6 text-sm leading-6 text-neutral-500">When a curator-approved variation is available, this viewer opens in split comparison with the preserved source. No derivative replaces the source.</p>
+
+              <section aria-label="Add family knowledge to this photograph" className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4">
+                <p className="text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Family memory</p>
+                <h3 className="mt-2 font-serif text-2xl leading-tight">Recognise someone or remember this day?</h3>
+                <p className="mt-2 text-sm leading-6 text-neutral-600">Add a name, correction, voice note, or story while this photograph is open. Family knowledge stays private until it is reviewed.</p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                  <Link href={`/remember?subject=${encodeURIComponent(selected.id)}&kind=identify`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1f2a24] px-3 text-sm font-semibold text-white"><UserRoundPlus className="h-4 w-4" /> Name someone</Link>
+                  <Link href={`/remember?subject=${encodeURIComponent(selected.id)}&kind=story`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-900/20 bg-white px-3 text-sm font-semibold text-neutral-900"><MessageCircleHeart className="h-4 w-4" /> Add a memory</Link>
+                </div>
+              </section>
+
+              <details className="mt-5 rounded-2xl border border-amber-900/10 bg-white p-4">
+                <summary className="cursor-pointer text-sm font-semibold text-neutral-900">Archive details</summary>
+                <p className="mt-3 text-sm leading-6 text-neutral-600">The preserved source may be a scan, crop, or screenshot. Versions never replace it.</p>
+                <dl className="mt-4 grid gap-3 text-sm">
+                  <div><dt className="text-neutral-500">Source file</dt><dd className="mt-1 break-words font-medium">{selected.original.filename} · {(selected.original.bytes / 1024).toFixed(0)} KB</dd></div>
+                  {selected.original.sha256 && <div><dt className="text-neutral-500">Source checksum</dt><dd className="mt-1 break-all font-mono text-[11px] text-neutral-600">{selected.original.sha256}</dd></div>}
+                  {selectedAsset?.kind === 'generation' && selectedAsset.outputSha256 && <div><dt className="text-neutral-500">Version checksum</dt><dd className="mt-1 break-all font-mono text-[11px] text-neutral-600">{selectedAsset.outputSha256}</dd></div>}
+                </dl>
+                <div className="mt-5 grid grid-cols-2 gap-2">
+                  <a href={selected.originalUrl} target="_blank" rel="noreferrer" className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-900/20 bg-white px-3 text-sm font-semibold"><ExternalLink className="h-4 w-4" /> Open source</a>
+                  <a href={selected.originalUrl} download={selected.original.filename} className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#1f2a24] px-3 text-sm font-semibold text-white"><Download className="h-4 w-4" /> Download source</a>
+                </div>
+                <Link href={`/gallery/${selected.id}`} className="mt-2 flex min-h-11 w-full items-center justify-center rounded-xl bg-amber-300 px-4 text-sm font-bold text-[#17241d]">Open full collection story</Link>
+                <div className="mt-5 flex flex-wrap gap-2">{selected.tags.map(tag => <span key={tag} className="rounded-full bg-amber-900/8 px-3 py-1.5 text-xs font-medium text-amber-950">{tag}</span>)}</div>
+              </details>
             </div>
           </div>
         </div>

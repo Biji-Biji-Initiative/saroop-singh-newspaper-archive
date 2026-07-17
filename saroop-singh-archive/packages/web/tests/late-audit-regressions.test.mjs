@@ -31,7 +31,7 @@ test("photograph browse cards stay compact and keep previews legible", () => {
 test("gallery viewer gives details a stable rail and opens a selected variation in split comparison", () => {
   const gallery = read("app/gallery/page.tsx");
 
-  assert.match(gallery, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(22rem,26rem\)\]/);
+  assert.match(gallery, /lg:grid-cols-\[minmax\(0,1fr\)_minmax\(29rem,34rem\)\]/);
   assert.match(gallery, /function defaultViewerAsset\(item: GalleryItem\)/);
   assert.match(gallery, /const initialAsset = defaultViewerAsset\(item\)/);
   assert.match(gallery, /setShowComparison\(initialAsset\.kind === 'generation'\)/);
@@ -42,13 +42,17 @@ test("gallery viewer gives details a stable rail and opens a selected variation 
   assert.doesNotMatch(gallery, /Back to featured variation|Open split slider/);
 });
 
-test("gallery keeps a source-locked commission action beside the compared variation", () => {
+test("gallery keeps direct family image-making beside the compared variation", () => {
   const gallery = read("app/gallery/page.tsx");
+  const maker = read("components/family-study-maker.tsx");
+  const familyCuration = read("app/api/family/studies/[id]/route.ts");
 
-  assert.match(gallery, /aria-label="Commission a fresh AI study"/);
-  assert.match(gallery, /The current variation above is never used as the input/);
-  assert.match(gallery, /GPT Image 2, Nano Banana 2, or Nano Banana Pro/);
-  assert.match(gallery, /commissionHref\(selected\)/);
+  assert.match(gallery, /FamilyStudyMaker/);
+  assert.match(maker, /Make a new version/);
+  assert.match(maker, /Using \{selectedModel\.label\}\. The original remains untouched/);
+  assert.match(maker, /useState<RestorationModel>\("gpt-image-2"\)/);
+  assert.match(familyCuration, /restoration:family-curation-updated/);
+  assert.match(familyCuration, /family-workspace/);
 });
 
 test("family curation persists a rating, gallery rank, and visibility without exposing hidden variants", () => {
