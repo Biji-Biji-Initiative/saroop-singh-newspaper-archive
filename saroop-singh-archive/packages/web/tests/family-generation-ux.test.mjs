@@ -67,6 +67,7 @@ test("a shared family link unlocks direct source-only image-making without Studi
   assert.match(maker, /Make a version from this source/);
   assert.match(maker, /Paste family link/);
   assert.match(maker, /Open your family invitation once/);
+  assert.match(maker, /Make a clean version/);
   assert.match(maker, /Fine-tune this version/);
   assert.match(maker, /See the exact prompt we will send/);
   assert.match(maker, /\/api\/family\/studies/);

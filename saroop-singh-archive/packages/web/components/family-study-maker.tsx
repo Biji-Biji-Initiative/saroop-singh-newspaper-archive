@@ -31,10 +31,10 @@ export type FamilyStudy = {
   galleryVisibility: "visible" | "hidden";
 };
 
-const choices: Array<{ id: RestorationRecipe; label: string; note: string }> = [
-  { id: "conservative", label: "Clean it up", note: "Keep it faithful" },
-  { id: "structural", label: "Repair damage", note: "Mend visible tears" },
-  { id: "colourResearch", label: "Try colour", note: "A clearly labelled study" },
+const choices: Array<{ id: RestorationRecipe; label: string; note: string; actionLabel: string }> = [
+  { id: "conservative", label: "Clean it up", note: "Keep it faithful", actionLabel: "Make a clean version" },
+  { id: "structural", label: "Repair damage", note: "Mend visible tears", actionLabel: "Make a repaired version" },
+  { id: "colourResearch", label: "Try colour", note: "A clearly labelled study", actionLabel: "Make a colour study" },
 ];
 
 export function FamilyStudyMaker({
@@ -131,7 +131,7 @@ export function FamilyStudyMaker({
 
     <button type="button" onClick={createStudy} disabled={busy} className="mt-4 flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-900 px-4 text-base font-semibold text-white shadow-sm transition hover:bg-emerald-950 disabled:opacity-60">
       {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <WandSparkles className="h-5 w-5" />}
-      {busy ? "Making your new image…" : `Make a ${selectedChoice.label.toLowerCase()} version`}
+      {busy ? "Making your new image…" : selectedChoice.actionLabel}
     </button>
     <p className="mt-2 text-center text-xs leading-5 text-emerald-950/70">Using {selectedModel.label}. The original remains untouched.</p>
 
