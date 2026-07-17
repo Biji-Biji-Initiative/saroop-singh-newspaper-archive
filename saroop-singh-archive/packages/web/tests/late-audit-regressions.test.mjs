@@ -49,7 +49,9 @@ test("gallery keeps direct family image-making beside the compared variation", (
 
   assert.match(gallery, /FamilyStudyMaker/);
   assert.match(maker, /Make a new version/);
-  assert.match(maker, /Starts with \{selectedModel\.label\}\. The original remains untouched/);
+  assert.match(maker, /Starts with \$\{selectedModel\.label\}\. The original remains untouched/);
+  assert.match(maker, /Choose the engine/);
+  assert.match(maker, /This can take up to two minutes/);
   assert.match(maker, /useState<RestorationModel>\("gpt-image-2"\)/);
   assert.match(familyCuration, /restoration:family-curation-updated/);
   assert.match(familyCuration, /family-workspace/);

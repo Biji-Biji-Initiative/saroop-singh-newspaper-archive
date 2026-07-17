@@ -68,8 +68,12 @@ test("the gallery opens direct source-only image-making without a link, account,
   assert.match(maker, /Make a new version/);
   assert.doesNotMatch(maker, /Paste family link|family invitation/);
   assert.match(maker, /Make a clean version/);
-  assert.match(maker, /Fine-tune this version/);
-  assert.match(maker, /See the exact prompt we will send/);
+  assert.match(maker, /Choose the engine/);
+  assert.match(contract, /label: "GPT Image 2"/);
+  assert.match(contract, /label: "Nano Banana 2"/);
+  assert.match(contract, /label: "Nano Banana Pro"/);
+  assert.match(maker, /Add instructions for this version/);
+  assert.match(maker, /Preview the exact prompt/);
   assert.match(maker, /\/api\/family\/studies/);
   assert.match(workspace, /FAMILY_WORKSPACE_ID/);
   assert.doesNotMatch(workspace, /INVITE|cookies|localStorage|sessionStorage/);
@@ -77,6 +81,11 @@ test("the gallery opens direct source-only image-making without a link, account,
   assert.match(studiesRoute, /hasTrustedArchiveOrigin/);
   assert.match(studiesRoute, /configuredDailyLimit/);
   assert.match(studiesRoute, /familyWorkspaceHash/);
+  assert.match(studiesRoute, /const \[existing\] = processingRuns/);
+  assert.match(studiesRoute, /STUDY_IN_PROGRESS/);
+  assert.match(maker, /Your new version is on its way/);
+  assert.match(maker, /Check now/);
+  assert.match(gallery, /setInterval/);
   assert.doesNotMatch(studiesRoute, /requireArchiveAdmin/);
   assert.match(service, /bucket\(\)\.get\(image\.originalKey\)/);
   assert.match(service, /buildRestorationPrompt\(recipe, notes \|\| "", modelConfig\.apiModel\)/);

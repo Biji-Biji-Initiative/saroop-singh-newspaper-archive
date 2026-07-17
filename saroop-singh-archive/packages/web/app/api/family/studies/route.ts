@@ -130,13 +130,31 @@ export async function POST(request: Request) {
   const actor = `family:${sourceHash}`;
   const networkLimit = configuredDailyLimit("FAMILY_GENERATION_DAILY_NETWORK_LIMIT", 12, 40);
   const globalLimit = configuredDailyLimit("FAMILY_GENERATION_DAILY_GLOBAL_LIMIT", 100, 500);
-  const [[{ value: generatedToday }], [{ value: generatedGlobally }], existing] = await Promise.all([
+  const [networkUsage, globalUsage, processingRuns] = await Promise.all([
     getDb().select({ value: count() }).from(restorationRuns).where(and(eq(restorationRuns.createdBy, actor), gte(restorationRuns.createdAt, `${day} 00:00:00`))),
     getDb().select({ value: count() }).from(restorationRuns).where(and(like(restorationRuns.createdBy, "family:%"), gte(restorationRuns.createdAt, `${day} 00:00:00`))),
-    getDb().select({ id: restorationRuns.id }).from(restorationRuns).where(and(eq(restorationRuns.imageId, imageId), eq(restorationRuns.familyWorkspaceHash, workspace.hash), eq(restorationRuns.status, "processing"))).limit(1),
+    getDb().select({ id: restorationRuns.id, imageId: restorationRuns.imageId, provider: restorationRuns.provider, model: restorationRuns.model, recipe: restorationRuns.recipe, interventionClass: restorationRuns.interventionClass, promptVersion: restorationRuns.promptVersion, prompt: restorationRuns.prompt, createdAt: restorationRuns.createdAt }).from(restorationRuns).where(and(eq(restorationRuns.imageId, imageId), eq(restorationRuns.familyWorkspaceHash, workspace.hash), eq(restorationRuns.status, "processing"))).limit(1),
   ]);
+  const [{ value: generatedToday }] = networkUsage;
+  const [{ value: generatedGlobally }] = globalUsage;
+  const [existing] = processingRuns;
   if (existing) {
-    return familyJson({ error: { code: "STUDY_IN_PROGRESS", message: "A version of this source is already being made for you." } }, 409);
+    return familyJson({
+      data: {
+        ...existing,
+        type: publicStudyLabel(existing.recipe, "recorded"),
+        url: null,
+        provenance: "recorded",
+        outputSha256: null,
+        status: "processing",
+        error: null,
+        workspaceOnly: true,
+        familyRating: null,
+        galleryRank: null,
+        galleryVisibility: "visible",
+      },
+      error: { code: "STUDY_IN_PROGRESS", message: "A version of this source is already being made." },
+    }, 409);
   }
   if (generatedToday >= networkLimit || generatedGlobally >= globalLimit) {
     return familyJson({ error: { code: "DAILY_LIMIT_REACHED", message: "The family image-making limit has been reached for today. Please try again tomorrow." } }, 429);
