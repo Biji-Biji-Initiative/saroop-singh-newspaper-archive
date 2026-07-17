@@ -15,6 +15,7 @@ import {
 export const runtime = "nodejs";
 
 const imageIdPattern = /^[a-zA-Z0-9_-]{1,128}$/;
+const familyResponseHeaders = { "Cache-Control": "private, no-store" };
 
 function rankedFirst<T extends { galleryRank: number | null; createdAt: string; id: string }>(left: T, right: T) {
   const leftRank = left.galleryRank ?? Number.MAX_SAFE_INTEGER;
@@ -23,15 +24,19 @@ function rankedFirst<T extends { galleryRank: number | null; createdAt: string; 
 }
 
 function familyAccessError() {
-  return Response.json(
+  return familyJson(
     {
       error: {
         code: "FAMILY_ACCESS_REQUIRED",
         message: "Open the family link once to make and view private image studies here.",
       },
     },
-    { status: 401 },
+    401,
   );
+}
+
+function familyJson(body: unknown, status = 200) {
+  return Response.json(body, { status, headers: familyResponseHeaders });
 }
 
 function outputUrl(key: string | null) {
@@ -44,7 +49,7 @@ export async function GET(request: Request) {
 
   const imageId = new URL(request.url).searchParams.get("image") || "";
   if (!imageIdPattern.test(imageId)) {
-    return Response.json({ error: { code: "INVALID_IMAGE", message: "Choose a photograph from the archive." } }, { status: 400 });
+    return familyJson({ error: { code: "INVALID_IMAGE", message: "Choose a photograph from the archive." } }, 400);
   }
 
   const runs = await getDb()
@@ -88,15 +93,15 @@ export async function GET(request: Request) {
         galleryVisibility: run.galleryVisibility === "hidden" ? "hidden" : "visible",
       };
     });
-  return Response.json({ data: { imageId, studies } });
+  return familyJson({ data: { imageId, studies } });
 }
 
 export async function POST(request: Request) {
   if (!hasTrustedArchiveOrigin(request)) {
-    return Response.json({ error: { code: "UNTRUSTED_ORIGIN", message: "Untrusted request origin." } }, { status: 403 });
+    return familyJson({ error: { code: "UNTRUSTED_ORIGIN", message: "Untrusted request origin." } }, 403);
   }
   if (!familyWorkspaceConfigured()) {
-    return Response.json({ error: { code: "FAMILY_ACCESS_UNAVAILABLE", message: "Family image-making is not configured yet." } }, { status: 503 });
+    return familyJson({ error: { code: "FAMILY_ACCESS_UNAVAILABLE", message: "Family image-making is not configured yet." } }, 503);
   }
   const workspace = await getFamilyWorkspace();
   if (!workspace) return familyAccessError();
@@ -105,10 +110,10 @@ export async function POST(request: Request) {
   const imageId = typeof body.imageId === "string" ? body.imageId : "";
   const requestedModel = typeof body.model === "string" ? body.model : "gpt-image-2";
   if (!imageIdPattern.test(imageId)) {
-    return Response.json({ error: { code: "INVALID_IMAGE", message: "Choose a photograph from the archive." } }, { status: 400 });
+    return familyJson({ error: { code: "INVALID_IMAGE", message: "Choose a photograph from the archive." } }, 400);
   }
   if (!validRestorationModel(requestedModel)) {
-    return Response.json({ error: { code: "UNSUPPORTED_MODEL", message: "Choose one of the archive image models." } }, { status: 400 });
+    return familyJson({ error: { code: "UNSUPPORTED_MODEL", message: "Choose one of the archive image models." } }, 400);
   }
   const recipe = validRestorationRecipe(body.recipe) ? body.recipe : "conservative";
   const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 1200) : "";
@@ -119,7 +124,7 @@ export async function POST(request: Request) {
     .where(and(eq(archiveImages.id, imageId), eq(archiveImages.status, "published"), isNotNull(archiveImages.publishedAt)))
     .limit(1);
   if (!image) {
-    return Response.json({ error: { code: "SOURCE_NOT_AVAILABLE", message: "This source is not available for the family workspace." } }, { status: 404 });
+    return familyJson({ error: { code: "SOURCE_NOT_AVAILABLE", message: "This source is not available for the family workspace." } }, 404);
   }
 
   const day = new Date().toISOString().slice(0, 10);
@@ -133,10 +138,10 @@ export async function POST(request: Request) {
     getDb().select({ id: restorationRuns.id }).from(restorationRuns).where(and(eq(restorationRuns.imageId, imageId), eq(restorationRuns.familySessionHash, workspace.sessionHash), eq(restorationRuns.status, "processing"))).limit(1),
   ]);
   if (existing) {
-    return Response.json({ error: { code: "STUDY_IN_PROGRESS", message: "A version of this source is already being made for you." } }, { status: 409 });
+    return familyJson({ error: { code: "STUDY_IN_PROGRESS", message: "A version of this source is already being made for you." } }, 409);
   }
   if (generatedToday >= networkLimit || generatedGlobally >= globalLimit) {
-    return Response.json({ error: { code: "DAILY_LIMIT_REACHED", message: "The family image-making limit has been reached for today. Please try again tomorrow." } }, { status: 429 });
+    return familyJson({ error: { code: "DAILY_LIMIT_REACHED", message: "The family image-making limit has been reached for today. Please try again tomorrow." } }, 429);
   }
 
   try {
@@ -148,7 +153,7 @@ export async function POST(request: Request) {
       createdBy: actor,
       familySessionHash: workspace.sessionHash,
     });
-    return Response.json({
+    return familyJson({
       data: {
         ...study,
         type: publicStudyLabel(study.recipe, "recorded"),
@@ -160,12 +165,12 @@ export async function POST(request: Request) {
         galleryRank: null,
         galleryVisibility: "visible",
       },
-    }, { status: 201 });
+    }, 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : "The new version could not be made.";
-    return Response.json(
+    return familyJson(
       { error: { code: error instanceof RestorationRequestError ? "RESTORATION_REQUEST_REJECTED" : "RESTORATION_FAILED", message } },
-      { status: error instanceof RestorationRequestError ? error.status : 502 },
+      error instanceof RestorationRequestError ? error.status : 502,
     );
   }
 }

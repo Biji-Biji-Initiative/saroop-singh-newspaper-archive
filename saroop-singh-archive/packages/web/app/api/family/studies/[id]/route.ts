@@ -5,6 +5,7 @@ import { getFamilyWorkspace } from "@/lib/family-workspace";
 import { hasTrustedArchiveOrigin } from "@/lib/request-origin";
 
 const VISIBILITY = new Set(["visible", "hidden"]);
+const familyResponseHeaders = { "Cache-Control": "private, no-store" };
 
 type CurationRequest = {
   rating?: unknown;
@@ -29,10 +30,14 @@ function requestedRank(value: unknown) {
 }
 
 function familyAccessError() {
-  return Response.json(
+  return familyJson(
     { error: { code: "FAMILY_ACCESS_REQUIRED", message: "Open the family link once to organise image versions here." } },
-    { status: 401 },
+    401,
   );
+}
+
+function familyJson(body: unknown, status = 200) {
+  return Response.json(body, { status, headers: familyResponseHeaders });
 }
 
 /**
@@ -41,7 +46,7 @@ function familyAccessError() {
  */
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!hasTrustedArchiveOrigin(request)) {
-    return Response.json({ error: { code: "UNTRUSTED_ORIGIN", message: "Untrusted request origin." } }, { status: 403 });
+    return familyJson({ error: { code: "UNTRUSTED_ORIGIN", message: "Untrusted request origin." } }, 403);
   }
   const workspace = await getFamilyWorkspace();
   if (!workspace) return familyAccessError();
@@ -52,14 +57,14 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   const wantsRank = Object.hasOwn(body, "rank");
   const wantsVisibility = Object.hasOwn(body, "visibility");
   if (!wantsRating && !wantsRank && !wantsVisibility) {
-    return Response.json({ error: { code: "NO_CHANGE", message: "Choose a rating, gallery position, or visibility decision." } }, { status: 400 });
+    return familyJson({ error: { code: "NO_CHANGE", message: "Choose a rating, gallery position, or visibility decision." } }, 400);
   }
 
   const rating = requestedRating(body.rating);
   const rank = requestedRank(body.rank);
   const visibility = typeof body.visibility === "string" ? body.visibility : undefined;
   if ((wantsRating && rating === undefined) || (wantsRank && rank === undefined) || (wantsVisibility && (!visibility || !VISIBILITY.has(visibility)))) {
-    return Response.json({ error: { code: "INVALID_CURATION", message: "Use a rating from one to five, a positive position, or visible/hidden." } }, { status: 400 });
+    return familyJson({ error: { code: "INVALID_CURATION", message: "Use a rating from one to five, a positive position, or visible/hidden." } }, 400);
   }
 
   const result = getDb().transaction(transaction => {
@@ -115,6 +120,6 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return { run: { id: run.id, familyRating: wantsRating ? rating as number | null : run.familyRating, galleryRank: nextRank, galleryVisibility: nextVisibility } };
   });
 
-  if ("error" in result) return Response.json({ error: { code: "CURATION_REJECTED", message: result.error } }, { status: result.status });
-  return Response.json({ data: result.run });
+  if ("error" in result) return familyJson({ error: { code: "CURATION_REJECTED", message: result.error } }, result.status);
+  return familyJson({ data: result.run });
 }

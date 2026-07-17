@@ -46,6 +46,7 @@ test("the public gallery keeps prompts private while the family workspace can in
   assert.match(gallery, /Open the shared family link once to see full prompts/);
   assert.match(familyStudies, /prompt: recovered \? null : run\.prompt/);
   assert.match(familyStudies, /FAMILY_ACCESS_REQUIRED/);
+  assert.match(familyStudies, /Cache-Control": "private, no-store"/);
 });
 
 test("a shared family link unlocks direct source-only image-making without Studio sign-in", () => {
@@ -70,6 +71,7 @@ test("a shared family link unlocks direct source-only image-making without Studi
   assert.match(familyRoute, /acceptsFamilyInvite/);
   assert.match(familyRoute, /createFamilyWorkspaceToken/);
   assert.match(familyRoute, /familyWorkspaceConfigured/);
+  assert.match(familyRoute, /Cache-Control", "private, no-store"/);
   assert.match(workspace, /FAMILY_WORKSPACE_INVITE_SECRET/);
   assert.match(workspace, /FAMILY_WORKSPACE_ID/);
   assert.match(workspace, /httpOnly: true/);

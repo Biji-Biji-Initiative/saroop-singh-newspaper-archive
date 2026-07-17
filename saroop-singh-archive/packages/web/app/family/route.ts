@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 
   const returnTo = safeRelativeReturnPath(url.searchParams.get("return_to") || "/gallery");
   const response = NextResponse.redirect(publicArchiveUrl(returnTo, request.url), 303);
+  response.headers.set("Cache-Control", "private, no-store");
   response.cookies.set(
     FAMILY_WORKSPACE_COOKIE,
     createFamilyWorkspaceToken(),
