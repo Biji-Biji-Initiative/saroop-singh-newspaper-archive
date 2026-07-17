@@ -105,6 +105,13 @@ export default function GalleryPage() {
   const viewerRef = useModalFocus<HTMLDivElement>(Boolean(selected), closeViewer);
 
   const requestGallery = useCallback(() => fetchAllPublicGallery<GalleryItem>(), []);
+  const loadFamilyStudies = useCallback(async (imageId: string, signal?: AbortSignal) => {
+    const response = await fetch(`/api/family/studies?image=${encodeURIComponent(imageId)}`, { signal });
+    const body = await response.json() as { data?: { studies?: FamilyStudy[] } };
+    if (!response.ok) return;
+    const studies = body.data?.studies || [];
+    setFamilyStudies(Object.fromEntries(studies.map(study => [study.id, study])));
+  }, []);
   const loadGallery = useCallback(() => {
     setLoading(true);
     setError(false);
@@ -146,22 +153,13 @@ export default function GalleryPage() {
 
   useEffect(() => {
     if (!selected) return;
-    let active = true;
     const abort = new AbortController();
     const start = window.setTimeout(() => {
       setFamilyStudies({});
-      fetch(`/api/family/studies?image=${encodeURIComponent(selected.id)}`, { signal: abort.signal })
-        .then(async response => ({ response, body: await response.json() as { data?: { studies?: FamilyStudy[] } } }))
-        .then(({ response, body }) => {
-          if (!active) return;
-          if (!response.ok) return;
-          const studies = body.data?.studies || [];
-          setFamilyStudies(Object.fromEntries(studies.map(study => [study.id, study])));
-        })
-        .catch(() => { /* The maker reports a configured-workspace error only if creation is requested. */ });
+      loadFamilyStudies(selected.id, abort.signal).catch(() => { /* The maker reports a configured-workspace error only if creation is requested. */ });
     }, 0);
-    return () => { active = false; abort.abort(); window.clearTimeout(start); };
-  }, [selected]);
+    return () => { abort.abort(); window.clearTimeout(start); };
+  }, [loadFamilyStudies, selected]);
 
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase();
@@ -190,11 +188,23 @@ export default function GalleryPage() {
     return [sourceAsset(selected), ...visibleRestorations.map(generationAsset), ...workspaceStudies];
   }, [familyStudies, selected]);
   const selectedStudy = selectedAsset?.kind === 'generation' ? familyStudies[selectedAsset.id] : undefined;
+  const activeFamilyStudy = useMemo(
+    () => Object.values(familyStudies).find(study => study.workspaceOnly && study.status === 'processing') || null,
+    [familyStudies],
+  );
+  useEffect(() => {
+    if (!selected || !activeFamilyStudy) return;
+    const interval = window.setInterval(() => { loadFamilyStudies(selected.id).catch(() => {}); }, 5_000);
+    return () => window.clearInterval(interval);
+  }, [activeFamilyStudy, loadFamilyStudies, selected]);
   const onFamilyStudyCreated = useCallback((study: FamilyStudy) => {
     const asset = familyStudyAsset(study);
     setFamilyStudies(current => ({ ...current, [study.id]: study }));
     setSelectedAsset(asset);
     setShowComparison(true);
+  }, []);
+  const onFamilyStudyInProgress = useCallback((study: FamilyStudy) => {
+    setFamilyStudies(current => ({ ...current, [study.id]: study }));
   }, []);
   const updateFamilyStudy = useCallback(async (id: string, changes: { rating?: number | null; rank?: number; visibility?: 'visible' | 'hidden' }) => {
     setCurationError('');
@@ -288,7 +298,7 @@ export default function GalleryPage() {
                 {showComparison && selectedAsset?.kind === 'generation' && selectedAsset.url ? <><RestorationCompare originalUrl={selected.originalUrl} studyUrl={selectedAsset.url} title={selected.title} studyLabel={selectedAsset.label} className="mx-auto w-full max-w-4xl text-white" /><button type="button" onClick={() => setShowComparison(false)} aria-label="Show selected variation only" title="Show selected variation only" className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300"><Columns2 className="h-5 w-5" /></button></> : <><Image src={selectedAsset?.url || selected.originalUrl} alt={`${selected.title} — ${selectedAsset?.label || 'preserved source'}`} fill unoptimized sizes="(max-width: 1024px) 100vw, 70vw" className="object-contain p-2 sm:p-4" /><span className={`absolute bottom-3 left-3 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-[.12em] ${selectedAsset?.kind === 'generation' ? 'bg-amber-300 text-[#17241d]' : 'bg-emerald-950/90 text-white'}`}>{selectedAsset?.kind === 'generation' ? selectedAsset.label : 'Fit to screen · complete source'}</span>{selectedAsset?.kind === 'generation' && <button type="button" onClick={() => setShowComparison(true)} aria-label="Compare source and selected variation" title="Compare source and selected variation" className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#17241d] shadow-lg focus:outline-none focus:ring-4 focus:ring-amber-300"><Columns2 className="h-5 w-5" /></button>}</>}
               </div>
               <div className="mt-4 px-1">
-                <p className="text-xs font-semibold uppercase tracking-[.16em] text-stone-300">All images and variations</p>
+                <div className="flex items-baseline justify-between gap-3"><p className="text-xs font-semibold uppercase tracking-[.16em] text-stone-300">All images and variations</p><p className="text-right text-[11px] text-stone-400">Choose one to inspect</p></div>
                 <div role="list" aria-label="Source and published image variations" className="mt-3 flex snap-x gap-2.5 overflow-x-auto pb-2">
                   {carouselAssets.map(asset => {
                     const active = selectedAsset?.id === asset.id;
@@ -304,7 +314,7 @@ export default function GalleryPage() {
               <h2 className="mt-2 break-words font-serif text-3xl leading-tight">{selected.title}</h2>
               <p className="mt-3 text-sm leading-6 text-neutral-600">{selected.familyMember || 'Saroop Singh family collection'}</p>
 
-              <div className="mt-5"><FamilyStudyMaker image={{ id: selected.id, title: selected.title }} onCreated={onFamilyStudyCreated} /></div>
+              <div className="mt-5"><FamilyStudyMaker image={{ id: selected.id, title: selected.title }} activeStudy={activeFamilyStudy} onCreated={onFamilyStudyCreated} onStudyInProgress={onFamilyStudyInProgress} onRefresh={() => { loadFamilyStudies(selected.id).catch(() => {}); }} /></div>
 
               <section aria-label="Selected image details" className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[.14em] text-emerald-800">Now viewing</p>
