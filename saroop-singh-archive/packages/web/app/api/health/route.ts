@@ -2,6 +2,7 @@ import { archiveAuthConfigured } from "@/lib/archive-auth";
 import { verifyDatabaseWritable } from "@/db";
 import { verifyObjectStorageWritable } from "@/lib/archive-bucket";
 import { getAllArticles } from "@/lib/articles";
+import { familyWorkspaceConfigured } from "@/lib/family-workspace";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +34,7 @@ export async function GET() {
           adminAuthConfigured: archiveAuthConfigured(),
           restorationProviders: providers,
           contributionIntakeEnabled: contributionIntakeEnabled(),
+          familyWorkspaceConfigured: familyWorkspaceConfigured(),
         },
       },
       {

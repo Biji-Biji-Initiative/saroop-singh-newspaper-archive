@@ -46,6 +46,10 @@ commit them to the repository or configure them as build-time variables.
 | `ARCHIVE_SOURCE_HASH_SECRET`     | Separate pepper for daily abuse-limit hashes             |
 | `ADMIN_API_TOKEN`                | Required high-entropy Studio automation token            |
 | `ARCHIVE_REVALIDATE_SECRET`      | Optional bearer credential for `/api/revalidate`         |
+| `FAMILY_WORKSPACE_INVITE_SECRET` | 32+ character private family-link capability; rotate this to revoke old links |
+| `FAMILY_WORKSPACE_ID`            | Separate stable 32+ character workspace identity; do not rotate with the invite |
+| `FAMILY_GENERATION_DAILY_NETWORK_LIMIT` | Optional per-network family image-making cap; defaults to `12`/day, max `40` |
+| `FAMILY_GENERATION_DAILY_GLOBAL_LIMIT` | Optional global family image-making cap; defaults to `100`/day, max `500` |
 | `OPENAI_API_KEY`                 | Dedicated server-side GPT Image credential               |
 | `GEMINI_API_KEY`                 | Dedicated server-side Gemini credential                  |
 | `GEMINI_ANALYSIS_MODEL`          | Optional private face-observation model override         |
@@ -89,6 +93,9 @@ After Coolify reports a successful rollout:
 6. Confirm both contribution types stay pending until explicit archive review.
 7. Check the Coolify deployment logs for startup, storage-permission, and
    Gemini errors before directing traffic to the new domain.
+8. Open the private family link once in a clean browser, make one non-sensitive
+   test study, verify its split comparison, model and exact prompt, then remove
+   that test study from the family image rail if it is not wanted.
 
 ## Moderating a contribution
 

@@ -3,6 +3,7 @@ import { bucket } from "@/lib/archive-server";
 import { getDb } from "@/db";
 import { archiveImages, restorationRuns } from "@/db/schema";
 import { getArchiveUser } from "@/lib/archive-auth";
+import { getFamilyWorkspace } from "@/lib/family-workspace";
 
 export const runtime = "nodejs";
 
@@ -41,7 +42,22 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
       (image?.status === "published" &&
         image.originalKey === objectKey),
   );
-  if (!isPublished) {
+  const familyWorkspace = isPublished ? null : await getFamilyWorkspace();
+  const [familyStudy] = familyWorkspace
+    ? await db
+      .select({ id: restorationRuns.id })
+      .from(restorationRuns)
+      .where(
+        and(
+          eq(restorationRuns.outputKey, objectKey),
+          eq(restorationRuns.status, "ready"),
+          eq(restorationRuns.familySessionHash, familyWorkspace.sessionHash),
+        ),
+      )
+      .limit(1)
+    : [];
+  const isFamilyDraft = Boolean(familyStudy);
+  if (!isPublished && !isFamilyDraft) {
     const user = await getArchiveUser();
     if (!user) return new Response("Not found", { status: 404 });
   }
@@ -52,6 +68,6 @@ export async function GET(_request: Request, context: { params: Promise<{ key: s
   headers.set("etag", object.httpEtag);
   headers.set("cache-control", isPublished ? "public, max-age=0, must-revalidate" : "private, no-store");
   headers.set("x-content-type-options", "nosniff");
-  if (!isPublished) headers.set("content-disposition", `attachment; filename="${(image?.originalName || "archive-original").replace(/["\\\r\n]/g, "-")}"`);
+  if (!isPublished && !isFamilyDraft) headers.set("content-disposition", `attachment; filename="${(image?.originalName || "archive-original").replace(/["\\\r\n]/g, "-")}"`);
   return new Response(await object.arrayBuffer(), { headers });
 }

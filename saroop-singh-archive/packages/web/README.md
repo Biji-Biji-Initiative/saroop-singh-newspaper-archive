@@ -32,7 +32,8 @@ or complete digitisation histories were recovered.
 - `/gallery` — source-first photographic records and optional comparisons
 - `/remember` — private names, stories, corrections, voice, fronts and backs
 - `/contribute` — multi-photo family intake with per-photo metadata
-- `/studio` — owner-only preservation, restoration review and publication
+- `/family?access=…` — passwordless shared family workspace for making, comparing and organising private image versions
+- `/studio` — owner-only preservation review and deliberate publication
 - `/methodology` — evidence, provenance, originals and restoration policy
 
 ## Runtime and storage
@@ -62,6 +63,10 @@ Important runtime values:
 - `CONTRIBUTION_DAILY_GLOBAL_LIMIT` — durable daily photograph intake cap
 - `CONTRIBUTIONS_ENABLED` — set `false`, `0`, or `off` to close public photo intake
 - `MEMORY_DAILY_GLOBAL_LIMIT` — durable daily memory intake cap
+- `FAMILY_WORKSPACE_INVITE_SECRET` — at least 32 random characters; the private shared family-link capability
+- `FAMILY_WORKSPACE_ID` — separate stable 32+ character workspace identity; retain it when rotating the invite secret
+- `FAMILY_GENERATION_DAILY_NETWORK_LIMIT` — per-network daily image-making limit (default 12, max 40)
+- `FAMILY_GENERATION_DAILY_GLOBAL_LIMIT` — global daily family image-making limit (default 100, max 500)
 - `OPENAI_API_KEY` — GPT Image restoration provider
 - `GEMINI_API_KEY` — Gemini restoration and private face-observation provider
 - `GEMINI_ANALYSIS_MODEL` — optional Gemini model override for face observations
@@ -87,12 +92,16 @@ media isolation, AI consent gates and receipt privacy.
 
 ## Restoration contract
 
-The family chooses one of three optional intentions: Clean & preserve, Repair
-damage, or Explore colour. The owner chooses the engine in the advanced panel.
-Each run records the exact provider model, versioned prompt, preset and output
-checksum. Gemini calls use stateless storage settings. Outputs with material
-aspect-ratio drift are rejected before storage, and publication requires an
-explicit human comparison checklist.
+The normal family flow is intentionally direct: open the shared private link
+once, select a source, choose Clean & preserve, Repair damage, or Try colour,
+and make a version. GPT Image 2 is the default; Nano Banana 2 and Nano Banana
+Pro remain available under “Fine-tune this version.” Each finished thumbnail
+opens its exact model, provider, versioned prompt, preset and output checksum.
+The family can rate a version, put a preferred result first, or hide a weak
+older result while retaining its record. Every new run is source-locked and
+private to the shared family workspace; only a later explicit Studio decision
+can publish it. Gemini calls use stateless storage settings. Outputs with
+material aspect-ratio drift are rejected before storage.
 
 The slider is a review instrument, not proof of geometric registration. Every
 published comparison still requires human landmark and alignment inspection.
@@ -121,15 +130,15 @@ storage are writable while reporting only boolean auth/provider configuration.
 Before every production promotion:
 
 1. keep the existing `/data` persistent-volume mount;
-2. inject the Infisical-managed auth, OpenAI and Gemini values;
+2. inject the Infisical-managed auth, OpenAI, Gemini and family-workspace values;
 3. keep `ARCHIVE_ADMIN_EMAILS` fail-closed and use separate session/password/API
    secrets;
 4. set both public-origin variables to `https://saroop.mereka.dev`;
 5. preserve proxy request-body and rate limits;
 6. run the full test suite and container health check;
 7. verify backup and restore for `archive.sqlite*` and the `objects/` tree;
-8. exercise contribution, memory receipt, Studio login, restoration review,
-   publication and withdrawal on the deployed domain.
+8. exercise contribution, memory receipt, the passwordless family workspace,
+   Studio publication and withdrawal on the deployed domain.
 
 ## Preservation exports
 

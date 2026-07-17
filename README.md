@@ -32,10 +32,12 @@ archive administrator to request a working-copy study after family review; the
 source is never replaced and nothing is published automatically. Leaving it
 unticked means no contribution copy is sent to an AI provider.
 
-Conservative AI-assisted restoration studies are initiated by archive
-administrators only after private intake and explicit consent. The public
-contribution path always preserves the original without sending it to an AI
-provider.
+The private shared family link opens a passwordless workspace for making and
+comparing source-locked restoration versions of published family photographs.
+Each version shows its model and exact prompt, and the family can rate, order,
+or hide weaker versions. New versions remain private until a deliberate archive
+publication decision. The public contribution path always preserves the
+original without sending it to an AI provider.
 
 For article corrections, new clippings, or a local development workflow, start
 with [CONTRIBUTING.md](CONTRIBUTING.md). It contains the actual content path,
