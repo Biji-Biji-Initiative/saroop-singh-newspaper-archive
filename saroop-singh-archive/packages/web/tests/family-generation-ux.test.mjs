@@ -62,6 +62,7 @@ test("the gallery opens direct source-only image-making without a link, account,
   assert.match(gallery, /FamilyStudyMaker/);
   assert.match(gallery, /\/api\/family\/studies/);
   assert.doesNotMatch(gallery, /familyAccess|shared family link/);
+  assert.ok(gallery.indexOf("<FamilyStudyMaker") < gallery.indexOf('aria-label="Family choices for this image version"'));
   assert.match(detail, /Make a family image version/);
   assert.match(detail, /\/gallery\?image=/);
   assert.match(maker, /Make a new version/);

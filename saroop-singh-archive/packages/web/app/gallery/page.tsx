@@ -304,7 +304,9 @@ export default function GalleryPage() {
               <h2 className="mt-2 break-words font-serif text-3xl leading-tight">{selected.title}</h2>
               <p className="mt-3 text-sm leading-6 text-neutral-600">{selected.familyMember || 'Saroop Singh family collection'}</p>
 
-              <section aria-label="Selected image details" className="mt-5 rounded-2xl border border-amber-900/10 bg-white p-4 shadow-sm">
+              <div className="mt-5"><FamilyStudyMaker image={{ id: selected.id, title: selected.title }} onCreated={onFamilyStudyCreated} /></div>
+
+              <section aria-label="Selected image details" className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4 shadow-sm">
                 <p className="text-xs font-semibold uppercase tracking-[.14em] text-emerald-800">Now viewing</p>
                 <h3 className="mt-2 font-serif text-2xl leading-tight">{selectedAsset?.label || 'Preserved source'}</h3>
                 {selectedAsset?.kind !== 'generation' ? (
@@ -349,8 +351,6 @@ export default function GalleryPage() {
                   {curationError && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm leading-5 text-red-800">{curationError}</p>}
                 </section>
               )}
-
-              <div className="mt-4"><FamilyStudyMaker image={{ id: selected.id, title: selected.title }} onCreated={onFamilyStudyCreated} /></div>
 
               <section aria-label="Add family knowledge to this photograph" className="mt-4 rounded-2xl border border-amber-900/10 bg-white p-4">
                 <p className="text-xs font-semibold uppercase tracking-[.14em] text-amber-800">Family memory</p>
