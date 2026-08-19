@@ -1,5 +1,7 @@
 name: PR Intake Dashboard
 
+# Runs on mereka-k8s-light: the job never checks out or executes PR code; it
+# only reads PR/check metadata and updates one issue through the GitHub API.
 on:
   # This workflow intentionally does not check out or execute pull-request code.
   # That makes the write-scoped dashboard safe for PRs from any remote source.
@@ -34,7 +36,7 @@ concurrency:
 jobs:
   reconcile:
     name: Reconcile PR intake queue
-    runs-on: ubuntu-latest
+    runs-on: mereka-k8s-light
     timeout-minutes: 5
     steps:
       - name: Refresh the read-only PR dashboard
