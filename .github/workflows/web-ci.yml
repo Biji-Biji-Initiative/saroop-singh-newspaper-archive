@@ -1,5 +1,9 @@
 name: Web CI
 
+# This job serves pull_request, so it executes PR-authored source. It runs on
+# mereka-k8s-untrusted-ci: the ARC lane profiled for untrusted PR code (no
+# cluster/secret authority), because GitHub-hosted runners are disabled
+# org-wide and the required "Verify web build" context must actually report.
 on:
   pull_request:
   push:
@@ -18,7 +22,7 @@ concurrency:
 jobs:
   verify-web:
     name: Verify web build
-    runs-on: ubuntu-latest
+    runs-on: mereka-k8s-untrusted-ci
     timeout-minutes: 20
     defaults:
       run:
@@ -31,8 +35,6 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: saroop-singh-archive/packages/web/package-lock.json
 
       - name: Install locked dependencies
         run: npm ci --workspaces=false
@@ -55,7 +57,15 @@ jobs:
 
       - name: Build the production Coolify image
         working-directory: .
-        run: docker build --tag saroop-archive:ci .
+        # The untrusted ARC lane has no Docker daemon. Coolify builds this same
+        # Dockerfile on deploy, and Deploy production fails unless that build
+        # finishes at the verified SHA, so the image build is still gated.
+        run: |
+          if docker info >/dev/null 2>&1; then
+            docker build --tag saroop-archive:ci .
+          else
+            echo "::notice::No Docker daemon on this runner; the Dockerfile is built and gated by Coolify in Deploy production."
+          fi
 
       - name: Reject high-severity production dependency findings
         run: npm audit --omit=dev --audit-level=high
